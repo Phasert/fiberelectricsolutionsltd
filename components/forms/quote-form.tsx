@@ -1,0 +1,20 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Errors = Record<string, string>;
+export function QuoteForm() {
+  const [files, setFiles] = useState<File[]>([]); const [errors, setErrors] = useState<Errors>({}); const [notice, setNotice] = useState(false);
+  const names = useMemo(() => files.map(file => `${file.name} (${Math.ceil(file.size / 1024)} KB)`), [files]);
+  function validate(form: HTMLFormElement) { const data = new FormData(form); const next: Errors = {}; ["service", "name", "contact", "location", "description"].forEach(key => { if (!String(data.get(key) || "").trim()) next[key] = "This field is required."; }); setErrors(next); return Object.keys(next).length === 0; }
+  return <form noValidate onSubmit={e => { e.preventDefault(); setNotice(false); if (validate(e.currentTarget)) setNotice(true); }} className="grid gap-8">
+    <fieldset><legend className="display text-2xl">01. Select a service</legend><div className="mt-5 grid gap-3 sm:grid-cols-2">{["Electrical", "Fiber Optic"].map(value => <label key={value} className="flex cursor-pointer items-center gap-3 border border-black/15 bg-white p-5 font-bold has-[:checked]:border-wine has-[:checked]:text-wine"><input type="radio" name="service" value={value}/>{value}</label>)}</div>{errors.service && <p className="mt-2 text-sm text-wine" role="alert">{errors.service}</p>}</fieldset>
+    <fieldset><legend className="display text-2xl">02. Contact details</legend><div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label="Full name" name="name" error={errors.name}/><Field label="Phone or email" name="contact" error={errors.contact}/></div></fieldset>
+    <fieldset><legend className="display text-2xl">03. Job information</legend><div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label="General job location" name="location" error={errors.location}/><label className="grid gap-2 text-sm font-bold">Property type (optional)<select name="propertyType" className="min-h-12 border border-black/15 bg-white px-4 font-normal"><option value="">Select if applicable</option><option>Commercial</option><option>Industrial</option><option>Residential</option><option>Other</option></select></label></div><label className="mt-5 grid gap-2 text-sm font-bold">Describe the work required<textarea name="description" rows={6} className="border border-black/15 bg-white p-4 font-normal" placeholder="Tell us what you need, the current site conditions, and any timing considerations."/>{errors.description && <span className="font-normal text-wine" role="alert">{errors.description}</span>}</label></fieldset>
+    <fieldset><legend className="display text-2xl">04. Job or site photographs</legend><label className="mt-5 flex cursor-pointer flex-col items-center justify-center border border-dashed border-wine/40 bg-white p-8 text-center"><span className="font-bold text-wine">Choose photographs</span><span className="mt-2 text-sm text-ink/50">JPG, PNG or WEBP. Files remain on your device in this frontend preview.</span><input className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={e => setFiles(Array.from(e.target.files || []))}/></label>{names.length > 0 && <ul className="mt-4 grid gap-2 text-sm text-ink/65">{names.map(name => <li key={name}>— {name}</li>)}</ul>}</fieldset>
+    {notice && <div role="status" className="border-l-4 border-wine bg-white p-5"><p className="font-bold">Your request is complete, but has not been sent.</p><p className="mt-1 text-sm text-ink/60">Online submission will be enabled when the secure backend is connected in Phase 2.</p></div>}
+    <button type="submit" className="min-h-14 bg-wine px-7 text-sm font-black uppercase tracking-widest text-white hover:bg-wine-dark">Review request</button>
+  </form>;
+}
+
+function Field({ label, name, error }: { label: string; name: string; error?: string }) { return <label className="grid gap-2 text-sm font-bold">{label}<input name={name} aria-invalid={!!error} className="min-h-12 border border-black/15 bg-white px-4 font-normal"/>{error && <span className="font-normal text-wine" role="alert">{error}</span>}</label>; }

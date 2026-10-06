@@ -1,0 +1,9 @@
+import type { Metadata } from "next";
+import { PageHero } from "@/components/layout/page-hero";
+import { ServiceGrid } from "@/components/services/service-grid";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { ButtonLink } from "@/components/ui/button-link";
+import { electricalServices, projects } from "@/data/content";
+import { ProjectCard } from "@/components/projects/project-card";
+export const metadata: Metadata = { title: "Electrical Services", description: "Commercial and industrial electrical services from FES." };
+export default function ElectricalPage(){ return <><PageHero eyebrow="Electrical services" title="Serious electrical capability, clearly presented." body="FES supports commercial and industrial electrical requirements, from installation and data wiring to approved fire, transformer and generator work."/><section className="section-pad"><div className="shell"><SectionHeading eyebrow="Capabilities" title="Built around approved project requirements."/><div className="mt-12"><ServiceGrid services={electricalServices}/></div></div></section><section className="section-pad bg-ink text-white"><div className="shell grid gap-12 lg:grid-cols-2 lg:items-end"><SectionHeading light eyebrow="Project pathway" title="See the work in context." body="Project entries will bring scope, imagery and approved locations together as the client portfolio is confirmed."/><div>{projects.filter(p=>p.category!=="Fiber").slice(0,1).map(p=><ProjectCard key={p.slug} project={p}/>)}</div></div></section><section className="bg-wine py-14 text-white"><div className="shell flex flex-col justify-between gap-6 sm:flex-row sm:items-center"><h2 className="display text-4xl">Discuss an electrical requirement.</h2><ButtonLink href="/request-a-quote" variant="light">Request a quote</ButtonLink></div></section></>; }
