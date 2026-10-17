@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { PageHero } from "@/components/layout/page-hero";
 import { QuoteForm } from "@/components/forms/quote-form";
+import { electricalServices, fiberServices } from "@/data/content";
 export const metadata: Metadata = { title: "Request a Quote", description: "Prepare an electrical or fiber optic quote request for FES." };
-export default function QuotePage(){return <><PageHero eyebrow="Request a quote / contact" title="Give us a clear view of the work." accent="work" body="Choose a service, describe the requirement and attach useful site photographs. This Phase 1 preview validates your details but does not send them."/><section className="section-pad"><div className="shell grid gap-12 lg:grid-cols-[.55fr_1fr]"><aside><p className="eyebrow">Before you begin</p><h2 className="display mt-5 text-4xl">A useful request starts with context.</h2><ol className="mt-8 grid gap-5 text-sm leading-6 text-ink/60"><li><strong className="text-ink">01.</strong> Choose electrical or fiber optic.</li><li><strong className="text-ink">02.</strong> Share a reliable contact method.</li><li><strong className="text-ink">03.</strong> Describe the site and work required.</li><li><strong className="text-ink">04.</strong> Add clear photographs if useful.</li></ol><div className="mt-10 border-t border-black/10 pt-6 text-sm leading-6 text-ink/50">Public phone and email contact details are awaiting client confirmation.</div></aside><QuoteForm/></div></section></>}
+export default async function QuotePage({searchParams}:{searchParams:Promise<{service?:string}>}) {
+  const {service}=await searchParams;
+  const initialService=service==="Electrical"||service==="Fiber Optic"?service:undefined;
+  const services=[...electricalServices,...fiberServices].map(({slug,title,kind})=>({id:slug,title,category:kind}));
+  return <>
+    <section className="grain relative overflow-hidden bg-ink text-white"><div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,#7d1028_0,transparent_68%)] opacity-70"/><div className="shell relative py-14 sm:py-18"><p className="eyebrow !text-[#db8298]">Request a quote</p><h1 className="display mt-5 max-w-4xl text-5xl sm:text-6xl lg:text-7xl">Tell us about your <span className="text-[#c42b4e]">project.</span></h1><p className="mt-6 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">Need electrical or fiber optic services? Share your project requirements and our team can review the details and follow up with you.</p></div></section>
+    <section className="py-12 sm:py-16"><div className="shell"><QuoteForm initialService={initialService} services={services}/></div></section>
+  </>;
+}

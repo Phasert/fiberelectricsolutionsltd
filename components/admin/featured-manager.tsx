@@ -1,0 +1,104 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ArrowRight, Check, CircleAlert, Eye, ImageOff, RotateCcw, Save } from "lucide-react";
+import type { AdminProject, AdminResource, AdminTip, MediaItem } from "@/types/admin";
+
+type Selection = { projectId: string; resourceId: string; tipIds: string[] };
+
+export function FeaturedManager({ projects, resources, tips, media }: { projects: AdminProject[]; resources: AdminResource[]; tips: AdminTip[]; media: MediaItem[] }) {
+  const initialSelection = useMemo<Selection>(() => ({
+    projectId: projects.find((project) => project.featured)?.id ?? "",
+    resourceId: "",
+    tipIds: tips.filter(isEligibleTip).sort((a, b) => a.order - b.order).map((tip) => tip.id),
+  }), [projects, tips]);
+  const [savedSelection, setSavedSelection] = useState(initialSelection);
+  const [selection, setSelection] = useState(initialSelection);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const publishedProjects = projects.filter((project) => project.status === "Published");
+  const publishedResources = resources.filter((resource) => resource.status === "Published");
+  const orderedTips = [...tips].sort((a, b) => a.order - b.order);
+  const selectedProject = projects.find((project) => project.id === selection.projectId);
+  const selectedResource = resources.find((resource) => resource.id === selection.resourceId);
+  const selectedTips = orderedTips.filter((tip) => selection.tipIds.includes(tip.id));
+  const mediaSources = new Set(media.map((item) => item.src));
+  const projectImageExists = Boolean(selectedProject?.image && mediaSources.has(selectedProject.image));
+  const resourceImageExists = Boolean(selectedResource?.coverImage && mediaSources.has(selectedResource.coverImage));
+  const hasChanges = JSON.stringify(selection) !== JSON.stringify(savedSelection);
+  const errors = validateSelection(selection, projects, resources, tips, mediaSources);
+
+  function update(next: Selection) { setSelection(next); setNotice(null); }
+  function save() {
+    if (errors.length) { setNotice("Resolve the highlighted validation issues before applying this preview selection."); return; }
+    setSavedSelection(selection);
+    setNotice("Selection applied to this browser preview only. Nothing was published or permanently saved.");
+  }
+  function revert() { setSelection(savedSelection); setNotice("Unsaved changes reverted."); }
+  function openPreview() { document.getElementById("homepage-preview")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+
+  return <div className="space-y-6">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+      <div className="space-y-6">
+        <Section number="01" title="Featured Project" description="Choose the published project that leads the homepage portfolio section.">
+          {selectedProject?.status === "Draft" && <ValidationWarning><strong>{selectedProject.title}</strong> is a draft and cannot be featured publicly. Select a published project before applying changes. Its status will not be changed.</ValidationWarning>}
+          <fieldset><legend className="sr-only">Select a published featured project</legend><div className="grid gap-3 md:grid-cols-2">
+            {publishedProjects.map((project) => {
+              const checked = selection.projectId === project.id;
+              const imageExists = mediaSources.has(project.image);
+              return <label key={project.id} className={`group relative cursor-pointer overflow-hidden rounded-lg border bg-white transition ${checked ? "border-wine ring-2 ring-wine/10" : "border-black/10 hover:border-black/25"}`}>
+                <input className="sr-only" type="radio" name="featured-project" value={project.id} checked={checked} onChange={() => update({ ...selection, projectId: project.id })} />
+                <div className="relative aspect-[16/8] bg-paper">{imageExists ? <Image src={project.image} alt="" fill loading={checked ? "eager" : "lazy"} className="object-cover" sizes="(max-width: 768px) 100vw, 40vw" /> : <MissingImage compact />}<span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[.6rem] font-black uppercase tracking-wider text-emerald-700 shadow-sm">Published</span><span className={`absolute right-3 top-3 grid size-7 place-items-center rounded-full border ${checked ? "border-wine bg-wine text-white" : "border-black/15 bg-white text-transparent"}`}><Check size={15} strokeWidth={3} /></span></div>
+                <div className="p-4"><p className="text-[.65rem] font-black uppercase tracking-[.14em] text-wine">{project.category}</p><h3 className="mt-2 font-bold text-ink">{project.title}</h3><p className="mt-2 line-clamp-2 text-xs leading-5 text-ink/55">{project.summary}</p></div>
+              </label>;
+            })}
+          </div></fieldset>
+          {publishedProjects.length === 0 && <ValidationWarning>No published projects are available. Publish a project from Projects before choosing homepage content.</ValidationWarning>}
+        </Section>
+
+        <Section number="02" title="Featured Resource" description="Optionally highlight one published resource in the existing resources section.">
+          <fieldset><legend className="sr-only">Select a featured resource</legend><div className="grid gap-3">
+            <SelectionCard checked={!selection.resourceId} name="featured-resource" value="" onChange={() => update({ ...selection, resourceId: "" })} title="No featured resource" meta="Optional" description="Keep the homepage resources section in its default state." />
+            {publishedResources.map((resource) => <SelectionCard key={resource.id} checked={selection.resourceId === resource.id} name="featured-resource" value={resource.id} onChange={() => update({ ...selection, resourceId: resource.id })} title={resource.title} meta={`${resource.kind} · ${resource.category}`} description={resource.summary} image={resource.coverImage && mediaSources.has(resource.coverImage) ? resource.coverImage : undefined} />)}
+          </div></fieldset>
+          {!publishedResources.length && <p className="mt-3 text-xs text-ink/45">No published resources are currently available. Draft resources are intentionally excluded.</p>}
+        </Section>
+
+        <Section number="03" title="Homepage Tips" description="Select from complete, enabled tips. Their order is controlled in Tips management.">
+          <div className="flex items-center justify-between gap-4 border-b border-black/8 pb-4"><p className="text-xs text-ink/50">{selectedTips.length} of {orderedTips.filter(isEligibleTip).length} eligible tips selected</p><Link href="/admin/tips" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-wine hover:underline">Manage Tips <ArrowRight size={14} /></Link></div>
+          <fieldset className="mt-4 grid gap-3 sm:grid-cols-2"><legend className="sr-only">Select homepage tips</legend>{orderedTips.map((tip) => {
+            const eligible = isEligibleTip(tip); const checked = selection.tipIds.includes(tip.id);
+            return <label key={tip.id} className={`relative rounded-lg border p-4 transition ${!eligible ? "cursor-not-allowed border-black/5 bg-black/[.025] opacity-55" : checked ? "cursor-pointer border-wine bg-wine/[.025] ring-2 ring-wine/10" : "cursor-pointer border-black/10 bg-white hover:border-black/25"}`}>
+              <input className="sr-only" type="checkbox" checked={checked} disabled={!eligible} onChange={() => update({ ...selection, tipIds: checked ? selection.tipIds.filter((id) => id !== tip.id) : [...selection.tipIds, tip.id] })} />
+              <div className="flex items-start gap-3"><span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded border ${checked ? "border-wine bg-wine text-white" : "border-black/20 bg-white text-transparent"}`}><Check size={13} strokeWidth={3} /></span><span className="min-w-0"><span className="flex flex-wrap items-center gap-2"><span className={`text-[.62rem] font-black uppercase tracking-[.14em] ${tip.type === "Do" ? "text-emerald-700" : "text-wine"}`}>{tip.type}</span><span className={`rounded-full px-2 py-0.5 text-[.58rem] font-black uppercase tracking-wider ${tip.enabled ? "bg-emerald-50 text-emerald-700" : "bg-black/5 text-ink/45"}`}>{tip.enabled ? "Enabled" : "Disabled"}</span></span><span className="mt-2 block text-sm font-bold text-ink">{tip.title || "Untitled tip"}</span><span className="mt-1 block text-xs leading-5 text-ink/50">{tip.body || "This tip is incomplete and cannot be selected."}</span></span></div>
+            </label>;
+          })}</fieldset>
+        </Section>
+      </div>
+
+      <aside className="space-y-4 xl:sticky xl:top-24">
+        <section className="overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm"><div className="border-b border-black/8 px-5 py-4"><p className="text-[.62rem] font-black uppercase tracking-[.16em] text-wine">Project cover image</p><h2 className="mt-1 font-bold">Homepage image</h2></div><div className="relative aspect-[4/3] bg-paper">{projectImageExists && selectedProject ? <Image src={selectedProject.image} alt={`Cover preview for ${selectedProject.title}`} fill loading="eager" className="object-cover" sizes="22rem" /> : <MissingImage />}</div><div className="p-5"><p className="text-sm font-bold">{selectedProject?.title ?? "No project selected"}</p><p className="mt-2 text-xs leading-5 text-ink/50">The homepage uses the project cover image. Images remain managed with the project—there is no separate upload.</p>{selectedProject && <Link href={`/admin/projects/${selectedProject.id}`} className="mt-4 inline-flex min-h-10 items-center gap-2 text-xs font-bold text-wine hover:underline">Edit project images <ArrowRight size={14} /></Link>}</div></section>
+        {errors.length > 0 && <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><p className="flex items-center gap-2 font-bold"><CircleAlert size={15} /> Review required</p><ul className="mt-2 list-disc space-y-1 pl-5">{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
+      </aside>
+    </div>
+
+    <section id="homepage-preview" className="scroll-mt-24 overflow-hidden rounded-lg border border-black/10 bg-ink text-white shadow-sm">
+      <div className="flex flex-col justify-between gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:px-6"><div><p className="text-[.62rem] font-black uppercase tracking-[.16em] text-[#db8298]">Homepage Preview</p><h2 className="mt-1 text-lg font-bold">Current unsaved selection</h2></div><span className="w-fit rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1.5 text-[.62rem] font-black uppercase tracking-wider text-amber-200">Preview only · Not live</span></div>
+      <div className="grid lg:grid-cols-[1.05fr_.95fr]">
+        <div className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r"><p className="text-[.62rem] font-black uppercase tracking-[.16em] text-[#db8298]">Featured work</p><div className="mt-4 overflow-hidden bg-white text-ink"><div className="relative aspect-[16/9] bg-paper">{projectImageExists && selectedProject ? <Image src={selectedProject.image} alt="" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" /> : <MissingImage />}</div><div className="p-5"><p className="text-[.62rem] font-black uppercase tracking-wider text-wine">{selectedProject?.category ?? "No category"}</p><h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">{selectedProject?.title ?? "Select a published project"}</h3><p className="mt-2 text-xs leading-5 text-ink/55">{selectedProject?.summary ?? "The selected project story will appear here."}</p></div></div></div>
+        <div className="grid content-start gap-6 p-5 sm:p-7"><div><p className="text-[.62rem] font-black uppercase tracking-[.16em] text-[#db8298]">Field notes</p><div className="mt-3 divide-y divide-white/10 border border-white/10">{selectedTips.length ? selectedTips.map((tip) => <article key={tip.id} className="p-4"><p className="text-[.6rem] font-black uppercase tracking-widest text-[#db8298]">{tip.type}</p><p className="mt-1 text-sm font-bold">{tip.title}</p><p className="mt-1 text-xs leading-5 text-white/50">{tip.body}</p></article>) : <p className="p-4 text-xs text-white/45">No homepage tips selected.</p>}</div></div><div><p className="text-[.62rem] font-black uppercase tracking-[.16em] text-[#db8298]">Resources &amp; insights</p><div className="mt-3 border border-white/10 p-4"><p className="text-[.6rem] font-black uppercase tracking-widest text-white/40">{selectedResource ? `${selectedResource.kind} · ${selectedResource.category}` : "Default homepage section"}</p><p className="mt-2 text-sm font-bold">{selectedResource?.title ?? "No featured resource selected"}</p><p className="mt-1 text-xs leading-5 text-white/50">{selectedResource?.summary ?? "The existing public resources layout remains unchanged."}</p>{selectedResource?.coverImage && !resourceImageExists && <p className="mt-2 text-xs font-bold text-amber-200">Cover image is missing from mock media.</p>}</div></div></div>
+      </div>
+    </section>
+
+    <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-black/10 bg-white/95 p-4 shadow-[0_16px_50px_rgba(20,19,21,.16)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-bold">{hasChanges ? "Unsaved preview changes" : "Preview selection is up to date"}</p><p aria-live="polite" className="mt-1 text-xs text-ink/50">{notice ?? "Frontend mock only—applying changes will not publish to the live website."}</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={revert} disabled={!hasChanges} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-black/12 px-4 text-xs font-bold text-ink/70 disabled:cursor-not-allowed disabled:opacity-40"><RotateCcw size={15} /> Cancel / Revert</button><button type="button" onClick={openPreview} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-wine px-4 text-xs font-bold text-wine"><Eye size={15} /> Preview Homepage</button><button type="button" onClick={save} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-wine px-5 text-xs font-bold text-white hover:bg-wine-dark"><Save size={15} /> Save Changes</button></div></div>
+  </div>;
+}
+
+function Section({ number, title, description, children }: { number: string; title: string; description: string; children: React.ReactNode }) { return <section className="rounded-lg border border-black/10 bg-white shadow-sm"><div className="flex gap-4 border-b border-black/8 px-5 py-4 sm:px-6"><span className="text-[.65rem] font-black tracking-widest text-wine">{number}</span><div><h2 className="font-bold text-ink">{title}</h2><p className="mt-1 text-xs leading-5 text-ink/50">{description}</p></div></div><div className="p-5 sm:p-6">{children}</div></section>; }
+function SelectionCard({ checked, name, value, onChange, title, meta, description, image }: { checked: boolean; name: string; value: string; onChange: () => void; title: string; meta: string; description: string; image?: string }) { return <label className={`relative flex min-h-32 cursor-pointer overflow-hidden rounded-lg border bg-white transition ${checked ? "border-wine ring-2 ring-wine/10" : "border-black/10 hover:border-black/25"}`}><input className="sr-only" type="radio" name={name} value={value} checked={checked} onChange={onChange} />{image && <div className="relative w-28 shrink-0 bg-paper"><Image src={image} alt="" fill className="object-cover" sizes="7rem" /></div>}<div className="flex min-w-0 flex-1 gap-3 p-4"><span className="min-w-0 flex-1"><span className="text-[.6rem] font-black uppercase tracking-[.13em] text-wine">{meta}</span><span className="mt-2 block text-sm font-bold text-ink">{title}</span><span className="mt-1 block text-xs leading-5 text-ink/50">{description}</span></span><span className={`grid size-6 shrink-0 place-items-center rounded-full border ${checked ? "border-wine bg-wine text-white" : "border-black/15 text-transparent"}`}><Check size={13} strokeWidth={3} /></span></div></label>; }
+function ValidationWarning({ children }: { children: React.ReactNode }) { return <div className="mb-4 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><CircleAlert size={17} className="mt-0.5 shrink-0" /><p>{children}</p></div>; }
+function MissingImage({ compact = false }: { compact?: boolean }) { return <div className="absolute inset-0 grid place-items-center bg-paper text-center text-ink/35"><div><ImageOff size={compact ? 20 : 28} className="mx-auto" /><p className={`mt-2 font-bold ${compact ? "text-[.6rem]" : "text-xs"}`}>No cover image available</p></div></div>; }
+function isEligibleTip(tip: AdminTip) { return tip.enabled && tip.title.trim().length > 0 && tip.body.trim().length > 0; }
+function validateSelection(selection: Selection, projects: AdminProject[], resources: AdminResource[], tips: AdminTip[], mediaSources: Set<string>) { const errors: string[] = []; const project = projects.find((item) => item.id === selection.projectId); const resource = resources.find((item) => item.id === selection.resourceId); if (!project) errors.push("Select a featured project."); else if (project.status !== "Published") errors.push("The featured project must be published."); else if (!project.image || !mediaSources.has(project.image)) errors.push("The featured project cover image is missing from mock media."); if (resource && resource.status !== "Published") errors.push("The featured resource must be published."); if (resource?.coverImage && !mediaSources.has(resource.coverImage)) errors.push("The featured resource cover image is missing from mock media."); if (selection.tipIds.some((id) => !tips.some((tip) => tip.id === id && isEligibleTip(tip)))) errors.push("Featured tips must be enabled and complete."); return errors; }

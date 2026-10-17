@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Browser clients never access administrative or private data. Trusted
+    // server code uses the Admin SDK and independently verifies the session.
+    match /admins/{document=**} { allow read, write: if false; }
+    match /drafts/{document=**} { allow read, write: if false; }
+    match /enquiries/{document=**} { allow read, write: if false; }
+    match /notes/{document=**} { allow read, write: if false; }
+    match /adminDashboardContent/{document=**} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

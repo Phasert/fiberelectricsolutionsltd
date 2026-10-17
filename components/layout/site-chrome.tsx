@@ -1,0 +1,5 @@
+"use client";
+import { usePathname } from "next/navigation";
+import { Header } from "./header";
+import { Footer } from "./footer";
+export function SiteChrome({children}:{children:React.ReactNode}){const path=usePathname();if(path.startsWith("/admin"))return <>{children}</>;return <><Header/><main id="main">{children}</main><Footer/></>}

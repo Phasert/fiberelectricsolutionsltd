@@ -27,6 +27,12 @@ bun run typecheck
 bun run build
 ```
 
+Development and production builds intentionally use Next.js's supported Webpack fallback. On the current Windows toolchain, Next.js 16.3.8's default Turbopack processes repeatedly stall before the development server is ready or during production compilation, even after clearing generated `.next` state; the same source starts and builds normally with Webpack. This workaround can be re-evaluated after a Next.js/Turbopack upgrade is tested.
+
+## Environment
+
+Copy `.env.example` to a local environment file when deployment values are available. `SITE_URL` must be set to the client-approved canonical origin before production indexing is enabled. Demo projects and sample resources are visible automatically in development, hidden by default in production, and can be enabled only for an explicitly non-public preview with `NEXT_PUBLIC_ENABLE_DEMO_CONTENT=true`.
+
 ## Structure
 
 - `app/` — routes, metadata, sitemap and robots configuration
@@ -42,6 +48,12 @@ Includes seven public sections, responsive navigation, reusable design tokens, a
 ## Deliberately deferred to Phase 2
 
 Firebase configuration, authentication, admin/CMS tools, Firestore collections, media storage, live quote submissions, spam controls and production analytics are not implemented. The current form never claims to send an enquiry.
+
+## Phase 2A admin preview
+
+The `/admin` route contains the uncommitted Phase 2A administration frontend. It uses typed mock data through `lib/admin/repository.ts`, which is the integration boundary for Phase 2B. `/admin/login` demonstrates future authentication states but does not authenticate. A clearly labelled development link opens protected-screen previews without claiming a real session.
+
+No admin action persists: create, edit, delete, upload, status and settings controls only update temporary browser state. Firebase Authentication, Firestore and Storage remain deliberately absent.
 
 Types in `types/content.ts` and isolated content in `data/content.ts` form the boundary for a future Firebase repository/data layer. Components should consume those contracts rather than Firebase directly.
 

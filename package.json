@@ -3,26 +3,41 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node node_modules/next/dist/bin/next dev --webpack",
+    "build": "node scripts/run-build.mjs",
+    "start": "node node_modules/next/dist/bin/next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node scripts/run-typecheck.mjs",
+    "test:security": "vitest run tests/security",
+    "test:emulators": "firebase emulators:exec --project fes-local --only auth,firestore,storage \"bun run test:security\"",
+    "emulators:seed": "node scripts/seed-firebase-emulator.mjs"
   },
   "dependencies": {
+    "@google-cloud/storage": "^8.4.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "@tiptap/extension-link": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
+    "firebase": "^13.0.0",
+    "firebase-admin": "^14.5.0",
+    "lucide-react": "0.468.0",
     "next": "16.3.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwindcss": "^4.3.0"
+    "server-only": "^0.0.1",
+    "tailwindcss": "^4.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.3.8",
-    "typescript": "^5.9.0"
+    "firebase-tools": "^15.34.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.4"
   },
-  "packageManager": "bun@1.3.8"
+  "packageManager": "bun@1.4.3"
 }

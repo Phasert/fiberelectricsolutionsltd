@@ -169,6 +169,13 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
+
+# Local Firebase/Admin credentials must never enter source control.
+/firebase-service-account*.json
+/service-account*.json
+/*firebase-adminsdk*.json
+/secrets/
 
 # vercel
 .vercel

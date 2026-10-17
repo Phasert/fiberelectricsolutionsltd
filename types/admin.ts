@@ -1,0 +1,112 @@
+import type { ProjectCategory } from "./content";
+
+export type PublishStatus = "Draft" | "Published";
+export type EnquiryStatus = "New" | "Reviewing" | "Contacted" | "Closed";
+export type QuoteServiceCategory = "Electrical" | "Fiber Optic" | "Both Services" | "Not Sure Yet";
+export type PreferredContactMethod = "Phone" | "Email" | "WhatsApp";
+
+/** Customer-supplied fields shared by the public form and the future admin workflow. */
+export interface QuoteRequestCustomerInput {
+  name: string;
+  email?: string;
+  phone?: string;
+  preferredContact?: PreferredContactMethod;
+  service: QuoteServiceCategory;
+  selectedServiceIds: string[];
+  location: string;
+  propertyType: "Residential" | "Commercial" | "Industrial" | "Other" | "";
+  description: string;
+  preferredTimeframe?: string;
+  attachments: string[];
+}
+
+export interface AdminProject { id:string; title:string; category:ProjectCategory; summary:string; location:string; period:string; status:PublishStatus; featured:boolean; image:string; galleryCount:number; updatedAt:string; }
+export interface AdminResource { id:string; slug:string; title:string; kind:"FES article"|"Company update"|"External resource"; category:"Electrical"|"Fiber Optic"|"Company Updates"; summary:string; source?:string; externalUrl?:string; status:PublishStatus; featured?:boolean; publishedAt?:string; updatedAt:string; coverImage?:string; content?: Record<string, unknown>; }
+export interface AdminTip { id:string; type:"Do"|"Don’t"; title:string; body:string; enabled:boolean; order:number; }
+export interface Enquiry extends Omit<QuoteRequestCustomerInput, "propertyType"> {
+  id:string;
+  name:string;
+  contact?:string;
+  email?:string;
+  phone?:string;
+  location:string;
+  propertyType:string;
+  selectedServiceIds: string[];
+  submittedAt:string;
+  submittedAtIso?:string;
+  updatedAt?:string;
+  status:EnquiryStatus;
+  attachments:string[];
+  note?:string;
+}
+export interface MediaItem {
+  id:string;
+  name:string;
+  src:string;
+  type:"JPG"|"PNG"|"WEBP"|"SVG";
+  size:string;
+  projectId?:string;
+  project?:string;
+  category:ProjectCategory;
+  isCover?:boolean;
+  createdAt:string;
+}
+
+export interface BusinessHoursDay {
+  day: string;
+  open: boolean;
+  opensAt: string;
+  closesAt: string;
+}
+
+export interface BusinessSettings {
+  businessName: string;
+  publicEmail: string;
+  publicPhone: string;
+  whatsappNumber: string;
+  publicLocation: string;
+  googleMapsUrl: string;
+  businessHours: BusinessHoursDay[];
+  socialLinks: {
+    facebook: string;
+    instagram: string;
+    linkedin: string;
+    googleBusiness: string;
+    whatsapp: string;
+  };
+  branding: {
+    logoUrl: string | null;
+    faviconUrl: string | null;
+  };
+  seo: {
+    title: string;
+    description: string;
+    socialImageUrl: string | null;
+  };
+}
+
+export type SiteContentSection = "homepage" | "electrical" | "fiber" | "about" | "cta";
+export type ContentStatus = "Draft" | "Published";
+
+export interface ManagedService {
+  id: string;
+  category: "electrical" | "fiber";
+  slug: string;
+  title: string;
+  shortDescription: string;
+  detailedDescription: string;
+  imageId?: string;
+  displayOrder: number;
+  status: ContentStatus;
+  enabled: boolean;
+}
+
+export interface ManagedCta {
+  id: string;
+  placement: string;
+  label: string;
+  supportingText: string;
+  destination: string;
+  enabled: boolean;
+  essential?: boolean;
+}
