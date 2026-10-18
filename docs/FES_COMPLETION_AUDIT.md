@@ -21,7 +21,7 @@
 | `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 31 pages. |
 | `bun run test:emulators` | 0 | PASS on the final deterministic run; 6 test files and all 27 security/integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. An earlier pre-fix run exited 1 when the shared-emulator tip race reproduced; it was investigated and resolved before commit. |
 
-The implementation is ready for a normal `main` commit and push after the staged secret/artifact review. The implementation and audit commit hashes are recorded in the follow-up audit entry created after that push.
+The verified Phase C4 implementation was committed on `main` as `29e8199` with subject `feat: add secure site content management`. The staged review contained only the 11 intended source, route, test, configuration and audit paths; `git diff --cached --check` passed, `.env.local` and generated output remained ignored, and the credential-pattern scan found no secret or private-key material. The following audit-only commit records that outcome before both commits are pushed normally to `origin/main`.
 
 ### Remaining Phase C dependencies
 
