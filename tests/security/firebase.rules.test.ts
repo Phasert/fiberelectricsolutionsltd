@@ -34,6 +34,8 @@ describe("deny-by-default Firebase boundaries", () => {
     const client = environment.authenticatedContext("approved").firestore();
     await assertFails(getDoc(doc(client, "adminDashboardContent/foundation")));
     await assertFails(setDoc(doc(client, "drafts/example"), { title: "blocked" }));
+    await assertFails(setDoc(doc(client, "siteContent/homepage-v1"), { status: "Published" }));
+    await assertFails(setDoc(doc(client, "services/electrical-test"), { status: "Published" }));
   });
 
   it("blocks private Storage reads and writes", async () => {

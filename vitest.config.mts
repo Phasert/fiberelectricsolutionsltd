@@ -8,5 +8,7 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./", import.meta.url)),
     },
   },
-  test: { testTimeout: 20_000, hookTimeout: 30_000 },
+  // Integration files share one emulator project. Run files serially so a
+  // complete-list reorder cannot race another file seeding the same collection.
+  test: { testTimeout: 20_000, hookTimeout: 30_000, fileParallelism: false },
 });

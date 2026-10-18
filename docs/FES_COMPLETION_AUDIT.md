@@ -5,6 +5,30 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C4 Site Content and Services Management - 18 October 2026
+
+- The existing Site Content interface now reads and writes Firestore through server-only Firebase Admin SDK repositories. Every mutation requires a trusted same-origin request and an active approved administrator session; browser Firestore access remains deny-by-default.
+- Homepage, Electrical Services, Fiber Optic Services, About Us and Call-to-Action content use distinct, typed `siteContent/{section}-v1` documents. Each document records schema version 1, administrator audit fields and separate `draft` and `published` snapshots. Saving a draft never overwrites its retained published snapshot, and published-content queries return nothing while a section is Draft.
+- Services use independent versioned `services/{id}` records with category, slug, status, draft/published snapshots, audit fields, enablement and explicit display order. The existing interface supports add, edit, delete, reorder, enable/disable and publication status without redesign. Unsaved edits are tracked per section so switching tabs cannot falsely clear another section's pending state.
+- Zod validates every page shape, heading/description limit, CTA destination, unique CTA identifier, service category, slug, content, order and uniqueness constraint on the server. The public website still uses `data/content.ts`; Phase D public Firestore integration has not started.
+- Browser acceptance in Edge against approved staging project `fesr-c3ae1` saved the clearly labelled Draft homepage heading `PHASE C4 ACCEPTANCE TEST — draft homepage heading`, refreshed the page and confirmed persistence. It also created the clearly labelled Draft electrical service `phase-c4-acceptance-test-draft-service`, saved the ordered catalogue, refreshed and confirmed the record remained Draft in position 6. The existing five electrical services were copied from the current static approved catalogue into staging only. No public page, production project, Storage setting, billing setting or deployed rule changed.
+- Emulator coverage now includes trusted-origin denial, unauthorized browser writes to both new collections, validation, page and service persistence, draft isolation, publishing, ordering, duplicate rejection and published-query filtering. The final suite runs integration files serially because they share one emulator project; this removes a pre-existing race between the Phase C2 complete-tip-order test and Phase C3 featured-tip fixtures.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | PASS; ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | PASS; route types generated and TypeScript completed. |
+| `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 31 pages. |
+| `bun run test:emulators` | 0 | PASS on the final deterministic run; 6 test files and all 27 security/integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. An earlier pre-fix run exited 1 when the shared-emulator tip race reproduced; it was investigated and resolved before commit. |
+
+The implementation is ready for a normal `main` commit and push after the staged secret/artifact review. The implementation and audit commit hashes are recorded in the follow-up audit entry created after that push.
+
+### Remaining Phase C dependencies
+
+- Firebase Storage uploads, Storage rules, billing and editorial media remain deferred until the owner explicitly approves ownership, region, budget and file-retention requirements.
+- The public website remains on its static data source until Phase D acceptance and migration approval.
+- The recommended next milestone is Phase C5 Business Settings: preserve the current Settings design while adding typed, versioned, server-authorized business contact, hours, social and SEO settings. Do not start it without explicit approval.
+
 ## Phase C3 Featured Content Management - 18 October 2026
 
 - The existing Featured Content interface now persists a single audited `featuredContent/homepage` placement document through server-only Firebase Admin SDK operations. Every write requires a trusted same-origin request and an active approved administrator session.
