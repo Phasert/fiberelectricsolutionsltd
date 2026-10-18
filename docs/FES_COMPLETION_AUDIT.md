@@ -5,6 +5,31 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C5 Business Settings Management - 18 October 2026
+
+- The existing Settings interface now persists one typed, versioned `businessSettings/public-v1` Firestore document through the server-only Firebase Admin SDK. The document separates the validated public payload from server-generated schema, approval and audit metadata. Every page read requires the approved administrator session, and every write independently requires a trusted same-origin request and active approved administrator session.
+- The retained interface manages the existing approved scope: business name, public email, telephone, WhatsApp, location, opening days and hours, social links, Google Business and Maps URLs, SEO title/description and existing branding references. Branding file selection remains a clearly labelled local preview because Storage and billing are not approved.
+- Settings default to Draft. Approved status requires a confirmed location and at least one public email or telephone number. The strict Zod schema validates email, telephone, HTTP(S) URLs, all seven unique business days, opening/closing times and SEO lengths; unknown fields are rejected so SMTP passwords, Firebase keys and other internal configuration cannot enter the public settings document.
+- Missing or malformed documents fall back to safe Draft defaults. Only a valid Approved document can be returned by the separate approved-settings query, and the public website does not call that query in Phase C5.
+- The responsive tabbed design, local branding preview and search preview were preserved. The form now includes persistent loading/error/success feedback, explicit Draft/Approved control, cancellation to the last saved state, per-field validation and a browser unload warning for unsaved persistent changes.
+- Edge acceptance against approved staging project `fesr-c3ae1` used an approved administrator session and saved `PHASE C5 ACCEPTANCE TEST — draft business settings` with `phase-c5@example.test` as a clearly labelled Draft record. The API returned HTTP 200, and a full refresh restored the test values, Draft state and opening hours. No approved company record was overwritten, and no public page, production resource, Storage setting, billing setting or deployed rule changed.
+- Emulator coverage includes untrusted-origin rejection, direct browser read/write denial, safe missing-document defaults, authorized repository persistence, audit fields, approval filtering, invalid email/URL/telephone/hours rejection, incomplete-approval rejection and secret-field injection rejection.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | PASS; ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | PASS; route types generated and TypeScript completed. |
+| `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 32 pages. |
+| `bun run test:emulators` | 0 | PASS; 7 test files and all 33 security/integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. |
+
+The verified Phase C5 implementation is ready for the reviewed commit and normal push recorded in the audit follow-up. Phase C6 and Phase D have not started.
+
+### Remaining dependencies
+
+- Approved final business contact details, exact address/hours, public social profiles and SEO copy must replace the clearly labelled Draft acceptance record before any future public integration.
+- Firebase Storage, billing and editorial media remain deferred pending explicit owner approval.
+- The public website remains on its existing static configuration until Phase D migration and acceptance are explicitly authorized.
+
 ## Phase C4 Site Content and Services Management - 18 October 2026
 
 - The existing Site Content interface now reads and writes Firestore through server-only Firebase Admin SDK repositories. Every mutation requires a trusted same-origin request and an active approved administrator session; browser Firestore access remains deny-by-default.
