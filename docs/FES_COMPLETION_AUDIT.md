@@ -5,6 +5,23 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C3 Featured Content Management - 18 October 2026
+
+- The existing Featured Content interface now persists a single audited `featuredContent/homepage` placement document through server-only Firebase Admin SDK operations. Every write requires a trusted same-origin request and an active approved administrator session.
+- Zod validation rejects duplicate tip selections and malformed placements. The Firestore transaction verifies that the featured project is published, the optional resource is published, and every selected tip is enabled at the instant of saving. Reads re-check those source records, so missing, deleted, draft, unpublished or disabled records are automatically omitted from active featured output without changing the source content.
+- Featured projects and resources can be selected or replaced, the optional resource can be removed, tips can be selected or removed, and selected tips have an explicit persisted order with accessible move controls. The existing responsive layout and homepage preview were preserved; only persistence, feedback and ordering controls changed.
+- Browser acceptance against `fesr-c3ae1` used clearly labelled staging records. It selected a published project, published resource and enabled tip, saved successfully, and a full refresh restored all three selections. Staging fixture project `phase-c3-browser-project` and its local-image metadata remain clearly labelled for continued acceptance testing. No public website query was changed.
+- Automated emulator coverage includes untrusted-origin denial, eligible persistence, explicit order, duplicate rejection, missing and ineligible references, and active filtering after a project/resource is unpublished or a tip is disabled. Storage, billing, security-rule deployment, production deployment and public Firestore integration remain untouched.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | PASS; ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | PASS; route types generated and TypeScript completed. |
+| `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 30 pages. |
+| `bun run test:emulators` | 0 | PASS; 5 test files and all 20 security/integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. |
+
+Git commit and push evidence follows after the verified changes are secured.
+
 ## Phase C2 Resources, Articles and Tips - 17 October 2026
 
 - Resources now use server-only Firestore CRUD with administrator session and trusted-origin enforcement, transactional unique slug reservations, draft/published/unpublished workflows, external URL and attribution validation, audit fields, and allowlisted sanitization of structured rich-text nodes, marks and links. Published-content queries exclude drafts.

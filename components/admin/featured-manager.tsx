@@ -2,39 +2,42 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowRight, Check, CircleAlert, Eye, ImageOff, RotateCcw, Save } from "lucide-react";
+import { useState } from "react";
+import { ArrowDown, ArrowRight, ArrowUp, Check, CircleAlert, Eye, ImageOff, RotateCcw, Save } from "lucide-react";
 import type { AdminProject, AdminResource, AdminTip, MediaItem } from "@/types/admin";
+import type { FeaturedSelection } from "@/lib/featured/schemas";
 
-type Selection = { projectId: string; resourceId: string; tipIds: string[] };
+type Selection = FeaturedSelection;
 
-export function FeaturedManager({ projects, resources, tips, media }: { projects: AdminProject[]; resources: AdminResource[]; tips: AdminTip[]; media: MediaItem[] }) {
-  const initialSelection = useMemo<Selection>(() => ({
-    projectId: projects.find((project) => project.featured)?.id ?? "",
-    resourceId: "",
-    tipIds: tips.filter(isEligibleTip).sort((a, b) => a.order - b.order).map((tip) => tip.id),
-  }), [projects, tips]);
+export function FeaturedManager({ projects, resources, tips, media, initialSelection }: { projects: AdminProject[]; resources: AdminResource[]; tips: AdminTip[]; media: MediaItem[]; initialSelection: Selection }) {
   const [savedSelection, setSavedSelection] = useState(initialSelection);
   const [selection, setSelection] = useState(initialSelection);
   const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const publishedProjects = projects.filter((project) => project.status === "Published");
   const publishedResources = resources.filter((resource) => resource.status === "Published");
   const orderedTips = [...tips].sort((a, b) => a.order - b.order);
   const selectedProject = projects.find((project) => project.id === selection.projectId);
   const selectedResource = resources.find((resource) => resource.id === selection.resourceId);
-  const selectedTips = orderedTips.filter((tip) => selection.tipIds.includes(tip.id));
+  const selectedTips = selection.tipIds.map((id) => tips.find((tip) => tip.id === id)).filter((tip): tip is AdminTip => Boolean(tip));
   const mediaSources = new Set(media.map((item) => item.src));
   const projectImageExists = Boolean(selectedProject?.image && mediaSources.has(selectedProject.image));
   const resourceImageExists = Boolean(selectedResource?.coverImage && mediaSources.has(selectedResource.coverImage));
   const hasChanges = JSON.stringify(selection) !== JSON.stringify(savedSelection);
-  const errors = validateSelection(selection, projects, resources, tips, mediaSources);
+  const errors = validateSelection(selection, projects, resources, tips);
 
   function update(next: Selection) { setSelection(next); setNotice(null); }
-  function save() {
-    if (errors.length) { setNotice("Resolve the highlighted validation issues before applying this preview selection."); return; }
+  function moveTip(id: string, direction: -1 | 1) { const index=selection.tipIds.indexOf(id),destination=index+direction;if(index<0||destination<0||destination>=selection.tipIds.length)return;const ids=[...selection.tipIds];[ids[index],ids[destination]]=[ids[destination],ids[index]];update({...selection,tipIds:ids}); }
+  async function save() {
+    if (errors.length) { setNotice("Resolve the highlighted validation issues before saving."); return; }
+    setBusy(true);
+    const response = await fetch("/api/admin/featured", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(selection) });
+    const result = await response.json().catch(() => ({}));
+    setBusy(false);
+    if (!response.ok) { setNotice(result.error ?? "Unable to save featured content."); return; }
     setSavedSelection(selection);
-    setNotice("Selection applied to this browser preview only. Nothing was published or permanently saved.");
+    setNotice("Featured selections saved to staging Firestore. The public website remains unchanged.");
   }
   function revert() { setSelection(savedSelection); setNotice("Unsaved changes reverted."); }
   function openPreview() { document.getElementById("homepage-preview")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
@@ -68,6 +71,7 @@ export function FeaturedManager({ projects, resources, tips, media }: { projects
 
         <Section number="03" title="Homepage Tips" description="Select from complete, enabled tips. Their order is controlled in Tips management.">
           <div className="flex items-center justify-between gap-4 border-b border-black/8 pb-4"><p className="text-xs text-ink/50">{selectedTips.length} of {orderedTips.filter(isEligibleTip).length} eligible tips selected</p><Link href="/admin/tips" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-wine hover:underline">Manage Tips <ArrowRight size={14} /></Link></div>
+          {selectedTips.length>0&&<ol className="mt-4 grid gap-2">{selectedTips.map((tip,index)=><li key={tip.id} className="flex items-center justify-between rounded-md border border-wine/15 bg-wine/[.025] px-3 py-2"><span className="text-xs font-bold">{index+1}. {tip.title}</span><span className="flex gap-1"><button type="button" disabled={index===0} onClick={()=>moveTip(tip.id,-1)} aria-label={`Move ${tip.title} up`} className="grid size-8 place-items-center rounded border border-black/10 disabled:opacity-25"><ArrowUp size={14}/></button><button type="button" disabled={index===selectedTips.length-1} onClick={()=>moveTip(tip.id,1)} aria-label={`Move ${tip.title} down`} className="grid size-8 place-items-center rounded border border-black/10 disabled:opacity-25"><ArrowDown size={14}/></button></span></li>)}</ol>}
           <fieldset className="mt-4 grid gap-3 sm:grid-cols-2"><legend className="sr-only">Select homepage tips</legend>{orderedTips.map((tip) => {
             const eligible = isEligibleTip(tip); const checked = selection.tipIds.includes(tip.id);
             return <label key={tip.id} className={`relative rounded-lg border p-4 transition ${!eligible ? "cursor-not-allowed border-black/5 bg-black/[.025] opacity-55" : checked ? "cursor-pointer border-wine bg-wine/[.025] ring-2 ring-wine/10" : "cursor-pointer border-black/10 bg-white hover:border-black/25"}`}>
@@ -92,7 +96,7 @@ export function FeaturedManager({ projects, resources, tips, media }: { projects
       </div>
     </section>
 
-    <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-black/10 bg-white/95 p-4 shadow-[0_16px_50px_rgba(20,19,21,.16)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-bold">{hasChanges ? "Unsaved preview changes" : "Preview selection is up to date"}</p><p aria-live="polite" className="mt-1 text-xs text-ink/50">{notice ?? "Frontend mock only—applying changes will not publish to the live website."}</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={revert} disabled={!hasChanges} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-black/12 px-4 text-xs font-bold text-ink/70 disabled:cursor-not-allowed disabled:opacity-40"><RotateCcw size={15} /> Cancel / Revert</button><button type="button" onClick={openPreview} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-wine px-4 text-xs font-bold text-wine"><Eye size={15} /> Preview Homepage</button><button type="button" onClick={save} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-wine px-5 text-xs font-bold text-white hover:bg-wine-dark"><Save size={15} /> Save Changes</button></div></div>
+    <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-black/10 bg-white/95 p-4 shadow-[0_16px_50px_rgba(20,19,21,.16)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-bold">{hasChanges ? "Unsaved featured changes" : "Featured selection is up to date"}</p><p aria-live="polite" className="mt-1 text-xs text-ink/50">{notice ?? "Selections save to staging Firestore; the public website remains unchanged until Phase D."}</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={revert} disabled={!hasChanges||busy} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-black/12 px-4 text-xs font-bold text-ink/70 disabled:cursor-not-allowed disabled:opacity-40"><RotateCcw size={15} /> Cancel / Revert</button><button type="button" onClick={openPreview} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-wine px-4 text-xs font-bold text-wine"><Eye size={15} /> Preview Homepage</button><button type="button" disabled={busy||!hasChanges} onClick={save} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-wine px-5 text-xs font-bold text-white hover:bg-wine-dark disabled:cursor-not-allowed disabled:opacity-50"><Save size={15} /> {busy?"Saving…":"Save Changes"}</button></div></div>
   </div>;
 }
 
@@ -101,4 +105,4 @@ function SelectionCard({ checked, name, value, onChange, title, meta, descriptio
 function ValidationWarning({ children }: { children: React.ReactNode }) { return <div className="mb-4 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><CircleAlert size={17} className="mt-0.5 shrink-0" /><p>{children}</p></div>; }
 function MissingImage({ compact = false }: { compact?: boolean }) { return <div className="absolute inset-0 grid place-items-center bg-paper text-center text-ink/35"><div><ImageOff size={compact ? 20 : 28} className="mx-auto" /><p className={`mt-2 font-bold ${compact ? "text-[.6rem]" : "text-xs"}`}>No cover image available</p></div></div>; }
 function isEligibleTip(tip: AdminTip) { return tip.enabled && tip.title.trim().length > 0 && tip.body.trim().length > 0; }
-function validateSelection(selection: Selection, projects: AdminProject[], resources: AdminResource[], tips: AdminTip[], mediaSources: Set<string>) { const errors: string[] = []; const project = projects.find((item) => item.id === selection.projectId); const resource = resources.find((item) => item.id === selection.resourceId); if (!project) errors.push("Select a featured project."); else if (project.status !== "Published") errors.push("The featured project must be published."); else if (!project.image || !mediaSources.has(project.image)) errors.push("The featured project cover image is missing from mock media."); if (resource && resource.status !== "Published") errors.push("The featured resource must be published."); if (resource?.coverImage && !mediaSources.has(resource.coverImage)) errors.push("The featured resource cover image is missing from mock media."); if (selection.tipIds.some((id) => !tips.some((tip) => tip.id === id && isEligibleTip(tip)))) errors.push("Featured tips must be enabled and complete."); return errors; }
+function validateSelection(selection: Selection, projects: AdminProject[], resources: AdminResource[], tips: AdminTip[]) { const errors: string[] = []; const project = projects.find((item) => item.id === selection.projectId); const resource = resources.find((item) => item.id === selection.resourceId); if (!project) errors.push("Select a featured project."); else if (project.status !== "Published") errors.push("The featured project must be published."); if (resource && resource.status !== "Published") errors.push("The featured resource must be published."); if (selection.tipIds.some((id) => !tips.some((tip) => tip.id === id && isEligibleTip(tip)))) errors.push("Featured tips must be enabled and complete."); return errors; }
