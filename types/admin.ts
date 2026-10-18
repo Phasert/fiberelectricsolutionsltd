@@ -20,7 +20,8 @@ export interface QuoteRequestCustomerInput {
   attachments: string[];
 }
 
-export interface AdminProject { id:string; title:string; category:ProjectCategory; summary:string; location:string; period:string; status:PublishStatus; featured:boolean; image:string; galleryCount:number; updatedAt:string; }
+export interface ProjectGalleryItem { mediaId:string; alt:string; caption:string; order:number; }
+export interface AdminProject { id:string; slug:string; title:string; category:ProjectCategory; summary:string; location:string; period:string; status:PublishStatus; featured:boolean; image:string; coverMediaId:string|null; gallery:ProjectGalleryItem[]; galleryCount:number; updatedAt:string; }
 export interface AdminResource { id:string; slug:string; title:string; kind:"FES article"|"Company update"|"External resource"; category:"Electrical"|"Fiber Optic"|"Company Updates"; summary:string; source?:string; externalUrl?:string; status:PublishStatus; featured?:boolean; publishedAt?:string; updatedAt:string; coverImage?:string; content?: Record<string, unknown>; }
 export interface AdminTip { id:string; type:"Do"|"Don’t"; title:string; body:string; enabled:boolean; order:number; }
 export interface Enquiry extends Omit<QuoteRequestCustomerInput, "propertyType"> {

@@ -1,10 +1,11 @@
-import { adminProjects, adminResources, adminTips, enquiries, mediaItems } from "@/data/admin-mock";
+import { adminResources, adminTips, enquiries, mediaItems } from "@/data/admin-mock";
+import { getAdminProject, listAdminProjects } from "@/lib/projects/repository";
 
 // Phase 2B integration boundary: replace this object with a Firebase-backed
 // implementation that returns the same typed shapes. UI components stay unchanged.
 export const adminRepository = {
-  getProjects: async () => adminProjects,
-  getProject: async (id:string) => adminProjects.find(item => item.id === id),
+  getProjects: listAdminProjects,
+  getProject: getAdminProject,
   getResources: async () => adminResources,
   getResource: async (id:string) => adminResources.find(item => item.id === id),
   getTips: async () => adminTips,

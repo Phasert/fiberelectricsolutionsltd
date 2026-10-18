@@ -5,6 +5,26 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Official staging Phase B sign-off and Phase C1 implementation - 17 October 2026
+
+- The owner confirmed that `fesr-c3ae1` is the official FES development/staging Firebase project. Firebase CLI access was reauthenticated and a read-only project listing confirmed developer access. The ignored `.env.local` points both the browser SDK and Admin SDK to this project; no second live or production project is configured locally.
+- Read-only Admin SDK checks confirmed Authentication and Firestore connectivity, the approved administrator account is enabled, and its matching `admins/{uid}` document has `role: admin` and `active: true`. The owner confirmed the password previously disclosed in chat was rotated outside chat.
+- Phase B authentication and authorization prerequisites are satisfied. The emulator security suite was repeated before Phase C1 work and all 8 existing tests passed. No rules were deployed, billing or paid services were enabled, production resource was modified, or secret was committed.
+- Phase C1 now provides server-authorized Firestore project CRUD, transactional unique slug reservations, draft/published controls, publication prerequisites, Zod validation, and Firestore-backed existing Projects admin screens. The public website data source remains unchanged. Firebase Storage uploads remain deliberately disabled pending explicit Storage and billing approval.
+- Live browser acceptance against `fesr-c3ae1` created draft project `NbIdsMgVwHQpfKWd3hcZ`, persisted it across refresh, saved an edit, displayed it in the Projects list, and rejected publication without approved gallery media. The record was retained as a clearly identifiable staging verification record; no live record was deleted.
+- Automated Phase C1 coverage adds denial for untrusted mutation origins, authorized CRUD persistence, duplicate-slug transaction conflicts, publication rules, deletion, and slug release.
+
+### Phase C1 verification
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | PASS; ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | PASS; Next route types generated and TypeScript completed. |
+| `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 26 pages. |
+| `bun run test:emulators` | 0 | PASS; 3 test files and all 11 Auth/Firestore/Storage/project integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. |
+
+Git commit and push evidence is recorded below after the verified changes are secured.
+
 ## Phase A/B GitHub handoff - 17 October 2026
 
 - The complete reviewed Phase A/B foundation was committed on `main` as `05b26818f73230ba0aa793045008e0cccc3d7580` with subject `feat: complete Phase A and Phase B foundation`.

@@ -26,9 +26,9 @@ export const businessSettings: BusinessSettings = {
 };
 
 export const adminProjects: AdminProject[] = [
-  {id:"prj-001",title:"Featured project placeholder",category:"Combined",summary:"Awaiting approved scope and photography.",location:"To be confirmed",period:"1 Sep 2026",status:"Published",featured:true,image:"/images/project-combined.svg",galleryCount:3,updatedAt:"8 Oct 2026"},
-  {id:"prj-002",title:"Electrical project placeholder",category:"Electrical",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"15 Aug 2026",status:"Draft",featured:false,image:"/images/project-electrical.svg",galleryCount:2,updatedAt:"5 Oct 2026"},
-  {id:"prj-003",title:"Fiber infrastructure placeholder",category:"Fiber",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"12 Jun 2026",status:"Published",featured:false,image:"/images/project-fiber.svg",galleryCount:2,updatedAt:"2 Oct 2026"},
+  {id:"prj-001",slug:"featured-project-placeholder",title:"Featured project placeholder",category:"Combined",summary:"Awaiting approved scope and photography.",location:"To be confirmed",period:"1 Sep 2026",status:"Published",featured:true,image:"/images/project-combined.svg",coverMediaId:"med-001",gallery:[],galleryCount:3,updatedAt:"8 Oct 2026"},
+  {id:"prj-002",slug:"electrical-project-placeholder",title:"Electrical project placeholder",category:"Electrical",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"15 Aug 2026",status:"Draft",featured:false,image:"/images/project-electrical.svg",coverMediaId:"med-002",gallery:[],galleryCount:2,updatedAt:"5 Oct 2026"},
+  {id:"prj-003",slug:"fiber-infrastructure-placeholder",title:"Fiber infrastructure placeholder",category:"Fiber",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"12 Jun 2026",status:"Published",featured:false,image:"/images/project-fiber.svg",coverMediaId:"med-003",gallery:[],galleryCount:2,updatedAt:"2 Oct 2026"},
 ];
 export const adminResources: AdminResource[] = [
   {id:"res-001",slug:"planning-a-service-request",title:"Preparing a clear service request",kind:"FES article",category:"Company Updates",summary:"A concise guide to sharing the site details, photographs and outcomes needed for an effective service request.",status:"Published",featured:true,publishedAt:"1 Oct 2026",updatedAt:"5 Oct 2026",coverImage:"/images/project-combined.svg"},
