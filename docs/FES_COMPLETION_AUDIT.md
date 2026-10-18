@@ -5,6 +5,23 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C2 Resources, Articles and Tips - 17 October 2026
+
+- Resources now use server-only Firestore CRUD with administrator session and trusted-origin enforcement, transactional unique slug reservations, draft/published/unpublished workflows, external URL and attribution validation, audit fields, and allowlisted sanitization of structured rich-text nodes, marks and links. Published-content queries exclude drafts.
+- Tips now use server-only Firestore CRUD with administrator enforcement, server-side Zod validation, persisted enable/disable state, normalized deletion order and validated complete-list reordering. Enabled-content queries return only enabled tips in display order.
+- The existing Resources rich-text editor, list, forms and Tips manager design were retained. Mock notices were removed only from these completed screens. Storage uploads remain disabled, and the public website continues to use its existing static data source.
+- Live browser acceptance against staging project `fesr-c3ae1` created resource `HSqcvlYL9A4vy3WYhSu1`, verified draft persistence, publishing, unpublishing and refresh persistence. It also created a staging tip, verified refresh persistence and enabled/disabled persistence, and exercised deletion while removing an accidental duplicate test tip. The retained test resource is Draft and the retained test tip is disabled; neither changes the public website.
+- Automated tests cover untrusted-origin denial, resource CRUD, unique slugs, validation, structured-content sanitization, draft isolation, publish/unpublish behavior, tip CRUD, validation, enablement, ordering and order normalization after deletion.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | PASS; ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | PASS; route types generated and TypeScript completed. |
+| `bun run build` | 0 | PASS; Next.js 16.3.8 Webpack completed the optimized production build and generated all 29 pages. |
+| `bun run test:emulators` | 0 | PASS; 4 test files and all 16 security/integration tests passed. Non-fatal metadata-network warnings did not affect the exit code. |
+
+Git commit and push evidence follows after the verified changes are secured.
+
 ## Official staging Phase B sign-off and Phase C1 implementation - 17 October 2026
 
 - The owner confirmed that `fesr-c3ae1` is the official FES development/staging Firebase project. Firebase CLI access was reauthenticated and a read-only project listing confirmed developer access. The ignored `.env.local` points both the browser SDK and Admin SDK to this project; no second live or production project is configured locally.

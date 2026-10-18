@@ -64,40 +64,49 @@ export function TipsManager({ initial }: { initial: AdminTip[] }) {
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
-  function saveTip() {
+  async function saveTip() {
     if (!editor || !validate()) return;
     const cleaned = { ...draft, title: draft.title.trim(), body: draft.body.trim() };
     if (editor.mode === "add") {
-      const id = `tip-${Date.now()}`;
-      setTips((current) => normalizeOrder([...current, { id, order: current.length + 1, ...cleaned }]));
-      setMessage(`“${cleaned.title}” was added to this preview.`);
+      const response=await fetch("/api/admin/tips",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(cleaned)}),result=await response.json();
+      if(!response.ok){setMessage(result.error??"Unable to save this tip.");return}
+      setTips((current) => normalizeOrder([...current, { id:result.id, order:result.order, ...cleaned }]));
+      setMessage(`“${cleaned.title}” was added.`);
     } else {
+      const response=await fetch(`/api/admin/tips/${editor.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(cleaned)});
+      if(!response.ok){setMessage("Unable to update this tip.");return}
       setTips((current) => current.map((tip) => tip.id === editor.id ? { ...tip, ...cleaned } : tip));
-      setMessage(`“${cleaned.title}” was updated in this preview.`);
+      setMessage(`“${cleaned.title}” was updated.`);
     }
     closeEditor();
   }
-  function toggleTip(tip: AdminTip) {
+  async function toggleTip(tip: AdminTip) {
     if (!tip.enabled && (!tip.title.trim() || !tip.body.trim())) {
       openEdit(tip);
       setErrors({ ...(!tip.title.trim() && { title: "Add a title before enabling this tip." }), ...(!tip.body.trim() && { body: "Add a description before enabling this tip." }) });
       return;
     }
+    const response=await fetch(`/api/admin/tips/${tip.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({type:tip.type,title:tip.title,body:tip.body,enabled:!tip.enabled})});
+    if(!response.ok){setMessage("Unable to change this tip.");return}
     setTips((current) => current.map((item) => item.id === tip.id ? { ...item, enabled: !item.enabled } : item));
-    setMessage(`“${tip.title}” is now ${tip.enabled ? "disabled" : "enabled"} in this preview.`);
+    setMessage(`“${tip.title}” is now ${tip.enabled ? "disabled" : "enabled"}.`);
   }
-  function moveTip(index: number, direction: -1 | 1) {
+  async function moveTip(index: number, direction: -1 | 1) {
     const destination = index + direction;
     if (destination < 0 || destination >= tips.length) return;
     const next = [...tips];
     [next[index], next[destination]] = [next[destination], next[index]];
-    setTips(normalizeOrder(next));
+    const ordered=normalizeOrder(next),response=await fetch("/api/admin/tips/reorder",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({ids:ordered.map(tip=>tip.id)})});
+    if(!response.ok){setMessage("Unable to save the new order.");return}
+    setTips(ordered);
     setMessage(`“${tips[index].title}” moved ${direction === -1 ? "up" : "down"}.`);
   }
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTip) return;
+    const response=await fetch(`/api/admin/tips/${deleteTip.id}`,{method:"DELETE"});
+    if(!response.ok){setMessage("Unable to remove this tip.");return}
     setTips((current) => normalizeOrder(current.filter((tip) => tip.id !== deleteTip.id)));
-    setMessage(`“${deleteTip.title}” was removed from this preview.`);
+    setMessage(`“${deleteTip.title}” was removed.`);
     setDeleteId(null);
   }
 
