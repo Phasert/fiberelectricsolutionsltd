@@ -21,16 +21,17 @@ export async function saveBusinessSettings(input: unknown, uid: string) {
   const ref = document();
   await getAdminFirestore().runTransaction(async (transaction) => {
     const current = await transaction.get(ref);
+    const existing = current.data();
     transaction.set(ref, {
       schemaVersion: 1,
       approvalStatus: value.approvalStatus,
       public: value.settings,
-      createdAt: current.exists ? current.data()?.createdAt : FieldValue.serverTimestamp(),
-      createdBy: current.exists ? current.data()?.createdBy : uid,
+      createdAt: existing?.createdAt ?? FieldValue.serverTimestamp(),
+      createdBy: existing?.createdBy ?? uid,
       updatedAt: FieldValue.serverTimestamp(),
       updatedBy: uid,
-      approvedAt: value.approvalStatus === "Approved" ? (current.data()?.approvedAt ?? FieldValue.serverTimestamp()) : (current.data()?.approvedAt ?? null),
-      approvedBy: value.approvalStatus === "Approved" ? uid : (current.data()?.approvedBy ?? null),
+      approvedAt: value.approvalStatus === "Approved" ? (existing?.approvedAt ?? FieldValue.serverTimestamp()) : (existing?.approvedAt ?? null),
+      approvedBy: value.approvalStatus === "Approved" ? uid : (existing?.approvedBy ?? null),
     });
   });
 }

@@ -149,6 +149,21 @@ export interface PublicFeaturedContent {
   tips: PublicTip[];
 }
 
+export interface PublicContactLink { label: string; href: string; }
+export interface PublicBusinessHour { day: string; open: boolean; opensAt: string; closesAt: string; }
+export interface PublicBusinessSettings {
+  businessName: string;
+  email: PublicContactLink | null;
+  phone: PublicContactLink | null;
+  whatsapp: PublicContactLink | null;
+  location: string;
+  maps: PublicContactLink | null;
+  googleBusiness: PublicContactLink | null;
+  socialLinks: PublicContactLink[];
+  businessHours: PublicBusinessHour[];
+  seo: { title: string; description: string };
+}
+
 export interface ExternalResource {
   id: string;
   title: string;
