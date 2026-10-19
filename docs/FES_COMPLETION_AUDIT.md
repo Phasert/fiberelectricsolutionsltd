@@ -5,6 +5,68 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C final verification and Phase D readiness - 18 October 2026
+
+### GitHub and command verification
+
+- `main` was clean before this documentation update. Phase C6 implementation commit `a5e3615` and audit commit `e849c51` were both present on `origin/main`; local and remote resolved to `e849c519732ccf3b6760bd1bb289298144a9413e` with no divergence.
+- Read-only Firebase CLI checks confirmed access to active project `fesr-c3ae1`. Its default Firestore database is Standard, Firestore Native and located in `nam5`. The CLI available on this workstation does not expose the Firebase billing plan; the owner must confirm Spark or Blaze in the console.
+- No Firebase Storage bucket, billing setting, live record, security rule or production resource was changed.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | No diagnostics. |
+| `bun run typecheck` | 0 | Route types generated; no TypeScript diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build completed and generated 33 routes. |
+| `bun run test` | 0 | Auth, Firestore and Storage emulators ran 8 files / 38 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+### Combined Phase C1-C6 integration review
+
+The administrator foundation is cohesive and testable: approved-session enforcement, trusted-origin mutations, server-only Admin SDK access, transactional slugs, draft/published separation, rich-text sanitation, featured eligibility, ordered tips/services, versioned site content/settings and emulator-only editorial media all remain intact. Phase C is therefore **admin/data-foundation complete and emulator-verified**, but it is **not live-media complete** until the owner approves Storage and billing.
+
+The following connections must be resolved deliberately during Phase D rather than treated as completed:
+
+1. Every public route still reads `data/content.ts`; public projects, resources, services, tips, featured content, page copy and approved settings are not connected to Firestore.
+2. The quote form only validates a preview in the browser. Enquiry lists/details still use mock records; no submission API, Firestore enquiry repository, status/note mutation or customer confirmation exists.
+3. Project records use `coverMediaId` plus gallery `mediaId` entries, while resources still use a `coverImage` string and business branding uses URL strings. These must be normalized to explicit media IDs before public media resolution.
+4. Assigning a Media Library item to a project updates media metadata but does not add it to the project's ordered gallery or choose the project cover. The project editor currently preserves existing gallery relationships but does not manage them.
+5. Project publication validates that gallery IDs are present in the payload, but does not transactionally prove each referenced media record exists and is Ready. Site Content and Services also accept string media IDs without referential validation.
+6. Featured-resource preview logic compares a resource cover string with media source URLs, which is incompatible with the new media-ID model. Published media delivery also requires a public read path/derivative policy; the current media-file route is administrator-only and emulator-only by design.
+7. Media deletion protects references by scanning collections, but that scan and deletion are not one atomic reference-index transaction. A reverse reference/index model is recommended before concurrent live editorial use.
+8. Resource article structured data still contains a hardcoded `https://www.fes.co.tt` origin instead of the approved `SITE_URL`. Dynamic metadata and sitemap entries remain static-data based.
+9. The current deny-all browser rules remain appropriate for the server-only architecture. Phase D public reads should continue through server repositories unless a separately reviewed rule change is explicitly approved.
+
+### Storage owner instructions for `fesr-c3ae1`
+
+Do not click upgrade or create the bucket until the following decisions are approved in writing.
+
+1. Open Firebase Console, select **FESR (`fesr-c3ae1`)**, then open **Project settings → Usage and billing**. Record whether the plan is Spark or Blaze. Spark is not sufficient: since 3 February 2026, Cloud Storage for Firebase requires the pay-as-you-go Blaze plan even when usage remains inside no-cost quotas.
+2. If Spark is shown, choose who owns the Google Cloud Billing account and payment method. Approve linking that billing account only after the budget and alert recipients below are agreed. Codex must not perform the upgrade.
+3. Approve the bucket location. Existing Firestore is `nam5`, but a new `*.firebasestorage.app` bucket chooses its own location. The preliminary recommendation for Trinidad & Tobago is regional **`us-east1` (South Carolina)** because it is geographically reasonable for the audience and is eligible for Cloud Storage Always Free quotas. The owner must confirm latency, legal/data-residency and disaster-recovery requirements. A bucket's location cannot be changed after provisioning; changing it later requires a new bucket and a migration.
+4. Approve **Standard** storage class for actively served website images. Do not enable Autoclass, soft delete, object versioning, lifecycle deletion or retention locks until retention/recovery requirements and their costs are understood.
+5. Set an initial monthly project budget in Google Cloud Billing and alerts at low testing thresholds plus 50%, 90% and 100%. Name both the business owner and developer recipient. Budget alerts notify people; they do not stop Storage or cap the bill.
+6. Approve the operating limits: JPEG/PNG/WebP, 10 MiB maximum original (or a lower value), maximum dimensions, derivative sizes/formats, who may upload/delete, image-rights/alt-text responsibility, editorial retention, backup/export and incident response.
+7. Keep private quote photos in a separate `quote-photos/` namespace with a shorter approved retention period and stricter access than public editorial images. Do not reuse public editorial URLs for customer files.
+8. After those approvals, Codex can safely prepare the final reviewed Storage rules, explicit live-environment feature flag, public derivative/read architecture, reference-index migration, lifecycle configuration proposal and staging test plan. Rule deployment, bucket creation, billing changes and the first live upload still require the owner's explicit go-ahead.
+
+Expected cost should be small for a modest optimized image library, but cannot be guaranteed. In `us-east1`, current Always Free quotas include 5 GB-month storage, 5,000 Class A operations, 50,000 Class B operations and 100 GB North America outbound transfer per month (aggregated with qualifying regions). Beyond free usage, the current Google example uses approximately US$0.020/GB-month for Standard storage, US$0.005 per 1,000 Class A operations, US$0.0004 per 1,000 Class B operations and region/destination-dependent transfer. Prices and eligibility can change; verify the console calculator when approving. Sources: [Firebase Storage billing changes](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024), [Storage locations](https://firebase.google.com/docs/storage/locations), [Firebase budget alerts](https://firebase.google.com/docs/projects/billing/budget-alerts), [Google Cloud Storage pricing](https://cloud.google.com/storage/pricing).
+
+### Phase D implementation plan
+
+**D1 - Published public read model (can proceed without live Storage).** Normalize public DTOs and media references; add server-only published repositories for projects/galleries, articles/external resources, tips, enabled services, featured placement, published site-content snapshots and Approved business settings. Switch list/detail pages in small vertical slices with safe empty/fallback states, no draft leakage and no browser Firestore access. Replace the hardcoded article origin with `SITE_URL`. Add cache tags/revalidation boundaries, dynamic metadata and dynamic sitemap tests. Use existing approved static illustrations or explicit image placeholders until live editorial media is approved.
+
+**D2 - Editorial media completion (requires Storage approval for live acceptance).** Normalize project/resource/site/branding fields to media IDs; add transactional Ready-media validation and a reverse reference index; connect gallery ordering/cover selection; define optimized public derivatives and cache headers; migrate only approved references. Emulator work can proceed, but bucket provisioning, live rules and live uploads must wait.
+
+**D3 - Quote persistence without photographs (can proceed without live Storage).** Define a strict versioned quote schema, privacy/consent fields, trusted same-origin POST endpoint, server validation, normalized service IDs, idempotency key, Firestore transaction, abuse/rate controls, sanitized audit metadata and honest success/error/retry states. Do not accept attachments yet.
+
+**D4 - Private customer photographs (requires Storage, retention and privacy approval).** Use an isolated non-public namespace, server-validated signatures/limits, per-enquiry object ownership, upload rollback, malware-risk handling, short retention/lifecycle policy and authorized download routes. Never expose customer objects through public URLs.
+
+**D5 - Administrator enquiry workflow (D3 first; D4 optional).** Replace mock enquiries with authorized Firestore reads, filters and detail views; implement transactional status transitions, append-only/internal notes, actor timestamps and attachment authorization. Define notification behavior only if an approved provider and recipients exist.
+
+**D6 - Integrated public/admin quality gate.** Test published/draft transitions, featured invalidation, gallery/media integrity, settings fallbacks, quote idempotency, abuse rejection, attachment failures, admin access, cache invalidation, not-found/error states, metadata/canonical/robots/sitemap output and complete customer/admin journeys at mobile and desktop sizes. Run lint, typecheck, production build, emulator/security tests and staging UAT before any production deployment.
+
+Recommended first milestone: **D1a — published public projects and galleries read model**, initially using approved placeholders for unavailable media. It exercises the most important publication, slug, not-found, cache and metadata boundaries without requiring billing or a live bucket. Do not begin it until separately authorized.
+
 ## Phase C6 Firebase Storage and Media Management - 18 October 2026
 
 Phase C6 has reached the owner-approval boundary with a verified emulator-only editorial media implementation. No live Firebase Storage bucket was enabled, no file was uploaded to `fesr-c3ae1`, no billing or paid service was activated, no Firebase rule was deployed and Phase D did not begin.
