@@ -45,6 +45,9 @@ describe("deny-by-default Firebase boundaries", () => {
     const file = ref(storage, "quote-photos/private.jpg");
     await assertFails(uploadBytes(file, new Uint8Array([1, 2, 3])));
     await assertFails(getBytes(file));
+    const editorial = ref(storage, "editorial/images/example/original.jpg");
+    await assertFails(uploadBytes(editorial, new Uint8Array([1, 2, 3])));
+    await assertFails(getBytes(editorial));
   });
 
   it("allows the trusted server repository and distinguishes active records", async () => {

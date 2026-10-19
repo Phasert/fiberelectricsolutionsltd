@@ -1,4 +1,5 @@
-import { enquiries, mediaItems } from "@/data/admin-mock";
+import { enquiries } from "@/data/admin-mock";
+import { listAdminMedia } from "@/lib/media/repository";
 import { getAdminProject, listAdminProjects } from "@/lib/projects/repository";
 import { getAdminResource, listAdminResources } from "@/lib/resources/repository";
 import { listAdminTips } from "@/lib/tips/repository";
@@ -15,6 +16,6 @@ export const adminRepository = {
   getFeaturedSelection,
   getEnquiries: async () => enquiries,
   getEnquiry: async (id:string) => enquiries.find(item => item.id === id),
-  getMedia: async () => mediaItems,
-  getProjectMedia: async (projectId:string) => mediaItems.filter(item => item.projectId === projectId),
+  getMedia: listAdminMedia,
+  getProjectMedia: async (projectId:string) => (await listAdminMedia()).filter(item => item.projectId === projectId),
 };

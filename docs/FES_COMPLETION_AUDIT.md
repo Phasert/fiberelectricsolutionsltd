@@ -5,6 +5,47 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase C6 Firebase Storage and Media Management - 18 October 2026
+
+Phase C6 has reached the owner-approval boundary with a verified emulator-only editorial media implementation. No live Firebase Storage bucket was enabled, no file was uploaded to `fesr-c3ae1`, no billing or paid service was activated, no Firebase rule was deployed and Phase D did not begin.
+
+### Implemented safely
+
+- The mock Media Library repository was replaced with versioned Firestore `media` records and server-only Admin SDK operations. Editorial objects use `editorial/images/{year}/{mediaId}/original.{ext}`; the existing denied `quote-photos/**` namespace remains separate for future private customer attachments.
+- Shared TypeScript and Zod contracts require JPEG, PNG or WebP, alt text, captions, project/category metadata, byte size, dimensions, lifecycle status and audit ownership/timestamps. The default maximum is 10 MiB and can be lowered with `EDITORIAL_MEDIA_MAX_BYTES`.
+- Server validation checks MIME type against the file signature and extracts dimensions before writing. Object names exclude user filenames. Objects stay private and are served to approved administrators through an authenticated, no-store route.
+- Upload records move through Pending, Ready or Failed. Failed uploads attempt object rollback and receive a cleanup time; emulator-tested cleanup removes abandoned Pending/Failed records and objects.
+- Metadata and project assignment persist in Firestore. Project, Resource, Site Content, Service, Featured Content and Business Settings records are scanned before deletion; references cause `MEDIA_IN_USE` rather than broken content.
+- The responsive Media Library retains its design and adds progress, validation feedback, empty states, persistent metadata and an explicit live-Storage blocked state. Site Content pickers receive the same Firestore-backed media list instead of mock SVGs.
+- Every route verifies the approved administrator session; mutations also enforce trusted origin. Direct browser Firestore and Storage access remains deny-by-default.
+- `bun run test` now aliases the full Auth, Firestore and Storage emulator suite and never contacts the live project.
+
+### Verification evidence
+
+All final commands ran from `C:\fes-dev\fiberelectricsolutionsltd` on 18 October 2026:
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | No errors or warnings. |
+| `bun run typecheck` | 0 | Route types generated; no TypeScript diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build generated 33 route outputs, including three media routes. |
+| `bun run test` | 0 | Firebase emulators ran 8 files / 38 tests; all passed. Offline metadata lookup warnings did not affect the result. |
+
+Tests cover untrusted requests, signature/size/dimension validation, emulator upload/read/update/delete persistence, reference integrity, abandoned cleanup, and browser-client denial for private quote and editorial Storage paths. Edge acceptance testing confirmed the authenticated Media Library reports `LIVE UPLOADS BLOCKED`, disables uploads, explains the approval boundary and makes no live write. Upload/progress behavior was verified through emulators only.
+
+### Owner approval boundary
+
+Before live Storage work, the owner must explicitly approve:
+
+1. Client ownership and whether `fesr-c3ae1` is the long-term staging or production boundary.
+2. The immutable Storage/Firestore region and data-location requirements.
+3. Billing owner, monthly budget, alert recipients and escalation threshold; alerts are not a hard cap.
+4. Editorial retention, backup/export and deletion policy, including permanent-delete authority.
+5. File-size/dimension/format limits and any paid derivative-generation or optimization work.
+6. Staging-first deployment of reviewed rules/indexes, named approver and rollback plan.
+
+Phase C6 is emulator-complete, not live-complete. Public pages remain unchanged and Phase D has not started.
+
 ## Phase C5 Business Settings Management - 18 October 2026
 
 - The existing Settings interface now persists one typed, versioned `businessSettings/public-v1` Firestore document through the server-only Firebase Admin SDK. The document separates the validated public payload from server-generated schema, approval and audit metadata. Every page read requires the approved administrator session, and every write independently requires a trusted same-origin request and active approved administrator session.

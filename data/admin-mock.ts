@@ -1,4 +1,4 @@
-import type { AdminProject, AdminResource, AdminTip, BusinessSettings, Enquiry, MediaItem } from "@/types/admin";
+import type { AdminProject, AdminResource, AdminTip, BusinessSettings, Enquiry } from "@/types/admin";
 
 export const businessSettings: BusinessSettings = {
   businessName: "Fiber & Electric Solutions Ltd.",
@@ -43,13 +43,4 @@ export const adminTips: AdminTip[] = [
 export const enquiries: Enquiry[] = [
   {id:"enq-demo-001",name:"Sample enquiry",contact:"Development data only",email:"sample.customer@example.com",phone:"+1 202-555-0147",preferredContact:"Email",service:"Electrical",selectedServiceIds:["commercial-industrial"],location:"Sample location",propertyType:"Commercial",description:"Mock enquiry used to demonstrate the future workflow. This is not a real customer submission.",submittedAt:"5 Oct 2026, 10:30",submittedAtIso:"2026-10-05T10:30:00-04:00",updatedAt:"2026-10-06T09:15:00-04:00",status:"New",attachments:["/images/project-electrical.svg","/images/project-combined.svg"],note:"Mock note: confirm the site access requirements before arranging a visit."},
   {id:"enq-demo-002",name:"Sample fibre enquiry",contact:"Development data only",service:"Fiber Optic",selectedServiceIds:[],location:"Sample location",propertyType:"Industrial",description:"Mock data for layout, missing-contact and empty-gallery testing only.",submittedAt:"4 Oct 2026, 14:10",submittedAtIso:"2026-10-04T14:10:00-04:00",updatedAt:"2026-10-04T14:10:00-04:00",status:"Reviewing",attachments:[]},
-];
-export const mediaItems: MediaItem[] = [
-  {id:"med-001",name:"combined-placeholder.svg",src:"/images/project-combined.svg",type:"SVG",size:"2 KB",projectId:"prj-001",project:"Featured project placeholder",category:"Combined",isCover:true,createdAt:"2026-10-05T14:30:00Z"},
-  {id:"med-002",name:"electrical-placeholder.svg",src:"/images/project-electrical.svg",type:"SVG",size:"2 KB",projectId:"prj-002",project:"Electrical project placeholder",category:"Electrical",isCover:true,createdAt:"2026-10-04T16:15:00Z"},
-  {id:"med-003",name:"fiber-placeholder.svg",src:"/images/project-fiber.svg",type:"SVG",size:"2 KB",projectId:"prj-003",project:"Fiber infrastructure placeholder",category:"Fiber",isCover:true,createdAt:"2026-10-03T11:00:00Z"},
-  {id:"med-004",name:"combined-gallery-02.svg",src:"/images/project-combined.svg",type:"SVG",size:"2 KB",projectId:"prj-001",project:"Featured project placeholder",category:"Combined",createdAt:"2026-10-02T09:20:00Z"},
-  {id:"med-005",name:"electrical-gallery-02.svg",src:"/images/project-electrical.svg",type:"SVG",size:"2 KB",projectId:"prj-002",project:"Electrical project placeholder",category:"Electrical",createdAt:"2026-10-01T13:45:00Z"},
-  {id:"med-006",name:"fiber-gallery-02.svg",src:"/images/project-fiber.svg",type:"SVG",size:"2 KB",projectId:"prj-003",project:"Fiber infrastructure placeholder",category:"Fiber",createdAt:"2026-09-30T10:10:00Z"},
-  {id:"med-007",name:"unassigned-combined.svg",src:"/images/project-combined.svg",type:"SVG",size:"2 KB",category:"Combined",createdAt:"2026-09-29T15:00:00Z"},
 ];

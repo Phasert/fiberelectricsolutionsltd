@@ -44,8 +44,14 @@ export interface MediaItem {
   id:string;
   name:string;
   src:string;
-  type:"JPG"|"PNG"|"WEBP"|"SVG";
+  type:"JPG"|"PNG"|"WEBP";
   size:string;
+  sizeBytes:number;
+  width:number;
+  height:number;
+  alt:string;
+  caption:string;
+  status:"Pending"|"Ready"|"Failed";
   projectId?:string;
   project?:string;
   category:ProjectCategory;
