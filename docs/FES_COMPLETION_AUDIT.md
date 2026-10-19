@@ -5,6 +5,38 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D1b public Resources and Articles integration - 19 October 2026
+
+Phase D1b is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. Public `/resources` and `/resources/[slug]` reads now use the server-only Firebase Admin SDK repository while preserving the approved library, search, category filters, article layout and responsive styling. No live record, Storage bucket, billing setting, Firebase rule or production deployment was changed.
+
+### Implemented
+
+- Strict `PublicArticle` and `PublicExternalResource` contracts expose only approved fields. Runtime validation requires `Published`, rejects unsafe external protocols, excludes records explicitly marked `stagingOnly` or with a non-public audience, and conservatively suppresses clearly labelled Phase/browser/emulator fixtures.
+- Internal articles resolve through the transactional slug registry and render a second sanitized, structured rich-text pass. External resources remain direct attributed HTTPS links; drafts, unpublished records, external-resource slugs, malformed slugs and missing records return no public article.
+- Resource covers resolve only to approved local static SVGs. Missing or unavailable administrator media receives the existing category placeholder, so private media routes and unapproved Storage URLs are never exposed.
+- Dynamic metadata uses `SITE_URL` for canonical and Open Graph URLs. Internal articles emit escaped `Article` JSON-LD; missing content is `noindex`. The sitemap includes only published internal articles, never external links or drafts.
+- Public reads use tagged Next.js data caching with a one-hour fallback. Successful administrator create, edit, publish, unpublish and delete operations expire the resource tag and revalidate the listing, detail-route pattern and sitemap.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | No diagnostics. |
+| `bun run typecheck` | 0 | Next route types generated; no TypeScript diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build completed; `/resources` and `/resources/[slug]` are server-rendered on demand and the sitemap retains its cache boundary. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 10 files / 52 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+The seven D1b integration tests cover published article/external-resource visibility, draft and staging-fixture isolation, unpublishing, invalid/unknown/external slugs, second-pass rich-text sanitation, safe link rendering, public-field whitelisting, media fallbacks, metadata/noindex behavior, sitemap filtering and cache invalidation. Existing Phase B, C and D1a tests remained green.
+
+Read-only Edge acceptance testing against `fesr-c3ae1` confirmed the resource library loads, retains its search/category controls and excludes the existing clearly labelled `Phase C2 Browser Resource` fixture despite that record currently being published. With no approved published internal article in staging, the correct approved empty state displayed and an unknown article returned HTTP 404. The browser pass did not create, edit, publish or delete staging data. Internal article layout, sanitation and navigation remain emulator/build verified pending client-approved content for a live acceptance pass.
+
+### Remaining limitations and next gate
+
+- Resource images intentionally use approved static placeholders until Storage ownership, Blaze billing, immutable bucket region and public-derivative policy are approved. The existing resource `coverImage` string should be normalized to the shared media-ID model in D2.
+- The fixture-name exclusion is a conservative interim safety net. Future test records should set the explicit non-public audience/staging marker, and approved business content should never be named like a Phase/browser/emulator fixture.
+- Real article copy, attribution, external destinations, image rights and publication approval remain client-owned launch dependencies.
+- The next recommended milestone is **Phase D1c: published site content, services, tips, featured placements and public business settings**, delivered as small public-read slices without enabling Storage. It must not begin without separate authorization.
+
 ## Phase D1a public Projects and Galleries integration - 19 October 2026
 
 Phase D1a is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The public `/projects` listing, `/projects/[slug]` detail route and project sitemap entries now read published Firestore projects through a server-only Firebase Admin SDK repository. No browser Firestore client access, live Storage activation, billing change, rule deployment, production deployment or staging-data mutation was performed.

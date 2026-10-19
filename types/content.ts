@@ -53,6 +53,31 @@ export interface Project {
 
 export type ResourceCategory = "Electrical" | "Fiber Optic" | "Company Updates";
 export type PublicationStatus = "Draft" | "Published";
+export interface PublicRichTextMark { type: "bold" | "italic" | "strike" | "code" | "link"; attrs?: { href: string; target: "_blank"; rel: string }; }
+export interface PublicRichTextNode { type: "doc" | "paragraph" | "heading" | "bulletList" | "orderedList" | "listItem" | "blockquote" | "hardBreak" | "text"; text?: string; attrs?: { level?: number }; marks?: PublicRichTextMark[]; content?: PublicRichTextNode[]; }
+export interface PublicArticle {
+  id: string;
+  slug: string;
+  title: string;
+  kind: "FES article" | "Company update";
+  category: ResourceCategory;
+  summary: string;
+  publishedAt?: string;
+  featured: boolean;
+  featuredImage: string;
+  featuredImageAlt: string;
+  readingTime: string;
+  content: PublicRichTextNode;
+}
+export interface PublicExternalResource {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  summary: string;
+  category: ResourceCategory;
+  publishedAt?: string;
+}
 export interface ArticleSection { heading?: string; paragraphs?: string[]; list?: string[]; quote?: string; }
 export interface Article {
   slug: string;
