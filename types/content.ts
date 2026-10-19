@@ -136,6 +136,19 @@ export interface Tip {
   body: string;
 }
 
+export interface PublicTip {
+  id: string;
+  type: "do" | "dont";
+  title: string;
+  body: string;
+}
+
+export interface PublicFeaturedContent {
+  project: PublicProject | null;
+  resource: PublicArticle | PublicExternalResource | null;
+  tips: PublicTip[];
+}
+
 export interface ExternalResource {
   id: string;
   title: string;

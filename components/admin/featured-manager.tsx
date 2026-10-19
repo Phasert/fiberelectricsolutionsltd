@@ -37,7 +37,7 @@ export function FeaturedManager({ projects, resources, tips, media, initialSelec
     setBusy(false);
     if (!response.ok) { setNotice(result.error ?? "Unable to save featured content."); return; }
     setSavedSelection(selection);
-    setNotice("Featured selections saved to staging Firestore. The public website remains unchanged.");
+    setNotice("Featured selections saved. Approved selections now update the public homepage.");
   }
   function revert() { setSelection(savedSelection); setNotice("Unsaved changes reverted."); }
   function openPreview() { document.getElementById("homepage-preview")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
@@ -96,7 +96,7 @@ export function FeaturedManager({ projects, resources, tips, media, initialSelec
       </div>
     </section>
 
-    <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-black/10 bg-white/95 p-4 shadow-[0_16px_50px_rgba(20,19,21,.16)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-bold">{hasChanges ? "Unsaved featured changes" : "Featured selection is up to date"}</p><p aria-live="polite" className="mt-1 text-xs text-ink/50">{notice ?? "Selections save to staging Firestore; the public website remains unchanged until Phase D."}</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={revert} disabled={!hasChanges||busy} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-black/12 px-4 text-xs font-bold text-ink/70 disabled:cursor-not-allowed disabled:opacity-40"><RotateCcw size={15} /> Cancel / Revert</button><button type="button" onClick={openPreview} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-wine px-4 text-xs font-bold text-wine"><Eye size={15} /> Preview Homepage</button><button type="button" disabled={busy||!hasChanges} onClick={save} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-wine px-5 text-xs font-bold text-white hover:bg-wine-dark disabled:cursor-not-allowed disabled:opacity-50"><Save size={15} /> {busy?"Saving…":"Save Changes"}</button></div></div>
+    <div className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-black/10 bg-white/95 p-4 shadow-[0_16px_50px_rgba(20,19,21,.16)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-bold">{hasChanges ? "Unsaved featured changes" : "Featured selection is up to date"}</p><p aria-live="polite" className="mt-1 text-xs text-ink/50">{notice ?? "Published, non-test selections update the public homepage after saving."}</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={revert} disabled={!hasChanges||busy} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-black/12 px-4 text-xs font-bold text-ink/70 disabled:cursor-not-allowed disabled:opacity-40"><RotateCcw size={15} /> Cancel / Revert</button><button type="button" onClick={openPreview} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-wine px-4 text-xs font-bold text-wine"><Eye size={15} /> Preview Homepage</button><button type="button" disabled={busy||!hasChanges} onClick={save} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-wine px-5 text-xs font-bold text-white hover:bg-wine-dark disabled:cursor-not-allowed disabled:opacity-50"><Save size={15} /> {busy?"Saving…":"Save Changes"}</button></div></div>
   </div>;
 }
 

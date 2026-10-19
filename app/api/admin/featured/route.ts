@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requestHasTrustedOrigin, verifyAdminSession } from "@/lib/auth/session";
 import { getFeaturedSelection, saveFeaturedSelection } from "@/lib/featured/repository";
+import { invalidatePublicHomepageFeatured } from "@/lib/featured/public-cache";
 
 export async function GET() {
   if (!await verifyAdminSession()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,6 +14,7 @@ export async function PUT(request: Request) {
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await saveFeaturedSelection(await request.json(), admin.uid);
+    invalidatePublicHomepageFeatured();
     return NextResponse.json({ ok: true });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
