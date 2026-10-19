@@ -5,6 +5,64 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Firebase Storage confirmation and development-plan update - 19 October 2026
+
+This update supersedes the earlier assumption that Cloud Storage still needed to be provisioned or that billing had not been approved. It is a readiness review only: no object was listed, uploaded, downloaded or deleted; no billing, bucket, IAM, retention, lifecycle or rule setting was changed; and Phase D2 was not started.
+
+### Owner-confirmed information
+
+- `fesr-c3ae1` remains the official development/staging Firebase project.
+- The project is already on a paid Firebase plan.
+- Cloud Storage has already been configured and the existing bucket is the bucket the owner intends the application to use.
+
+Billing-plan status is recorded as owner-confirmed because the installed Firebase CLI does not expose the plan. Codex did not independently inspect or modify the linked Cloud Billing account.
+
+### Independently verified configuration
+
+- The signed-in Firebase CLI can access active project `fesr-c3ae1`; Firebase reports that its default Storage bucket has been created.
+- Both public and server project variables in the ignored local environment select `fesr-c3ae1`. `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` selects `fesr-c3ae1.firebasestorage.app`; no Auth, Firestore or Storage emulator host is set in that staging environment.
+- A metadata-only request using the locally configured Firebase Admin SDK credentials successfully reached `fesr-c3ae1.firebasestorage.app`. The bucket reports `US-EAST1`, regional `STANDARD` storage, no configured retention policy, object versioning disabled and no lifecycle rules. This proves the credentials can initialize the correct bucket and read bucket metadata; it does not claim write/delete access because no live object mutation was authorized.
+- `.env.local` remains excluded by the repository's `.env*` ignore rule. No credential value was printed or added to Git.
+- The application initializes Admin Storage from `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, so it points at the verified bucket. However, repository upload, object read and deletion operations still call the deliberate `LIVE_STORAGE_NOT_APPROVED` guard whenever the Storage emulator host is absent. The administrator UI therefore continues to show **Live uploads blocked**.
+- The checked-in `storage.rules` deny all browser reads and writes, including the separate `quote-photos/` namespace. This is appropriate for the current server-only Admin SDK architecture. The deployed ruleset was not retrieved, so parity between the checked-in and deployed rules is not independently verified.
+
+### Phase C6 Media Library readiness
+
+The emulator-tested foundation should be preserved. It already provides approved-administrator session checks, trusted-origin upload/update/delete routes, server-only Admin SDK access, separate `editorial/images/...` naming, JPEG/PNG/WebP allowlisting, a configurable 10 MiB limit, file-signature and dimension checks, required alt text, captions, project/category metadata, upload progress, failed-upload cleanup metadata, and cross-collection reference scanning before deletion.
+
+Real editorial uploads still require a deliberately reviewed Phase D2 change set:
+
+1. Replace the emulator-only guard with an explicit, default-off live-editorial-media feature flag bound to `fesr-c3ae1`; retain independent administrator and trusted-origin checks on every mutation.
+2. Audit the deployed Storage rules and the bucket's IAM/ACL posture. Bucket metadata currently reports uniform bucket-level access disabled and public-access prevention inherited. Confirm that no legacy object ACL or IAM grant can bypass the intended controlled delivery path. Do not deploy a rules or IAM change without owner approval.
+3. Add transactional Ready-media reference validation to projects, resource covers, site content, services, featured content and branding. Normalize the resource `coverImage` and branding URL fields to media IDs, and add gallery cover/ordering controls to the existing project editor.
+4. Replace the current collection scan with a transactional reverse-reference model so upload attachment and deletion cannot race. Deletion must remain blocked while any draft or published record references an image.
+5. Add optimization and derivative generation, metadata stripping and a bounded pixel/decompression policy. Store originals privately; expose only approved published derivatives through a controlled server route or another separately approved delivery design. The present `/api/admin/media/{id}/file` route is administrator-only, private/no-store and unsuitable for public pages.
+6. Keep future customer quote photographs in a separate private namespace and authorization path. They must never reuse editorial delivery URLs, public derivatives or editorial retention rules.
+7. Decide and document upload quotas/rate limits, derivative sizes and formats, cache policy, abandoned-upload cleanup scheduling, retention/recovery policy, monitoring and incident handling. The bucket currently has no retention policy, versioning or lifecycle rule; this is a policy decision, not a provisioning failure.
+8. Extend emulator integration coverage for live-mode feature gating, Ready-reference validation, concurrent reference/delete behavior, derivative failures and cleanup. Perform a separately authorized, clearly labelled live staging upload/read/delete acceptance test only after the reviewed code and policy are approved.
+
+No Firestore index change is identified by this readiness review because Phase D2 queries have not been implemented. Any index or rules change discovered during implementation must be reported and approved before deployment.
+
+### Decisions and authorization still required
+
+- Approve starting Phase D2 after D1c-2 and D1c-3 are complete.
+- Approve the live-editorial-media feature flag and one bounded staging acceptance upload/delete test.
+- Approve the public derivative/delivery design, optimization formats and sizes, cache lifetime and image-rights/alt-text responsibilities.
+- Approve maximum upload size/count/rate, operational retention, failed-upload cleanup interval, recovery/backup expectations and deletion authority.
+- Approve any proposed deployed Storage-rule, bucket IAM/ACL, CORS, lifecycle or Firestore-index change after reviewing its exact diff. None is approved by this update.
+
+### Updated development sequence
+
+1. Finish **Phase D1c-2 - Featured Content and Tips**.
+2. Complete **Phase D1c-3 - Business Settings and Contact Details**.
+3. Begin **Phase D2 - Real Editorial Media and Public Galleries**, subject to the approvals above.
+4. Complete **Phase D3 - Real Quote Submissions**.
+5. Complete **Phase D4 - Private Quote Photo Uploads**.
+6. Complete **Phase D5 - Administrator Enquiry Management**.
+7. Perform **Phase E testing** and **Phase F launch preparation**.
+
+The existing bucket is correctly selected and operational for metadata access, and the Media Library has a sound emulator-tested base. It is not yet safe or enabled for live uploads because the explicit live gate, deployed-policy/IAM review, reference integrity, derivatives and operating-policy approvals remain outstanding. Phase D2 therefore should not start immediately: D1c-2 and D1c-3 come first, followed by explicit authorization for the reviewed D2 scope.
+
 ## Phase D1c-1 public Services and Site Content integration - 19 October 2026
 
 Phase D1c-1 is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The homepage copy/CTA fields, Electrical, Fiber Optic and About pages now use published Firestore site-content snapshots and enabled published services through server-only Firebase Admin SDK reads. Featured placements, tips, business settings, quotes, live Storage, billing, rules and production were not changed.
