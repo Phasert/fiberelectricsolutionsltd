@@ -5,6 +5,95 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## D1c-3 closeout and Phase D2 readiness review - 19 October 2026
+
+This review was performed only from `C:\fes-dev\fiberelectricsolutionsltd`. Before closeout, local `main` and `origin/main` both resolved to `5457e7004c29927b9203e19c78cb4db0f1663253`, the working tree was clean, and history contained implementation `5824f88` followed by audit commit `5457e70`. No Firebase resource, rule, IAM policy, ACL, billing setting or live object was changed.
+
+### D1c-3 mobile Edge closeout
+
+- Microsoft Edge was controlled through an isolated temporary profile and DevTools device metrics at exact `390 × 844` and `360 × 740` viewports. The homepage, About, Electrical, Fiber Optic and Request a Quote pages were exercised at both sizes.
+- All ten page/viewport combinations reported the exact requested viewport, `scrollWidth === innerWidth`, one H1, a main landmark and a footer. The mobile menu control was visible within the viewport, began collapsed and opened successfully with the complete navigation. Visual captures confirmed readable responsive stacking, unclipped headings, appropriately stacked CTAs/forms, and a usable header, menu and footer at both sizes.
+- The current staging settings are not eligible Approved public content. Every page therefore retained the intended contact empty state rather than exposing the Phase C5 test email or inventing details. The quote page retained the explicit preview-only/no-submission statement. Real populated-contact acceptance remains pending owner-approved business settings.
+- The first console pass identified only a missing `/favicon.ico`. A repository-native `app/icon.svg` matching the existing FES brand mark was added; the final ten-page pass had no console warnings, exceptions or failed resources. No form was submitted and no staging record was created, approved, modified or deleted.
+
+### Current Storage posture: independently verified
+
+- Local public/server configuration resolves project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app`. Admin credentials successfully read that exact bucket's metadata, IAM summary, bucket ACL and default-object ACL without listing objects.
+- The bucket is operational in regional location `US-EAST1`. The API currently reports storage class `REGIONAL` (the earlier audit described it as `STANDARD`; this review records the live metadata value without changing it), metageneration 1, zero CORS rules, zero lifecycle rules, versioning disabled and no retention policy.
+- Uniform bucket-level access is disabled. Public-access prevention reports `inherited`, not explicitly `enforced` at the bucket. The readable IAM policy is version 1 with only `roles/storage.legacyBucketOwner` and `roles/storage.legacyBucketReader`; no `allUsers` or `allAuthenticatedUsers` grant was present. The bucket ACL and default-object ACL were readable and contained no public entry.
+- Firebase CLI access shows project `fesr-c3ae1` active with its default Storage bucket created. The checked-in `.firebaserc` deliberately defaults CLI commands to emulator project `fes-local`; live selection comes from the ignored staging environment and explicit project arguments.
+- The application initializes Admin Storage with the configured bucket. Live uploads, reads and deletes still fail closed through `LIVE_STORAGE_NOT_APPROVED`; the Media Library reports **Live uploads blocked** outside the emulator. No live write permission was tested.
+- Checked-in `storage.rules` deny every browser read/write, including `quote-photos/**`, and Firestore remains deny-by-default for browser clients. Current administrator routes independently require an approved server session; upload/update/delete also require trusted-origin protection, except the authenticated private file GET which is read-only.
+
+### Not independently verified
+
+- Firebase CLI does not retrieve the deployed Storage Rules ruleset, so deployed/check-in parity remains unverified. No rule deployment or dry-run deployment was attempted.
+- Existing object names, contents and per-object ACLs were not enumerated. Therefore this review does not claim that every pre-existing object is private, despite the absence of public bucket/default ACL and IAM grants.
+- Billing-plan status remains owner-confirmed. Live object create/read/delete authority, Cloud Audit Logs, budget alerts, alert recipients, organization-policy inheritance and recovery procedures were not tested or changed.
+
+### Phase D2 file-by-file implementation plan (not implemented)
+
+1. **Feature gate and dependencies**
+   - `.env.example`: add server-only `EDITORIAL_MEDIA_LIVE_ENABLED=false`, `EDITORIAL_MEDIA_ALLOWED_PROJECT_ID=` and approved upload/pixel/quota settings. Never use a `NEXT_PUBLIC_` live-write switch.
+   - `lib/media/config.ts` (new): parse the settings once, default off, and allow live mode only when the flag is exactly true, configured/credential project IDs both equal approved staging project `fesr-c3ae1`, the configured bucket matches, and no emulator variable is mixed with live mode.
+   - `package.json` and `bun.lock`: add a reviewed server image decoder/processor such as `sharp`; pin and security-review the resulting dependency change before merge.
+
+2. **Validated records, processing and object layout**
+   - `lib/media/schemas.ts`: version the media model; add immutable checksum, lifecycle status (`Pending`, `Processing`, `Ready`, `Failed`, `Deleting`, `Deleted`), pixel count, original/derivative descriptors, approval/publication state and cleanup/audit fields. Keep editorial and future quote-photo types mutually exclusive.
+   - `lib/media/image-validation.ts`: replace header-only dimension parsing with full bounded decode, MIME/signature agreement, maximum width/height and total-pixel checks, animation/frame rejection, decompression limits and safe error codes.
+   - `lib/media/processing.ts` (new): auto-orient, strip EXIF/IPTC/XMP/GPS metadata, normalize colour space, and generate approved WebP/JPEG derivative widths without upscaling. Fail closed and delete incomplete derivatives on processing error.
+   - `lib/media/storage.ts` (new): own deterministic paths: private originals under `editorial/private/originals/{mediaId}/...`, non-public temporary work under `editorial/private/pending/...`, and approved derivatives under `editorial/public/derivatives/{mediaId}/{version}/{variant}`. Set private originals `no-store`; set versioned derivatives `public, max-age=31536000, immutable`; never reuse the future `quote-photos/` namespace.
+
+3. **Transactional references and lifecycle**
+   - `lib/media/references.ts` (new): maintain one reverse-reference document per media ID inside the same Firestore transaction that changes a consumer. Store typed references for project gallery/cover, resource cover, service image, site-content image, featured placement where applicable, and branding asset.
+   - `lib/media/repository.ts`: replace the emulator-only gate with the central configuration gate; stream/bound uploads; make creation idempotent; process to Ready only after every object and record succeeds; mark delete intent transactionally only when the reverse-reference set is empty; delete objects; retain an audited tombstone; support safe retry/reconciliation after partial failures. Never use the current collection-wide recursive scan as the final concurrency control.
+   - `lib/projects/repository.ts`, `lib/resources/repository.ts`, `lib/site-content/repository.ts`, `lib/settings/repository.ts` and `lib/featured/repository.ts`: attach/detach references transactionally and accept only Ready editorial media of the expected role. Publishing must fail if a required derivative is absent. Unpublishing removes public eligibility but does not silently delete media.
+   - `lib/projects/schemas.ts`, `lib/resources/schemas.ts`, `lib/site-content/schemas.ts` and `lib/settings/schema.ts`: standardize media IDs instead of administrator file URLs, require unique project gallery items/order, require cover membership in the gallery, and constrain image roles. Migrate legacy `coverImage`, branding URL and image-ID fields only after an explicit migration review.
+
+4. **Administrator routes and interfaces**
+   - `app/api/admin/media/route.ts`: retain approved-session/trusted-origin checks, enforce feature gate, request byte/count/rate quotas before reading the body, return stable validation errors, and expose no object path or credential detail.
+   - `app/api/admin/media/[id]/route.ts`: independently authenticate every metadata update/delete, use transactional reference checks, require explicit delete intent, and return conflict/retry states without orphaning records.
+   - `app/api/admin/media/[id]/file/route.ts`: remain approved-admin-only for originals/previews, add range/size safeguards where needed and keep `private, no-store`.
+   - `components/admin/media-manager.tsx` and `app/admin/(protected)/media/page.tsx`: distinguish Emulator, Live disabled and Approved staging live modes; show per-file processing/progress/error/retry state and quota guidance; never imply success before Ready.
+   - `components/admin/project-form.tsx`: add existing-Media-Library selection, ordered gallery controls, per-placement alt/caption, unique membership and explicit cover selection while preserving the current design.
+   - `components/admin/resource-form.tsx`, `components/admin/content-editor.tsx` and `components/admin/settings-form.tsx`: replace placeholder/URL image fields with role-filtered media selection for covers, page/service images and approved branding; display reference conflicts clearly.
+
+5. **Public delivery and cache invalidation**
+   - `lib/media/public-repository.ts` (new): resolve only Ready derivatives referenced by currently published/approved content and return a strict public image DTO, never original paths or audit metadata.
+   - `app/media/[id]/[variant]/route.ts` (new): controlled derivative delivery with allowlisted variants, publication/reference revalidation, `nosniff`, correct content type, ETag/conditional responses and immutable caching for versioned URLs. Originals and quote photographs must return 404/403 publicly.
+   - `lib/projects/public-repository.ts`, `lib/resources/public-repository.ts`, `lib/site-content/public-repository.ts`, `lib/featured/public-repository.ts` and `lib/settings/public-repository.ts`: resolve approved derivative URLs; preserve static placeholders when unavailable; never pass Admin Storage URLs or raw paths to components.
+   - Existing public cache modules plus a new `lib/media/public-cache.ts`: invalidate affected project/resource/site/settings/featured tags and paths only after a derivative becomes Ready, a reference changes, or eligibility is revoked.
+
+6. **Rules, operations and verification**
+   - `storage.rules`: proposed default is to retain complete browser denial because all mutations and controlled delivery remain server-only. Any change requires a reviewed emulator test and separate deployment approval. Quote photos stay in a separately denied namespace.
+   - `firestore.rules`: retain direct-client denial. Any new media/reference collections must be explicitly covered by denial tests; Admin SDK authorization remains application-layer.
+   - `firebase.json` and `firestore.indexes.json` only if emulator configuration or a proven query requires them; report each required index before deployment.
+   - `tests/security/media.integration.test.ts`: expand authorization, flag/project/bucket gating, valid formats, decode/pixel bombs, metadata stripping, derivatives, failure cleanup, idempotency, quotas, tombstones and public-original denial.
+   - Add `tests/security/media-references.integration.test.ts` for attach/detach across every consumer, simultaneous attach/delete, double-delete, publish during processing and transaction retry; add public repository/delivery tests for publication revocation, caching, ETags and missing variants. Keep quote-photo tests and namespaces separate.
+   - Add an authorized reconciliation/cleanup command only after retention decisions: dry-run by default, bounded batches, age threshold, audit output without filenames/customer data, and explicit live confirmation. Define monitoring for Failed/Pending age, derivative errors, quota rejection and unexpected delete attempts.
+
+### Bounded live staging acceptance procedure requiring separate authorization
+
+1. Obtain written approval for the decisions below and review the final diff/tests. Do not deploy rule/IAM changes implicitly.
+2. Configure the default-off flag only in the approved `fesr-c3ae1` staging environment, with exact project/bucket assertions and conservative quotas. Production remains off.
+3. Using one owner-authorized, rights-cleared, non-sensitive editorial image, verify approved-admin upload, metadata stripping, private-original denial, derivative generation and administrator preview. Do not use customer quote photography.
+4. Attach it to an owner-approved staging content record; verify ordering/cover selection and public derivative eligibility only under the agreed publication state. Verify anonymous users cannot access the original or mutate anything.
+5. Unpublish/detach, verify public revocation/cache behaviour, then perform the separately authorized deletion and confirm all derivatives/originals are removed or tombstoned according to policy. Review logs and quota/cleanup telemetry.
+6. Turn the live flag back off unless the owner separately approves continued staging use. Record object IDs and outcomes without credentials or private media content.
+
+### Owner approval checklist — recommendations are not approvals
+
+- [ ] Approve controlled server-route delivery of versioned public derivatives; keep originals private and prohibit public bucket/object ACLs. Recommended: controlled route first, CDN redesign only after measured need.
+- [ ] Approve derivative set and limits. Recommended starting limits: JPEG/PNG/WebP input, 10 MiB/file, 40 megapixels, maximum 20 files per administrator/day, variants near 640/1280/1920 px, no animated images, no upscaling.
+- [ ] Confirm image ownership/publication rights, alt-text/caption responsibility and who may approve an image for public use.
+- [ ] Approve retention/cleanup. Recommended: failed/pending cleanup after 24 hours; private originals retained while referenced plus 30 days after approved deletion; no permanent delete until reference and recovery checks pass.
+- [ ] Approve recovery design and cost. Recommended: enable an agreed recoverable-delete/versioning approach before live use, document restoration ownership and test restore quarterly; current bucket has neither versioning nor a retention policy.
+- [ ] Approve proposed IAM/rules posture review. Recommended: server-only deny-by-default rules, enforce public-access prevention and evaluate uniform bucket-level access after confirming Firebase compatibility and legacy ACL migration impact. These are infrastructure changes and are not authorized by this document.
+- [ ] Approve monitoring, quota alerts and responsible recipients for failures, unusual upload volume and cleanup backlog.
+- [ ] Approve the single bounded staging acceptance above, including the exact rights-cleared image/content record and authorization to upload, attach, publish if necessary, detach and delete it.
+
+Phase D2 has not started. Authorization must name the approved delivery model, limits, retention/recovery choices, IAM/rules changes (if any), and bounded live test before implementation or infrastructure work begins.
+
 ## Phase D1c-3 public Business Settings and Contact Details integration - 19 October 2026
 
 Phase D1c-3 is implemented from `C:\fes-dev\fiberelectricsolutionsltd`. Public surfaces now consume only a validated, Approved `businessSettings/public-v1` document through a server-only Firebase Admin SDK repository. Phase D2, quote submission, live Storage access, Firebase rules, infrastructure, billing and production were not changed.
