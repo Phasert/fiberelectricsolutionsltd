@@ -46,6 +46,8 @@ Before live Storage work, the owner must explicitly approve:
 
 Phase C6 is emulator-complete, not live-complete. Public pages remain unchanged and Phase D has not started.
 
+The verified implementation was committed on `main` as `a5e3615` with subject `feat: add emulator-only editorial media management`. The staged review contained only the 19 intended source, route, test, configuration-example and audit paths; `git diff --cached --check` passed, `.env.local` and generated output remained ignored, the credential-pattern scan found no real secret/private-key material, and Firebase rules/configuration were not changed. This audit-only follow-up records the implementation hash before both commits are pushed normally to `origin/main`.
+
 ## Phase C5 Business Settings Management - 18 October 2026
 
 - The existing Settings interface now persists one typed, versioned `businessSettings/public-v1` Firestore document through the server-only Firebase Admin SDK. The document separates the validated public payload from server-generated schema, approval and audit metadata. Every page read requires the approved administrator session, and every write independently requires a trusted same-origin request and active approved administrator session.
