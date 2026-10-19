@@ -30,6 +30,8 @@ The seven D1b integration tests cover published article/external-resource visibi
 
 Read-only Edge acceptance testing against `fesr-c3ae1` confirmed the resource library loads, retains its search/category controls and excludes the existing clearly labelled `Phase C2 Browser Resource` fixture despite that record currently being published. With no approved published internal article in staging, the correct approved empty state displayed and an unknown article returned HTTP 404. The browser pass did not create, edit, publish or delete staging data. Internal article layout, sanitation and navigation remain emulator/build verified pending client-approved content for a live acceptance pass.
 
+The verified Phase D1b implementation was committed on `main` as `84053bc` with subject `feat: connect public resources to Firestore`. The reviewed commit contains only the 13 intended source, style, test and documentation paths; `.env.local`, credentials, generated output and unrelated files were excluded. This audit-only follow-up records the implementation hash before both commits are pushed normally to `origin/main`.
+
 ### Remaining limitations and next gate
 
 - Resource images intentionally use approved static placeholders until Storage ownership, Blaze billing, immutable bucket region and public-derivative policy are approved. The existing resource `coverImage` string should be normalized to the shared media-ID model in D2.
