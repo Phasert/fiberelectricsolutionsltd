@@ -30,6 +30,8 @@ The seven new emulator integration tests cover published visibility, draft isola
 
 Edge acceptance testing against staging project `fesr-c3ae1` confirmed the existing published record appears on `/projects`, its title/category/summary/location/period and ordered gallery render on the detail page, and an unknown slug produces HTTP 404. Desktop and responsive 390 x 892 views retain the approved navigation, typography, filters, cards, project details and gallery layout. The browser pass was read-only and used the existing clearly labelled staging fixture; no demonstration record was created, edited or published.
 
+The verified Phase D1a implementation and this audit entry were committed on `main` as `8f2ae73` with subject `feat: connect public projects to Firestore` and pushed normally to `origin/main`. The commit contains only the 12 reviewed source, test and documentation paths; `.env.local`, credentials, generated output and unrelated files were not included.
+
 ### Remaining limitations and next gate
 
 - Public project images intentionally remain approved static category placeholders until Firebase Storage ownership, Blaze billing, immutable bucket region, budgets and public-derivative policy are approved. Phase D1a does not expose the emulator-only administrator media route.
