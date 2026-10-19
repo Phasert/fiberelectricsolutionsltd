@@ -5,6 +5,37 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D1c-1 public Services and Site Content integration - 19 October 2026
+
+Phase D1c-1 is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The homepage copy/CTA fields, Electrical, Fiber Optic and About pages now use published Firestore site-content snapshots and enabled published services through server-only Firebase Admin SDK reads. Featured placements, tips, business settings, quotes, live Storage, billing, rules and production were not changed.
+
+### Implemented
+
+- Strict public DTOs validate version 1 documents, whitelist approved copy/service fields, exclude audit and media identifiers, enforce service category/order, and reject disabled, draft, malformed or clearly labelled staging/browser/emulator fixtures.
+- `/electrical` and `/fiber-optic` preserve their approved heroes, service grids, project sections, CTAs and responsive styling while removing hardcoded demonstration-service fallback. Missing approved services produce explicit non-misleading empty states.
+- Homepage hero, service and about copy plus enabled Homepage CTA placements use published snapshots. Featured content and tips remain unchanged for D1c-2. About uses published overview/capability copy, approved services and an enabled About CTA; absent content uses clearly labelled structural copy rather than business claims.
+- Published project cards use the existing D1a repository. Home/About additionally suppress clearly labelled Phase/staging/browser/emulator fixtures so test records are not promoted into these new placements.
+- Public page metadata uses published headings/descriptions when available and `SITE_URL` canonicals. Successful site-content and service saves immediately expire dedicated tags and revalidate `/`, `/electrical`, `/fiber-optic` and `/about`.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | No diagnostics. |
+| `bun run typecheck` | 0 | Next route types generated; no TypeScript diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build completed; the four integrated pages are server-rendered on demand. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 11 files / 58 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+The six new emulator tests cover published/enabled visibility, disabled and draft exclusion, administrator ordering, category isolation, strict public-field sanitization, published snapshot/draft isolation, missing/malformed/fixture records and cache/path invalidation. Existing Phase B, C, D1a and D1b tests remained green.
+
+Read-only Edge acceptance against `fesr-c3ae1` passed at desktop and 390 x 844 mobile widths. Electrical rendered the existing approved published service set in administrator order; Fiber rendered the safe empty state; Homepage and About used safe structural content because existing Phase-labelled page/project fixtures were excluded. Navigation, responsive menu, illustrations, cards and CTAs retained the approved design, and `/projects` plus `/resources` still loaded. No staging record was created, edited, published or deleted.
+
+### Remaining limitations and next gate
+
+- The current staging project needs client-approved published Homepage, Electrical, Fiber, About and CTA snapshots for a final content-specific acceptance pass. Existing labelled verification records intentionally remain hidden.
+- Service and page images remain approved static illustrations until the D2 media-ID/public-derivative work and Storage approvals are complete.
+- The next authorized slice should be **D1c-2: published tips and featured placements**. Business settings remain D1c-3. Neither has started.
+
 ## Phase D1b public Resources and Articles integration - 19 October 2026
 
 Phase D1b is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. Public `/resources` and `/resources/[slug]` reads now use the server-only Firebase Admin SDK repository while preserving the approved library, search, category filters, article layout and responsive styling. No live record, Storage bucket, billing setting, Firebase rule or production deployment was changed.

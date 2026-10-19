@@ -32,6 +32,38 @@ export interface Service {
   icon: string;
 }
 
+export interface PublicService {
+  id: string;
+  category: ServiceKind;
+  slug: string;
+  title: string;
+  shortDescription: string;
+  detailedDescription: string;
+  displayOrder: number;
+}
+
+export interface PublicHomepageContent {
+  heroHeading: string;
+  heroDescription: string;
+  primaryCtaLabel: string;
+  secondaryCtaLabel: string;
+  serviceHeading: string;
+  serviceDescription: string;
+  aboutHeading: string;
+  aboutDescription: string;
+}
+
+export interface PublicServicePageContent { heading: string; description: string; }
+export interface PublicAboutContent {
+  heroHeading: string;
+  heroDescription: string;
+  overviewHeading: string;
+  overviewBody: string;
+  capabilitiesHeading: string;
+  capabilitiesDescription: string;
+}
+export interface PublicCta { id: string; placement: string; label: string; supportingText: string; destination: string; essential: boolean; }
+
 export interface Project {
   id?: string;
   slug: string;

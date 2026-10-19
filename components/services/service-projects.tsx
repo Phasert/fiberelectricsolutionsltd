@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ProjectCard } from "@/components/projects/project-card";
-import type { Project, ProjectCategory } from "@/types/content";
+import type { ProjectCategory, PublicProject } from "@/types/content";
 
-export function ServiceProjects({ projects, category }: { projects: Project[]; category: Exclude<ProjectCategory, "Combined"> }) {
-  const matches = projects.filter(project => project.category === category && project.status === "approved").slice(0, 2);
+export function ServiceProjects({ projects, category }: { projects: PublicProject[]; category: Exclude<ProjectCategory, "Combined"> }) {
+  const matches = projects.filter(project => project.category === category).slice(0, 2);
 
   if (!matches.length) return <div className="border border-white/12 bg-white/[.04] p-7 sm:p-9">
     <p className="text-xs font-black uppercase tracking-[.16em] text-[#ef9bb0]">Portfolio updates in progress</p>
