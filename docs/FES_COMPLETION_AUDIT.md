@@ -5,6 +5,41 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D1c-2 public Featured Content and Tips integration - 19 October 2026
+
+Phase D1c-2 is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The homepage now resolves its selected project, optional resource and ordered tips from `featuredContent/homepage` and the existing Firestore-backed source collections through a server-only public repository. Phase D1c-3, live Storage, Firebase infrastructure, rules and production were not changed.
+
+### Implemented
+
+- A strict `PublicFeaturedContent` contract exposes only normalized public project, resource and tip fields. Administrator IDs, audit data, raw Firestore documents and administrator-only media URLs are not returned to the browser.
+- The selected project is revalidated through the published-project repository. The optional resource is revalidated through the published resources/articles repository. Missing, deleted, draft, unpublished, malformed and clearly labelled Phase/staging/browser/emulator records are omitted even if their IDs remain in the placement document.
+- Homepage tips resolve only from explicitly selected, enabled, valid tip records and preserve the saved placement order. Disabled, deleted, malformed and test-labelled tips are removed from public output without mutating their source documents.
+- The existing project card, resource-card styling, tips panel, animations and responsive layout were preserved. Safe empty states describe pending approved content without inventing project claims, external recommendations or business advice.
+- Public project and article images continue to use approved category/static placeholders. The verified existing Storage bucket was not modified and live upload/delivery remains reserved for Phase D2.
+- A dedicated one-hour tagged cache backs the homepage placement. Successful featured, project, resource and tip create/update/delete/reorder operations expire that tag and revalidate `/`, so publication and eligibility changes become visible predictably.
+- The Featured Content interface now accurately explains that published, non-test selections update the public homepage after saving.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build compiled, typechecked and generated all 27 static pages; `/` remains server-rendered on demand. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 12 files / 63 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+The five new emulator integration tests cover valid selected project/resource visibility, explicit tip order, public-field sanitization, publication and enablement revalidation, deleted references, fixture isolation, missing/malformed placement documents and cache/path invalidation. Existing Phase B, C, D1a, D1b and D1c-1 tests remained green.
+
+Read-only Edge acceptance against `fesr-c3ae1` passed at the normal desktop viewport and 390 x 844 mobile viewport. Because the current saved selections are clearly labelled Phase/staging verification records, the public homepage correctly displayed the project, tips and resource empty states instead of promoting those fixtures. Navigation, responsive stacking, typography, illustrations, cards, CTAs and the surrounding D1c-1 content remained intact. The browser console contained no warnings or errors. No staging record was created, edited, published or deleted.
+
+The verified implementation was committed on `main` as `1f0929f` with subject `feat: connect homepage featured content`. The reviewed commit contains only the 15 intended source, route, type and test paths. `.env.local`, credentials, generated build output and unrelated files were excluded. This audit-only follow-up records the implementation hash before both commits are pushed normally to `origin/main`.
+
+### Remaining limitations and next gate
+
+- The owner must select client-approved, non-test published content before a content-specific live staging acceptance pass can show populated homepage placements. Existing Phase-labelled records remain deliberately excluded.
+- Editorial photographs and resource covers remain static placeholders until the reviewed Phase D2 private-original/public-derivative architecture is authorized and implemented. The existing bucket is already provisioned; live application access remains deliberately disabled.
+- The recommended next milestone is **Phase D1c-3 - Public Business Settings and Contact Details**. It has not started and requires separate authorization.
+
 ## Firebase Storage confirmation and development-plan update - 19 October 2026
 
 This update supersedes the earlier assumption that Cloud Storage still needed to be provisioned or that billing had not been approved. It is a readiness review only: no object was listed, uploaded, downloaded or deleted; no billing, bucket, IAM, retention, lifecycle or rule setting was changed; and Phase D2 was not started.
