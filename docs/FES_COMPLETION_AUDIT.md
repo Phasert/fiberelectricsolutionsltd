@@ -30,6 +30,8 @@ The six new emulator tests cover published/enabled visibility, disabled and draf
 
 Read-only Edge acceptance against `fesr-c3ae1` passed at desktop and 390 x 844 mobile widths. Electrical rendered the existing approved published service set in administrator order; Fiber rendered the safe empty state; Homepage and About used safe structural content because existing Phase-labelled page/project fixtures were excluded. Navigation, responsive menu, illustrations, cards and CTAs retained the approved design, and `/projects` plus `/resources` still loaded. No staging record was created, edited, published or deleted.
 
+The verified Phase D1c-1 implementation was committed on `main` as `ca637a5` with subject `feat: connect public services and site content`. The reviewed commit contains only the 13 intended source, test and documentation paths; `.env.local`, credentials, generated output and unrelated files were excluded. This audit-only follow-up records the implementation hash before both commits are pushed normally to `origin/main`.
+
 ### Remaining limitations and next gate
 
 - The current staging project needs client-approved published Homepage, Electrical, Fiber, About and CTA snapshots for a final content-specific acceptance pass. Existing labelled verification records intentionally remain hidden.
