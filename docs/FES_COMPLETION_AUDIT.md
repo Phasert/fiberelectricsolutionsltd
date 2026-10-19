@@ -5,6 +5,40 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D1c-3 public Business Settings and Contact Details integration - 19 October 2026
+
+Phase D1c-3 is implemented from `C:\fes-dev\fiberelectricsolutionsltd`. Public surfaces now consume only a validated, Approved `businessSettings/public-v1` document through a server-only Firebase Admin SDK repository. Phase D2, quote submission, live Storage access, Firebase rules, infrastructure, billing and production were not changed.
+
+### Implemented
+
+- A strict version-1 public settings reader requires `approvalStatus: Approved`, validates the nested Phase C5 schema at runtime and returns a deliberately reduced DTO. Missing, malformed, Draft, revoked, clearly labelled Phase/staging/browser/emulator fixtures and reserved test-email records return `null`.
+- The DTO normalizes `mailto:`, `tel:` and approved WhatsApp links; accepts only HTTP(S) public links; exposes approved name, contact details, location, opening hours, social/Google links and SEO defaults; and excludes branding internals, raw Firestore data, audit actors/timestamps and unknown or secret fields.
+- The shared header and mobile navigation expose approved phone, email and WhatsApp actions when available. The footer adds approved location/maps, contact links, social/Google Business links and accessible day-by-day hours, with a safe empty state when no approved settings exist.
+- The quote page includes the same approved contact information and explicitly states that the current form prepares a local preview and does not submit a request. No submission, upload or enquiry workflow was added.
+- Root SEO defaults use only approved settings and retain the existing `SITE_URL`, route-level metadata precedence and indexing safeguards. Organization JSON-LD is emitted only when approved settings exist and contains only approved name, canonical URL, public contact and social profile facts.
+- Successful administrator settings saves expire a dedicated one-hour tag and revalidate the shared layout plus `/`, `/about`, `/electrical`, `/fiber-optic` and `/request-a-quote`. The settings transaction now safely recovers audit creation fields if an existing stored document is malformed.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build compiled, typechecked and generated all 27 static pages; public settings consumers remain server-rendered. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 13 files / 69 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+The six new integration tests cover approved visibility and field sanitation, missing/malformed/version rejection, Draft and revocation isolation, Phase/staging/test fixture exclusion, contact and WhatsApp normalization, opening-hours formatting, safe SEO fallback and cache/path invalidation. The existing direct-client Firestore denial and all prior Phase B-D1c-2 tests remained green.
+
+Read-only Edge acceptance against the existing `fesr-c3ae1` staging configuration passed at the normal desktop viewport for the homepage, About, Electrical, Fiber Optic and quote/contact pages. The current settings document is not valid Approved public content, so every page correctly showed the safe no-contact fallback; the quote page clearly stated that nothing is submitted. All requested pages returned HTTP 200, navigation/footer layout remained intact and no staging data was created or changed. A separate mobile viewport pass could not be completed because the Windows browser-control helper stopped when it could not confidently determine the active Edge URL; no further UI action was attempted, and this limitation is not represented as a successful mobile check.
+
+The verified implementation was committed on `main` as `5824f88` with subject `feat: connect public business settings`. The reviewed commit contains only the 12 intended source, route, type and test paths. `.env.local`, credentials, generated output and unrelated files were excluded. This audit-only follow-up records the implementation hash before both commits are pushed normally to `origin/main`.
+
+### Remaining limitations and next gate
+
+- The owner must enter and explicitly approve the real public business name/contact/location/hours/social/SEO values in Phase C5 before a populated staging acceptance pass can occur. The existing Phase C5 test email and labelled fixtures remain deliberately excluded.
+- Complete the deferred mobile Edge viewport check when the Windows browser helper can identify the active tab reliably; repeat populated desktop/mobile acceptance after owner-approved settings are available.
+- The next planned milestone is **Phase D2 - Real Editorial Media and Public Galleries**, but it must not begin until separately authorized. Existing Storage is provisioned; live uploads, delivery policy, rules/IAM and object changes remain gated.
+
 ## Phase D1c-2 public Featured Content and Tips integration - 19 October 2026
 
 Phase D1c-2 is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The homepage now resolves its selected project, optional resource and ordered tips from `featuredContent/homepage` and the existing Firestore-backed source collections through a server-only public repository. Phase D1c-3, live Storage, Firebase infrastructure, rules and production were not changed.
