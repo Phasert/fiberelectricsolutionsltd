@@ -1,9 +1,40 @@
 # FES Website Completion Audit
 
-**Audit date:** 17 October 2026
+**Audit date:** 19 October 2026
 
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
+
+## Phase D1a public Projects and Galleries integration - 19 October 2026
+
+Phase D1a is implemented and verified from `C:\fes-dev\fiberelectricsolutionsltd`. The public `/projects` listing, `/projects/[slug]` detail route and project sitemap entries now read published Firestore projects through a server-only Firebase Admin SDK repository. No browser Firestore client access, live Storage activation, billing change, rule deployment, production deployment or staging-data mutation was performed.
+
+### Implemented
+
+- A strict `PublicProject` contract whitelists public fields instead of returning raw Firestore documents or administrator audit metadata. Runtime validation rejects malformed records and any record whose status is not `Published`.
+- The listing preserves the existing search, category filters, card layout, animation and responsive design. The detail route preserves the approved project layout and returns the existing not-found experience for unknown, invalid, draft or unpublished slugs.
+- Ordered gallery references preserve administrator-provided alt text and captions. Because live Firebase Storage remains unapproved, all unavailable editorial media resolves to the existing category-specific static project illustration; no administrator-only media URL is exposed.
+- Project metadata now uses each published title and summary, an environment-derived `SITE_URL` canonical, a safe static Open Graph placeholder and `noindex` metadata for missing/unpublished records. The sitemap queries the same published public repository and excludes drafts.
+- Public project reads use Next.js data caching with a one-hour fallback revalidation. Successful administrator create, edit, publish, unpublish and delete operations expire the shared project tag and revalidate the listing, detail-route pattern and sitemap immediately.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | No diagnostics. |
+| `bun run typecheck` | 0 | Next route types generated; no TypeScript diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build completed; `/projects` and `/projects/[slug]` are server-rendered on demand and the sitemap retains its cache boundary. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 9 files / 45 tests; all passed. Offline metadata lookup warnings were non-fatal. |
+
+The seven new emulator integration tests cover published visibility, draft isolation, unpublishing, unknown/invalid slugs, gallery ordering, missing-media fallback, public-field sanitization, canonical/noindex metadata, sitemap filtering and cache/path invalidation. Existing Phase B/C tests remained green.
+
+Edge acceptance testing against staging project `fesr-c3ae1` confirmed the existing published record appears on `/projects`, its title/category/summary/location/period and ordered gallery render on the detail page, and an unknown slug produces HTTP 404. Desktop and responsive 390 x 892 views retain the approved navigation, typography, filters, cards, project details and gallery layout. The browser pass was read-only and used the existing clearly labelled staging fixture; no demonstration record was created, edited or published.
+
+### Remaining limitations and next gate
+
+- Public project images intentionally remain approved static category placeholders until Firebase Storage ownership, Blaze billing, immutable bucket region, budgets and public-derivative policy are approved. Phase D1a does not expose the emulator-only administrator media route.
+- Existing staging content is suitable only for verification. Real project copy, photography, image rights and publication approval remain client-owned launch dependencies.
+- The next recommended milestone is **Phase D1b: published Resources and Articles integration**, using the same public DTO, draft isolation, metadata, sitemap and cache-invalidation boundaries. It must not begin without separate authorization.
 
 ## Phase C final verification and Phase D readiness - 18 October 2026
 

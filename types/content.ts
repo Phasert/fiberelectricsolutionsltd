@@ -7,6 +7,23 @@ export interface ProjectImage {
   caption?: string;
 }
 
+export interface PublicProject {
+  id: string;
+  slug: string;
+  title: string;
+  category: ProjectCategory;
+  summary: string;
+  description?: string;
+  location?: string;
+  period?: string;
+  featuredImage: string;
+  featuredImageAlt: string;
+  gallery: ProjectImage[];
+  featured: boolean;
+  publishedAt?: string;
+  updatedAt?: string;
+}
+
 export interface Service {
   slug: string;
   title: string;

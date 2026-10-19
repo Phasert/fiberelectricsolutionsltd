@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import type { Project, ProjectCategory } from "@/types/content";
+import type { ProjectCategory, PublicProject } from "@/types/content";
 import { ProjectCard } from "./project-card";
 
 const filters: ("All" | ProjectCategory)[] = ["All", "Electrical", "Fiber", "Combined"];
-export function ProjectFilter({ projects }: { projects: Project[] }) {
+export function ProjectFilter({ projects }: { projects: PublicProject[] }) {
   const [active, setActive] = useState<(typeof filters)[number]>("All");
   const [query, setQuery] = useState("");
   const visible = useMemo(() => {
