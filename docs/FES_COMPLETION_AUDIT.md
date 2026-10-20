@@ -55,6 +55,8 @@ An initial post-implementation typecheck/build attempt correctly failed because 
 
 **Phase D3 status:** implementation-complete, emulator-tested and browser-accepted; live activation is blocked on the owner approvals above. Phase D4 has not started. After the approval package is recorded, the recommended next milestone is Phase D4 private customer photographs using a namespace and retention/access policy completely separate from editorial media; otherwise, remain at this stopping point.
 
+The verified Phase D3 implementation, tests, browser harness and closeout evidence were committed as `101fee5b7d258065203d22c9c3fe769abb1bd6c5` (`feat: add secure customer quote submissions`). This exact hash is recorded in the immediate audit follow-up commit.
+
 ## Phase D2 secure editorial media implementation - 20 October 2026
 
 Phase D2 implementation and closeout were completed from `C:\fes-dev\fiberelectricsolutionsltd`. The baseline was clean and synchronized before implementation: local `main` and `origin/main` both resolved to `a27e2b64ce20d858ad746f84b66a150db797ac15`, which includes the D1c-3 closeout and `app/icon.svg`. Live editorial uploads remained disabled throughout; all upload, processing, delivery and browser acceptance activity used only the local Firebase Auth, Firestore and Storage emulators.
