@@ -5,6 +5,50 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D4 secure customer quote photo attachments - 20 October 2026
+
+Phase D4 was implemented only from the clean, synchronized `C:\fes-dev\fiberelectricsolutionsltd` baseline at `a9cb2f31b28a87609f711e7134d0ac9883fb9858`. All implementation, Storage writes and browser acceptance used the local Firebase emulators. Live customer submissions and live photo uploads remain disabled; no live object, Firebase rule, IAM/ACL setting, bucket configuration, billing setting or deployment was changed.
+
+### Implementation and privacy boundaries
+
+- The existing three-stage quote form now offers optional JPG, PNG and WebP photographs with accessible selection, previews, removal, limit feedback, review thumbnails, an upload/processing busy state and a photo-aware success message. Submitting without photographs remains supported.
+- Conservative proposed limits are four files, 5 MiB per file, 12 MiB combined, 8,000 pixels per dimension, 20 megapixels decoded and a 2,000-pixel maximum stored output. The server independently enforces every limit; client checks are usability only.
+- Multipart parsing remains behind the D3 trusted-origin, timing, honeypot, rate-limit, idempotency and duplicate protections. JSON submissions without photographs retain the D3 path.
+- Every file must pass MIME allowlisting, magic-byte agreement, bounded Sharp decoding, non-animation checks and dimension/pixel limits. Accepted images are auto-oriented, converted to sRGB and re-encoded as WebP, stripping EXIF/IPTC/XMP/GPS and other unnecessary source metadata. Raw customer originals are not retained.
+- Sanitized objects use deterministic, retry-safe paths under `quote-photos/private/requests/{requestId}/{fingerprint}/...`, separate from every editorial-media collection/path and public derivative route. Objects use `private, no-store`; no object path, download URL, credential or photo metadata is returned to the customer.
+- Firestore attachment records are written only after every sanitized object upload succeeds. Upload failure removes every attempted object and creates no enquiry. Equivalent submissions with different keys delete their redundant objects; same-key retries reuse deterministic objects and return the original enquiry. A transaction verifies duplicate references still point to an existing enquiry, preventing stale post-deletion references.
+- Attachment records contain an internal ID, private path, WebP MIME, dimensions, processed size, checksum and Ready state. They inherit the enquiry retention deadline and consent record. Direct Firestore/Storage browser access remains deny-by-default.
+- Added server-only enquiry deletion and expiry cleanup helpers that remove only paths scoped beneath the matching request ID before deleting the Firestore record. These helpers are not exposed through the mock D5 administrator UI and are not scheduled or run against live data.
+- Live photographs have a second fail-closed gate: both `QUOTE_PHOTO_UPLOADS_LIVE_ENABLED=true` and `QUOTE_PHOTO_CONSENT_APPROVED=true` are required in addition to every D3 live-submission approval. Both defaults remain false.
+
+### Verification and browser acceptance
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated 29 static pages. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 17 files / 89 tests. |
+
+New tests cover successful private attachment persistence, submissions without attachments through the retained D3 suite, MIME/signature rejection, file-count and individual-size limits, bounded-decode rejection, metadata stripping, retry idempotency, simulated upload failure rollback, explicit deletion, expiry cleanup and deny-by-default browser Storage/Firestore access. All 83 pre-D4 tests remain green.
+
+Isolated headless Microsoft Edge acceptance passed at desktop `1440 × 1000`, mobile `390 × 844` and mobile `360 × 740`. Each viewport exercised invalid-format feedback, valid preview, removal, reselection, all three form stages, private-photo acknowledgement, emulator submission and reference confirmation. Every measured stage reported `scrollWidth === innerWidth`, one H1 and a main landmark; mobile navigation opened at both narrow sizes. The run reported zero console errors, zero unexpected failed requests and zero unexpected HTTP error responses. Screenshots were written outside the repository under `%TEMP%\fes-d4-acceptance`.
+
+### Defect corrected during verification
+
+Deleting an enquiry initially left its short-lived duplicate-fingerprint record. A new equivalent request could therefore receive a reference to the deleted enquiry. Duplicate resolution now verifies the target enquiry inside the transaction, removes a stale fingerprint and creates a new request. Regression coverage includes delete-then-resubmit and retention cleanup.
+
+### Owner approvals still required
+
+- [ ] Approve customer-photo consent wording/version and how customers are told why photographs are useful, private and optional.
+- [ ] Approve the proposed limits: four files, 5 MiB each, 12 MiB total, 20 megapixels, 8,000-pixel input dimension and 2,000-pixel sanitized WebP output.
+- [ ] Approve the enquiry/photo retention period, expiry schedule, recovery/backup expectations, legal-hold handling and permanent-deletion authority.
+- [ ] Name the administrator roles/accounts permitted to view customer photographs and approve access review/audit requirements. No staff viewing route is exposed in D4.
+- [ ] Approve malware/incident handling expectations and monitoring recipients for rejected files, repeated failures, cleanup failures and unusual volume.
+- [ ] Authorize a bounded live staging test with non-sensitive, rights-cleared photographs. Separately approve any required deployed Rules, IAM or lifecycle change; none is included here.
+
+**Phase D4 status:** implementation-complete, emulator-tested and browser-accepted; live activation remains blocked on the D3 and D4 owner approvals above. Phase D5 has not started. The next recommended step is to record those decisions, perform a separately authorized bounded staging test, then authorize Phase D5 administrator enquiry management.
+
 ## Phase D3 secure customer quote submissions - 20 October 2026
 
 Phase D3 was implemented only from `C:\fes-dev\fiberelectricsolutionsltd`, starting from the clean, synchronized Phase D2 closeout commit `b9b324f5fdb3c1cfd88b4ca3216a967bd1c5dc2c`. The implementation is complete and verified against local Firebase emulators. Live customer submissions remain disabled by default because the owner has not yet approved the privacy notice, customer consent wording/version, retention period or staff access roster. No live Firebase data, Storage object, rule, IAM/ACL setting, billing setting or production deployment was changed.
