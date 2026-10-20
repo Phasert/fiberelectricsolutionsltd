@@ -24,8 +24,8 @@ export const publicBusinessSettingsSchema = z.object({
     if (new Set(names).size !== 7 || day.options.some((name) => !names.includes(name))) ctx.addIssue({ code: "custom", message: "Opening hours must contain each day exactly once." });
   }),
   socialLinks: z.object({ facebook: optionalUrl, instagram: optionalUrl, linkedin: optionalUrl, googleBusiness: optionalUrl, whatsapp: optionalUrl }).strict(),
-  branding: z.object({ logoUrl: optionalAssetUrl, faviconUrl: optionalAssetUrl }).strict(),
-  seo: z.object({ title: z.string().trim().min(1).max(60), description: z.string().trim().min(1).max(160), socialImageUrl: optionalAssetUrl }).strict(),
+  branding: z.object({ logoUrl: optionalAssetUrl, faviconUrl: optionalAssetUrl, logoMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null), faviconMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null) }).strict(),
+  seo: z.object({ title: z.string().trim().min(1).max(60), description: z.string().trim().min(1).max(160), socialImageUrl: optionalAssetUrl, socialImageMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null) }).strict(),
 }).strict();
 
 export const businessSettingsInputSchema = z.object({

@@ -5,6 +5,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { PUBLIC_PROJECTS_TAG } from "@/lib/projects/public-cache";
+import { getPublicMediaUrl } from "@/lib/media/public-repository";
 import type { ProjectCategory, ProjectImage, PublicProject } from "@/types/content";
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100);
@@ -45,14 +46,14 @@ export function projectPlaceholder(category: ProjectCategory) {
   return placeholderByCategory[category];
 }
 
-function normalizeProject(id: string, raw: unknown): PublicProject | null {
+async function normalizeProject(id: string, raw: unknown): Promise<PublicProject | null> {
   const parsed = storedProjectSchema.safeParse(raw);
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
-  const gallery: ProjectImage[] = project.gallery
+  const gallery: ProjectImage[] = await Promise.all(project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(item => ({ src: placeholder, alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) }));
+    .map(async item => ({ src: await getPublicMediaUrl(item.mediaId,"lg") ?? placeholder, alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) })));
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
 
   return {
@@ -64,7 +65,7 @@ function normalizeProject(id: string, raw: unknown): PublicProject | null {
     ...(project.description ? { description: project.description } : {}),
     ...(project.location ? { location: project.location } : {}),
     ...(project.period ? { period: project.period } : {}),
-    featuredImage: placeholder,
+    featuredImage: await getPublicMediaUrl(cover?.mediaId,"md") ?? placeholder,
     featuredImageAlt: cover?.alt || `${project.title} project image placeholder`,
     gallery,
     featured: project.featured,
@@ -75,8 +76,8 @@ function normalizeProject(id: string, raw: unknown): PublicProject | null {
 
 export async function listPublicProjectsUncached(): Promise<PublicProject[]> {
   const snapshot = await getAdminFirestore().collection("projects").where("status", "==", "Published").get();
-  return snapshot.docs
-    .map(document => normalizeProject(document.id, document.data()))
+  return (await Promise.all(snapshot.docs
+    .map(document => normalizeProject(document.id, document.data()))))
     .filter((project): project is PublicProject => project !== null)
     .toSorted((left, right) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title));
 }
@@ -90,7 +91,7 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   if (typeof projectId !== "string" || !projectId) return null;
   const projectDocument = await database.collection("projects").doc(projectId).get();
   if (!projectDocument.exists) return null;
-  const project = normalizeProject(projectDocument.id, projectDocument.data());
+  const project = await normalizeProject(projectDocument.id, projectDocument.data());
   return project?.slug === slug ? project : null;
 }
 

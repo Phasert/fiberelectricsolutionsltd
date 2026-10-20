@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { PUBLIC_RESOURCES_TAG } from "@/lib/resources/public-cache";
 import { sanitizeRichText } from "@/lib/resources/schemas";
+import { getPublicMediaUrl } from "@/lib/media/public-repository";
 import type { PublicArticle, PublicExternalResource, PublicRichTextNode, ResourceCategory } from "@/types/content";
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120);
@@ -21,6 +22,7 @@ const storedResourceSchema = z.object({
   featured: z.boolean().optional().default(false),
   publishedAt: z.unknown().optional(),
   coverImage: z.string().trim().max(500).optional().default(""),
+  coverMediaId: z.string().trim().max(128).nullable().optional().default(null),
   content: z.unknown().optional(),
   stagingOnly: z.boolean().optional().default(false),
   audience: z.enum(["Public", "Staging"]).optional().default("Public"),
@@ -60,7 +62,7 @@ function isClearlyLabelledStagingFixture(resource: z.infer<typeof storedResource
   return /\bphase\s+[a-z]\d+\b|\bstaging[- ]only\b|\bemulator\b|\bbrowser\s+(?:test|verification|resource)\b/i.test(label);
 }
 
-function normalize(id: string, raw: unknown): PublicArticle | PublicExternalResource | null {
+async function normalize(id: string, raw: unknown): Promise<PublicArticle | PublicExternalResource | null> {
   const parsed = storedResourceSchema.safeParse(raw);
   if (!parsed.success || parsed.data.stagingOnly || parsed.data.audience === "Staging" || isClearlyLabelledStagingFixture(parsed.data)) return null;
   const resource = parsed.data;
@@ -72,7 +74,7 @@ function normalize(id: string, raw: unknown): PublicArticle | PublicExternalReso
   }
   const content = sanitizeRichText(resource.content) as PublicRichTextNode | undefined;
   if (!content || content.type !== "doc") return null;
-  const featuredImage = safeCoverImage(resource.coverImage, resource.category);
+  const featuredImage = await getPublicMediaUrl(resource.coverMediaId,"md") ?? safeCoverImage(resource.coverImage, resource.category);
   return {
     id,
     slug: resource.slug,
@@ -93,7 +95,7 @@ export interface PublicResources { articles: PublicArticle[]; externalResources:
 
 export async function listPublicResourcesUncached(): Promise<PublicResources> {
   const snapshot = await getAdminFirestore().collection("resources").where("status", "==", "Published").get();
-  const normalized = snapshot.docs.map(document => normalize(document.id, document.data())).filter((item): item is PublicArticle | PublicExternalResource => item !== null);
+  const normalized = (await Promise.all(snapshot.docs.map(document => normalize(document.id, document.data())))).filter((item): item is PublicArticle | PublicExternalResource => item !== null);
   const byDateThenTitle = (left: { publishedAt?: string; title: string }, right: { publishedAt?: string; title: string }) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title);
   return {
     articles: normalized.filter((item): item is PublicArticle => "slug" in item).toSorted(byDateThenTitle),
@@ -110,7 +112,7 @@ export async function getPublicArticleBySlugUncached(slug: string): Promise<Publ
   if (typeof resourceId !== "string" || !resourceId) return null;
   const resourceDocument = await database.collection("resources").doc(resourceId).get();
   if (!resourceDocument.exists) return null;
-  const resource = normalize(resourceDocument.id, resourceDocument.data());
+  const resource = await normalize(resourceDocument.id, resourceDocument.data());
   return resource && "slug" in resource && resource.slug === slug ? resource : null;
 }
 

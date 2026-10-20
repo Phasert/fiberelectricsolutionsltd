@@ -4,6 +4,7 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import { defaultPages, defaultServices } from "@/lib/site-content/defaults";
 import { pageInputSchema, sectionSchema, servicesInputSchema, type SiteContentAdminState, type SiteContentSection } from "@/lib/site-content/schemas";
 import type { ManagedService } from "@/types/admin";
+import { collectMediaIds,prepareMediaReferenceSync,syncMediaReferences } from "@/lib/media/references";
 
 const pages = () => getAdminFirestore().collection("siteContent");
 const services = () => getAdminFirestore().collection("services");
@@ -25,6 +26,7 @@ export async function saveSiteContent(sectionValue: string, input: unknown, uid:
   await getAdminFirestore().runTransaction(async (transaction) => {
     const current = await transaction.get(ref);
     const published = value.status === "Published" ? value.content : (current.data()?.published ?? null);
+    await syncMediaReferences(transaction,{consumer:`siteContent/${ref.id}:content`,previousIds:collectMediaIds(current.data()),nextIds:collectMediaIds({draft:value.content,published}),role:"site-content",uid});
     transaction.set(ref, {
       schemaVersion: 1, section, status: value.status, draft: value.content, published,
       createdAt: current.exists ? current.data()?.createdAt : FieldValue.serverTimestamp(),
@@ -66,6 +68,10 @@ export async function saveServices(input: unknown, uid: string) {
     const existing = await transaction.get(services().where("category", "==", value.category));
     const incomingIds = new Set(value.services.map((service) => service.id));
     const current = new Map(existing.docs.map((doc) => [doc.id, doc.data()]));
+    const plans=[];
+    for(const item of value.services){const prior=current.get(item.id),draft=serviceSnapshot(item),published=item.status==="Published"?draft:(prior?.published??null);plans.push(await prepareMediaReferenceSync(transaction,{consumer:`services/${item.id}:image`,previousIds:collectMediaIds(prior),nextIds:collectMediaIds({draft,published}),role:"service-image",uid}))}
+    for(const doc of existing.docs)if(!incomingIds.has(doc.id))plans.push(await prepareMediaReferenceSync(transaction,{consumer:`services/${doc.id}:image`,previousIds:collectMediaIds(doc.data()),nextIds:[],role:"service-image",uid}));
+    plans.forEach(apply=>apply());
     for (const item of value.services) {
       const ref = services().doc(item.id);
       const prior = current.get(item.id);

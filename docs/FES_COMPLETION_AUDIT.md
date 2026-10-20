@@ -1,9 +1,87 @@
 # FES Website Completion Audit
 
-**Audit date:** 19 October 2026
+**Audit date:** 20 October 2026
 
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
+
+## Phase D2 secure editorial media implementation - 20 October 2026
+
+Phase D2 implementation and closeout were completed from `C:\fes-dev\fiberelectricsolutionsltd`. The baseline was clean and synchronized before implementation: local `main` and `origin/main` both resolved to `a27e2b64ce20d858ad746f84b66a150db797ac15`, which includes the D1c-3 closeout and `app/icon.svg`. Live editorial uploads remained disabled throughout; all upload, processing, delivery and browser acceptance activity used only the local Firebase Auth, Firestore and Storage emulators.
+
+### Implemented architecture
+
+- Added a server-only, default-off live-media gate. Live mode is rejected unless the configured project, allowed project, configured bucket and allowed bucket exactly match `fesr-c3ae1` and `fesr-c3ae1.firebasestorage.app`. Emulator and live mode cannot be combined. No `NEXT_PUBLIC_` write switch was introduced.
+- Added explicit 10 MiB input, 12,000-pixel dimension, 40-megapixel decode and 20-files-per-administrator/day defaults in `.env.example`. The live flag remains `false`; `.env.local` and credentials remain ignored and were not printed or staged.
+- Added pinned `sharp` 0.34.5 processing. JPEG, PNG and WebP inputs must pass MIME/signature agreement and bounded full decoding. Animated/multi-page images are rejected. Processing auto-orients, normalizes to sRGB, strips EXIF/IPTC/XMP/GPS metadata by re-encoding, and creates no-upscale WebP derivatives near 640, 1280 and 1920 pixels.
+- Versioned schema-2 media records now track `Pending`, `Processing`, `Ready`, `Failed`, `Deleting` and `Deleted` states, checksums, pixel count, derivative descriptors, failure/cleanup fields and audit actors/timestamps. Failed work is recoverable and cleanup retains an audited tombstone instead of silently deleting the record.
+- Object layout separates private temporary uploads (`editorial/private/pending/...`), sanitized private originals (`editorial/private/originals/...`) and versioned public derivatives (`editorial/public/derivatives/...`). Private objects use `private, no-store`; derivatives use immutable one-year caching. The future `quote-photos/` namespace is not used.
+- Added transaction-maintained `mediaReferences/{mediaId}` reverse references with Ready-state and role checks. Projects, resource covers, services, site content and branding/settings attach and detach references in the same Firestore transaction as their consumer mutation. Featured placements continue to inherit media eligibility from their referenced published project/resource rather than storing a second direct image reference.
+- Project administration now supports Media Library selection, unique ordered gallery membership, per-placement alternative text/captions and explicit cover selection. Resource administration now supports a Ready-media cover selector. Existing service/site-content selectors remain in place. Publishing validation continues to require a project cover that belongs to its gallery.
+- Public project galleries and resource/article covers resolve only Ready derivative URLs and retain the approved static placeholder when no eligible derivative exists. The new `/media/{id}/{variant}?v={version}` server route allows only `sm`, `md` and `lg`, rechecks a current published/approved reverse reference, requires the exact immutable version, supports ETag/304 responses, emits `nosniff`, and never exposes Storage paths, Admin credentials or originals.
+- Media deletion is two-stage and audited. It transactionally checks reverse references, records deletion intent, removes private/original derivative objects through the Admin SDK, then writes a tombstone. Concurrent attachment versus deletion is covered by an emulator race test so a published consumer cannot retain a deleted media record.
+- Direct browser Firestore and Storage access remains deny-by-default. Existing Firebase rules, IAM, ACLs, billing, bucket configuration and live objects were not changed or deployed.
+
+### Files and data-model changes
+
+- New server modules: `lib/media/config.ts`, `lib/media/processing.ts`, `lib/media/references.ts` and `lib/media/public-repository.ts`.
+- New controlled public route: `app/media/[id]/[variant]/route.ts`.
+- Updated media schemas, validation, repository and administrator routes; added `components/admin/media-picker.tsx`; connected project/resource forms and public repositories.
+- Updated project, resource, service/site-content and business-settings repositories to maintain media references. Resource `coverMediaId` and optional branding/social media-ID fields are additive; legacy URL fields remain readable for a controlled later migration.
+- Added `tests/security/media-references.integration.test.ts` and expanded media/project integration coverage. `package.json` and `bun.lock` include pinned Sharp support.
+
+### Verification evidence
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build compiled, typechecked and generated 28 static pages; the controlled `/media/[id]/[variant]` route is server-rendered. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulators ran 14 files / 74 tests; all passed. Repeated metadata-server lookup warnings were non-fatal and no live Firebase write was used. |
+
+The D2 tests exercise trusted-origin/administrator rejection, full decode and MIME checks, size/pixel limits, normalized private originals, derivative creation, metadata removal, public-original isolation, current-publication checks, immutable caching and ETags, failure cleanup, tombstones, reverse-reference blocking, Ready/role validation, publication attachment/detachment, simultaneous attachment/deletion and small-image best-available derivative selection. All 69 pre-D2 tests remain green.
+
+### Browser acceptance closeout
+
+- The earlier Windows browser-control safety interruption was resolved without weakening its protections: an isolated, temporary Microsoft Edge profile was driven through Playwright Core. It did not attach to an existing browser session or read private browser data.
+- The local Auth, Firestore and Storage emulators were started from clean state and seeded with emulator-only administrator fixtures. The application ran at `http://localhost:3000` with emulator host variables and `EDITORIAL_MEDIA_LIVE_ENABLED=false`. No staging or production data was read or changed.
+- Desktop acceptance at `1440 × 1000` passed for Media Library upload/listing, public project galleries and public article covers. Unsupported-file feedback was visible and recoverable; three valid PNGs processed to Ready; a referenced-media deletion returned the intended conflict message; an unreferenced public derivative returned 404; and an anonymous private-original request returned 401.
+- The project workflow persisted two ordered gallery images, per-placement alternative text and captions, an explicit cover and Published state. The saved project editor was reopened after navigation. The resource editor persisted a Ready-media cover; service/site-content and branding/settings role selectors exposed only eligible Ready media.
+- Public project and article pages rendered versioned controlled derivative URLs. A published article without media retained its approved static fallback. Private originals and unpublished/unreferenced derivatives were not exposed.
+- Responsive acceptance passed at exact `390 × 844` and `360 × 740` viewports for Media Library, the persisted project editor, resource editor, Site Content, Settings, public project and public article pages: 14 page/viewport combinations. Each reported `scrollWidth === innerWidth`, a main landmark and one H1; administrator and public mobile menus opened successfully. Visual captures showed usable controls, unclipped content and preserved layouts.
+- The final isolated Edge run reported zero application console errors, zero unexpected failed requests and zero unexpected HTTP error responses. Expected deletion-conflict traffic and navigation-aborted requests were explicitly classified rather than concealed as successes. Temporary evidence was written outside the repository under `%TEMP%\fes-d2-acceptance`.
+
+### Closeout defects discovered and corrected
+
+- The upload queue previously retained a live `FileList`; clearing the file input before React evaluated its state updater could empty the queue. Files are now snapshotted before the input is reset.
+- Ready/Failed lifecycle feedback and filename-specific deletion labels were added to the Media Library. The live-disabled message now accurately states that the existing bucket is gated rather than missing.
+- The Settings page now supplies Ready media to logo, favicon and social-image selectors.
+- Small valid images intentionally create only non-upscaled derivatives, but public repositories previously demanded an exact `md`/`lg` variant and silently showed a placeholder. Public URL resolution now chooses the best available versioned derivative, with emulator regression coverage.
+- Next.js 16 rejected version-query local media URLs in `next/image`, causing published media pages to return 500. Already-optimized controlled `/media/` derivatives now bypass redundant Next optimization; static placeholders retain normal optimization.
+- The public article page imported a date formatter from a client module and failed at runtime when real article data existed. Date formatting now lives in a shared server-safe utility.
+
+### Migration and remaining risks
+
+- Existing project gallery IDs can be adopted without rewriting captions/order, but every referenced media record must first be migrated to schema 2, processed to Ready and given derivative descriptors. Existing resource `coverImage` and branding/social image URL fields remain fallback-only; a dry-run inventory and owner-reviewed ID mapping are required before replacing them.
+- Reverse-reference documents are created by new consumer writes. A bounded, dry-run-first backfill must create references for existing Firestore consumers before live deletion is enabled. Until that migration is verified, the repository retains a legacy collection scan when a reverse-reference document is absent.
+- Deployed Storage Rules parity, organization/IAM policy inheritance, pre-existing per-object ACLs, recovery/versioning, retention/lifecycle policy, monitoring recipients and the bounded live write/read/delete path remain unverified or unapproved. No infrastructure change is included.
+- The final diff and staged content were reviewed for credentials, private keys, environment files, live Firebase changes and unrelated generated artifacts. `.env.local` remains ignored. No Storage/Firestore rules, IAM, ACL, billing, bucket, lifecycle or live-object operation was performed.
+- Live deployment risk remains deliberately gated: deployed Rules parity, organization/IAM inheritance, existing object ACLs, retention/versioning, recovery and monitoring still require owner review before a bounded staging upload.
+
+### Exact live staging gate and owner approvals
+
+The owner must explicitly approve all items below before `EDITORIAL_MEDIA_LIVE_ENABLED` may be set to `true` or any live object may be written:
+
+- [ ] Input and daily quotas. Recommended defaults: JPEG/PNG/WebP only, 10 MiB, 40 megapixels, 12,000 pixels per dimension and 20 files per administrator/day.
+- [ ] Rights and editorial responsibility: confirm image ownership/licensing, public-use approval, required alt text/captions and the people allowed to approve publication.
+- [ ] Public delivery: approve the controlled server route for versioned derivatives only; originals and temporary objects remain private and no public object ACL is used.
+- [ ] Retention and cleanup: approve 24-hour failed/pending cleanup and the post-deletion recovery window. Current bucket versioning/retention remains unchanged.
+- [ ] Recovery: approve a documented restore approach and responsible owner before permanent live deletion is accepted.
+- [ ] Security changes: separately review and approve any proposed deployed Rules, IAM, public-access-prevention, uniform-bucket-access, lifecycle, CORS or index change. None is authorized by this implementation.
+- [ ] Monitoring: name alert recipients and approve thresholds for failed processing, unusual upload volume, quota rejection, cleanup backlog and unexpected deletion attempts.
+- [ ] Bounded staging acceptance: approve one named administrator and one rights-cleared, non-sensitive editorial image for upload, derivative/private-original verification, attachment to a clearly approved staging record, publication/revocation check, detach and deletion. Turn the flag off afterward unless continued staging use receives separate approval.
+
+Phase D2 is implemented, emulator-tested and browser-accepted. It is technically closed in code; live staging uploads remain a separately owner-authorized activation step. Live uploads remain disabled, no Firebase infrastructure was modified, and Phase D3 has not started.
 
 ## D1c-3 closeout and Phase D2 readiness review - 19 October 2026
 

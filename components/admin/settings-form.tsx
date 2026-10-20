@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Check, ExternalLink, ImageIcon, Info, RotateCcw, Search, Share2, Upload, X } from "lucide-react";
 import Image from "next/image";
-import type { BusinessSettings } from "@/types/admin";
+import type { BusinessSettings,MediaItem } from "@/types/admin";
 import type { BusinessSettingsState } from "@/lib/settings/schema";
+import { MediaPicker } from "@/components/admin/media-picker";
 
 type SectionId = "business" | "social" | "branding" | "search";
 type Errors = Record<string, string>;
@@ -23,7 +24,7 @@ const isSafeUrl = (value: string) => {
 };
 const isPhone = (value: string) => !value.trim() || (/^[+()\-\s\d]{7,24}$/.test(value) && value.replace(/\D/g, "").length >= 7);
 
-export function SettingsForm({ initialState }: { initialState: BusinessSettingsState }) {
+export function SettingsForm({ initialState,media }: { initialState: BusinessSettingsState;media:MediaItem[] }) {
   const [activeSection, setActiveSection] = useState<SectionId>("business");
   const [settings, setSettings] = useState<BusinessSettings>(() => structuredClone(initialState.settings));
   const [baseline, setBaseline] = useState<BusinessSettings>(() => structuredClone(initialState.settings));
@@ -51,6 +52,7 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
   };
   const updateSocial = (key: keyof BusinessSettings["socialLinks"], value: string) => update("socialLinks", { ...settings.socialLinks, [key]: value });
   const updateSeo = (key: keyof BusinessSettings["seo"], value: string) => update("seo", { ...settings.seo, [key]: value });
+  const updateBrandingMedia = (key: "logoMediaId"|"faviconMediaId", value: string) => update("branding", { ...settings.branding, [key]: value || null });
 
   function validate() {
     const next: Errors = {};
@@ -160,11 +162,12 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
         </div>
       </SectionPanel>
 
-      <SectionPanel id="branding" active={activeSection} title="Branding" intro="Preview replacement artwork locally. Files are not uploaded and the public logo or browser icon will not change.">
+      <SectionPanel id="branding" active={activeSection} title="Branding" intro="Choose existing Ready editorial media for approved branding roles. Local file previews below are not uploaded.">
         <div className="grid gap-6 lg:grid-cols-2">
           <ImagePicker kind="logo" title="Company logo" description="PNG, JPG or WebP · maximum 2 MB · transparent PNG recommended" preview={logoPreview} error={errors.logoFile} onChoose={file => chooseImage("logo", file)} onRevert={() => clearPreview("logo")}/>
           <ImagePicker kind="favicon" title="Browser icon" description="PNG or ICO · maximum 1 MB · square image recommended" preview={faviconPreview} error={errors.faviconFile} onChoose={file => chooseImage("favicon", file)} onRevert={() => clearPreview("favicon")}/>
         </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-3"><MediaPicker items={media} value={settings.branding.logoMediaId??""} onChange={value=>updateBrandingMedia("logoMediaId",value)} title="Approved logo media" role="branding"/><MediaPicker items={media} value={settings.branding.faviconMediaId??""} onChange={value=>updateBrandingMedia("faviconMediaId",value)} title="Approved browser icon media" role="branding"/><MediaPicker items={media} value={settings.seo.socialImageMediaId??""} onChange={value=>update("seo",{...settings.seo,socialImageMediaId:value||null})} title="Approved social image" role="branding"/></div>
         <div className="mt-6 flex items-start gap-3 rounded-lg bg-blue-50 p-4 text-xs leading-5 text-blue-900"><Info size={16} className="mt-0.5 shrink-0"/><p>The current brand mark is rendered by the website rather than loaded from an image file. No file-based favicon is currently configured, so the FES tile shown here is a representative preview.</p></div>
       </SectionPanel>
 

@@ -22,7 +22,7 @@ export interface QuoteRequestCustomerInput {
 
 export interface ProjectGalleryItem { mediaId:string; alt:string; caption:string; order:number; }
 export interface AdminProject { id:string; slug:string; title:string; category:ProjectCategory; summary:string; location:string; period:string; status:PublishStatus; featured:boolean; image:string; coverMediaId:string|null; gallery:ProjectGalleryItem[]; galleryCount:number; updatedAt:string; }
-export interface AdminResource { id:string; slug:string; title:string; kind:"FES article"|"Company update"|"External resource"; category:"Electrical"|"Fiber Optic"|"Company Updates"; summary:string; source?:string; externalUrl?:string; status:PublishStatus; featured?:boolean; publishedAt?:string; updatedAt:string; coverImage?:string; content?: Record<string, unknown>; }
+export interface AdminResource { id:string; slug:string; title:string; kind:"FES article"|"Company update"|"External resource"; category:"Electrical"|"Fiber Optic"|"Company Updates"; summary:string; source?:string; externalUrl?:string; status:PublishStatus; featured?:boolean; publishedAt?:string; updatedAt:string; coverImage?:string; coverMediaId?:string|null; content?: Record<string, unknown>; }
 export interface AdminTip { id:string; type:"Do"|"Don’t"; title:string; body:string; enabled:boolean; order:number; }
 export interface Enquiry extends Omit<QuoteRequestCustomerInput, "propertyType"> {
   id:string;
@@ -51,7 +51,7 @@ export interface MediaItem {
   height:number;
   alt:string;
   caption:string;
-  status:"Pending"|"Ready"|"Failed";
+  status:"Pending"|"Processing"|"Ready"|"Failed"|"Deleting";
   projectId?:string;
   project?:string;
   category:ProjectCategory;
@@ -84,11 +84,14 @@ export interface BusinessSettings {
   branding: {
     logoUrl: string | null;
     faviconUrl: string | null;
+    logoMediaId?: string | null;
+    faviconMediaId?: string | null;
   };
   seo: {
     title: string;
     description: string;
     socialImageUrl: string | null;
+    socialImageMediaId?: string | null;
   };
 }
 
