@@ -38,6 +38,8 @@ describe("deny-by-default Firebase boundaries", () => {
     await assertFails(setDoc(doc(client, "services/electrical-test"), { status: "Published" }));
     await assertFails(getDoc(doc(client, "businessSettings/public-v1")));
     await assertFails(setDoc(doc(client, "businessSettings/public-v1"), { publicEmail: "blocked@example.test" }));
+    await assertFails(getDoc(doc(client, "quoteRequests/private-enquiry")));
+    await assertFails(setDoc(doc(client, "quoteRequests/private-enquiry"), { name: "Blocked customer" }));
   });
 
   it("blocks private Storage reads and writes", async () => {

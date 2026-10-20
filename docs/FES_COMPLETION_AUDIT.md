@@ -5,6 +5,56 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D3 secure customer quote submissions - 20 October 2026
+
+Phase D3 was implemented only from `C:\fes-dev\fiberelectricsolutionsltd`, starting from the clean, synchronized Phase D2 closeout commit `b9b324f5fdb3c1cfd88b4ca3216a967bd1c5dc2c`. The implementation is complete and verified against local Firebase emulators. Live customer submissions remain disabled by default because the owner has not yet approved the privacy notice, customer consent wording/version, retention period or staff access roster. No live Firebase data, Storage object, rule, IAM/ACL setting, billing setting or production deployment was changed.
+
+### Implemented quote workflow
+
+- Replaced the browser-only preview action with a server-only `POST /api/quote-requests` endpoint and a strict schema-version-1 Zod contract. The server independently validates contact-method requirements, normalized service identifiers/category compatibility, field lengths, enum values, duplicate service IDs and the absence of attachments.
+- Valid emulator submissions are stored by the Firebase Admin SDK in private `quoteRequests/{requestId}` records with `New` status, submitted/updated timestamps, a consent version and acknowledgement timestamp, source channel, retention deadline and an empty attachment list. Submission keys are hashed and never stored on the enquiry.
+- Added transaction-backed idempotency and duplicate suppression. A safe retry with the same submission key returns the original reference; an equivalent payload with a different key is deduplicated inside the bounded window; reusing a key for changed data fails with a conflict rather than creating an ambiguous record.
+- Added a 16 KiB request limit, JSON-only parsing, trusted-origin enforcement, a hidden honeypot, minimum/maximum completion-time checks and a five-requests-per-15-minute source limit. IP and user-agent values are never stored raw: keyed HMAC-SHA-256 values use an emulator-only local key or a required live server secret. Customer details are not logged.
+- Live submission mode is fail-closed. It requires the exact approved project `fesr-c3ae1`, no emulator conflict, `QUOTE_SUBMISSIONS_LIVE_ENABLED=true`, recorded privacy approval, a non-empty consent version, a positive retention period and a server-only abuse-hash secret of at least 32 characters. Defaults in `.env.example` remain off/empty and `.env.local` remains ignored.
+- Preserved the approved three-stage responsive form, adding an honest loading state, accessible inline/server errors and a real success/reference state. The page visibly explains the live approval gate when disabled. Phase D4 customer photographs were removed from the submission flow and are explicitly described as deferred to a separately approved private-media workflow.
+- Existing mock administrator enquiry list/detail/status/notes screens were intentionally not converted; administrator enquiry management remains a later milestone. No emails, notifications, invoices, payments or photo uploads were added.
+
+### Security and test coverage
+
+- Direct browser Firestore reads and writes to `quoteRequests` are explicitly covered by deny-by-default rules tests. All persistence is through server-only Admin SDK code; no public Firestore SDK path was introduced.
+- New integration coverage verifies valid persistence and audit/retention fields, protected source metadata, same-key retries, equivalent-payload deduplication, idempotency conflicts, invalid fields, mismatched service IDs, rejected attachments, untrusted origins, unsupported content types, oversized requests, implausibly fast submissions, honeypot behavior, rate limiting and the default-off live gate.
+- The complete Firebase Auth, Firestore and Storage emulator suite passed **16 files / 83 tests**. All 74 pre-D3 tests remain green. Repeated Google metadata lookup warnings were non-fatal and no live service was used.
+
+### Browser acceptance
+
+- Isolated headless Microsoft Edge acceptance ran against the local application connected only to Firebase emulators. It did not attach to an existing browser profile or use staging/production customer data.
+- Desktop `1440 × 1000`, mobile `390 × 844` and mobile `360 × 740` each completed the three form stages, exercised incomplete-stage validation, submitted a clearly labelled emulator enquiry and received a Firestore reference confirmation.
+- Every stage and confirmation reported `scrollWidth === innerWidth`, exactly one H1 and a main landmark. Both mobile sizes opened the public navigation successfully; the customer-photo deferral and emulator consent acknowledgement remained readable and usable.
+- The successful browser pass reported zero console errors, zero unexpected failed requests and zero unexpected HTTP error responses. Evidence screenshots were written outside the repository under `%TEMP%\fes-d3-acceptance`.
+
+### Verification results
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 Webpack production build compiled, typechecked and generated 29 static pages; `/api/quote-requests` is server-rendered. |
+| `bun run test` | 0 | Firebase emulator suite passed 16 files / 83 tests. |
+
+An initial post-implementation typecheck/build attempt correctly failed because the new test helper inferred a UUID-template type too narrowly. The helper contract was corrected; the successful results above are from the subsequent clean verification and the full suite is repeated before commit.
+
+### Remaining owner approval gates
+
+- [ ] Approve the exact privacy notice presented before submission and where it is linked/displayed.
+- [ ] Approve the customer consent wording and assign its durable version identifier.
+- [ ] Approve required versus optional customer fields and confirm that Phase D3 collects only necessary information.
+- [ ] Approve the enquiry retention/deletion period, deletion responsibility, legal-hold/escalation handling and backup/export expectations.
+- [ ] Name the staff accounts/roles permitted to access customer enquiries and approve an access-review process. The current administrator enquiry UI remains mock and cannot expose these records.
+- [ ] Approve production abuse-monitoring ownership and the securely generated server-only HMAC secret. Do not place that secret in Git or a public environment variable.
+- [ ] Authorize a bounded staging acceptance using non-sensitive test details before live customer use. Enabling the live flag and any infrastructure/rules/deployment action requires separate explicit authorization.
+
+**Phase D3 status:** implementation-complete, emulator-tested and browser-accepted; live activation is blocked on the owner approvals above. Phase D4 has not started. After the approval package is recorded, the recommended next milestone is Phase D4 private customer photographs using a namespace and retention/access policy completely separate from editorial media; otherwise, remain at this stopping point.
+
 ## Phase D2 secure editorial media implementation - 20 October 2026
 
 Phase D2 implementation and closeout were completed from `C:\fes-dev\fiberelectricsolutionsltd`. The baseline was clean and synchronized before implementation: local `main` and `origin/main` both resolved to `a27e2b64ce20d858ad746f84b66a150db797ac15`, which includes the D1c-3 closeout and `app/icon.svg`. Live editorial uploads remained disabled throughout; all upload, processing, delivery and browser acceptance activity used only the local Firebase Auth, Firestore and Storage emulators.
