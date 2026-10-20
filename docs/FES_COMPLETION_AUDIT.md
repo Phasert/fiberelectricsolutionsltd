@@ -49,6 +49,8 @@ Deleting an enquiry initially left its short-lived duplicate-fingerprint record.
 
 **Phase D4 status:** implementation-complete, emulator-tested and browser-accepted; live activation remains blocked on the D3 and D4 owner approvals above. Phase D5 has not started. The next recommended step is to record those decisions, perform a separately authorized bounded staging test, then authorize Phase D5 administrator enquiry management.
 
+The verified Phase D4 implementation, emulator tests, isolated Edge harness and closeout evidence were committed as `0fcdab4bc1d7a35192eea6ab64376e6c4baeb83a` (`feat: add secure private quote attachments`). This exact hash is recorded in the immediate audit follow-up commit.
+
 ## Phase D3 secure customer quote submissions - 20 October 2026
 
 Phase D3 was implemented only from `C:\fes-dev\fiberelectricsolutionsltd`, starting from the clean, synchronized Phase D2 closeout commit `b9b324f5fdb3c1cfd88b4ca3216a967bd1c5dc2c`. The implementation is complete and verified against local Firebase emulators. Live customer submissions remain disabled by default because the owner has not yet approved the privacy notice, customer consent wording/version, retention period or staff access roster. No live Firebase data, Storage object, rule, IAM/ACL setting, billing setting or production deployment was changed.
