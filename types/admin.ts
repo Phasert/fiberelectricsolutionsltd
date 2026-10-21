@@ -38,12 +38,15 @@ export interface Enquiry extends Omit<QuoteRequestCustomerInput, "propertyType">
   updatedAt?:string;
   status:EnquiryStatus;
   attachments:string[];
+  attachmentDetails?:EnquiryAttachment[];
+  consentAcknowledged?:boolean;
+  photoConsentAcknowledged?:boolean;
+  consentAcknowledgedAt?:string;
   consentVersion?:string;
   retentionUntil?:string;
   notes?:EnquiryNote[];
-  /** Legacy mock-only field retained until the fixture file is removed. */
-  note?:string;
 }
+export interface EnquiryAttachment { id:string; url:string; mimeType:string; sizeBytes:number; width:number; height:number; status:string; }
 export interface EnquiryNote { id:string; body:string; authorUid:string; authorEmail:string; createdAt:string; }
 export interface MediaItem {
   id:string;

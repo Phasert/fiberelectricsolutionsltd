@@ -11,7 +11,7 @@ import type { PublicAboutContent, PublicCta, PublicHomepageContent, PublicServic
 const fixturePattern = /\bphase\s+[a-z]\d+\b|\bstaging[- ]only\b|\bemulator\b|\bbrowser\s+(?:test|verification|content|service)\b/i;
 const containsFixtureLabel = (value: unknown) => fixturePattern.test(JSON.stringify(value));
 
-const storedPageSchema = z.object({ schemaVersion: z.literal(1), section: sectionSchema, status: z.literal("Published"), published: z.unknown() });
+const storedPageSchema = z.object({ schemaVersion: z.literal(1), section: sectionSchema, published: z.unknown() });
 export type PublicSiteContent = PublicHomepageContent | PublicServicePageContent | PublicAboutContent | PublicCta[];
 
 export async function getPublicSiteContentUncached(sectionValue: string): Promise<PublicSiteContent | null> {
@@ -28,13 +28,13 @@ export async function getPublicSiteContentUncached(sectionValue: string): Promis
 
 const storedServiceSchema = z.object({
   schemaVersion: z.literal(1), category: z.enum(["electrical", "fiber"]),
-  slug: z.string().trim().min(3).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/), status: z.literal("Published"),
+  slug: z.string().trim().min(3).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   published: z.object({ title: z.string().trim().min(1).max(160), shortDescription: z.string().trim().min(1).max(500), detailedDescription: z.string().trim().min(1).max(3000), displayOrder: z.number().int().min(0).max(999), enabled: z.literal(true) }),
 });
 
 export async function listPublicServicesUncached(categoryValue: string): Promise<PublicService[]> {
   const category = z.enum(["electrical", "fiber"]).parse(categoryValue);
-  const snapshot = await getAdminFirestore().collection("services").where("status", "==", "Published").where("category", "==", category).get();
+  const snapshot = await getAdminFirestore().collection("services").where("category", "==", category).get();
   return snapshot.docs.flatMap(document => {
     const parsed = storedServiceSchema.safeParse(document.data());
     if (!parsed.success || containsFixtureLabel(parsed.data.published)) return [];

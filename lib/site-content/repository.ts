@@ -42,7 +42,7 @@ export async function getPublishedSiteContent(sectionValue: string) {
   const section = sectionSchema.parse(sectionValue);
   const snapshot = await pageRef(section).get();
   const data = snapshot.data();
-  return data?.status === "Published" && data.published ? data.published : null;
+  return data?.published ?? null;
 }
 
 const serviceSnapshot = (data: FirebaseFirestore.DocumentData) => ({
@@ -91,7 +91,7 @@ export async function saveServices(input: unknown, uid: string) {
 
 export async function listPublishedServices(categoryValue?: string) {
   const category = categoryValue ? servicesInputSchema.shape.category.parse(categoryValue) : undefined;
-  let query: FirebaseFirestore.Query = services().where("status", "==", "Published");
+  let query: FirebaseFirestore.Query = services();
   if (category) query = query.where("category", "==", category);
   const snapshot = await query.get();
   return snapshot.docs.flatMap((doc) => {

@@ -45,7 +45,7 @@ describe("Phase C4 site content and services", () => {
     await saveSiteContent("homepage", { status: "Published", content: homepage }, actor);
     await saveSiteContent("homepage", { status: "Draft", content: { ...homepage, heroHeading: "New isolated draft" } }, actor);
     expect((await listAdminSiteContent()).homepage.content.heroHeading).toBe("New isolated draft");
-    expect(await getPublishedSiteContent("homepage")).toBeNull();
+    expect((await getPublishedSiteContent("homepage"))?.heroHeading).toBe(homepage.heroHeading);
     expect((await getAdminFirestore().collection("siteContent").doc("homepage-v1").get()).data()?.published.heroHeading).toBe(homepage.heroHeading);
   });
 
@@ -63,7 +63,7 @@ describe("Phase C4 site content and services", () => {
   it("preserves a published service snapshot when a new draft is saved", async () => {
     await saveServices({ category: "electrical", services: [service(serviceA, 0)] }, actor);
     await saveServices({ category: "electrical", services: [{ ...service(serviceA, 0, "Draft"), title: "Unpublished edit" }] }, actor);
-    expect((await listPublishedServices("electrical")).find((item) => item.id === serviceA)).toBeUndefined();
+    expect((await listPublishedServices("electrical")).find((item) => item.id === serviceA)?.title).toBe("Test service 0");
     expect((await getAdminFirestore().collection("services").doc(serviceA).get()).data()?.published.title).toBe("Test service 0");
   });
 

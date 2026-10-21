@@ -5,8 +5,7 @@ import { getAdminResource, listAdminResources } from "@/lib/resources/repository
 import { listAdminTips } from "@/lib/tips/repository";
 import { getFeaturedSelection } from "@/lib/featured/repository";
 
-// Phase 2B integration boundary: replace this object with a Firebase-backed
-// implementation that returns the same typed shapes. UI components stay unchanged.
+// Shared Firebase-backed repository facade used by protected administrator pages.
 export const adminRepository = {
   getProjects: listAdminProjects,
   getProject: getAdminProject,

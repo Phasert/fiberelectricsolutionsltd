@@ -1,9 +1,51 @@
 # FES Website Completion Audit
 
-**Audit date:** 20 October 2026
+**Audit date:** 21 October 2026
 
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
+
+## Firebase-backed administrator acceptance - 21 October 2026
+
+This is the newest implementation and verification entry. Testing used the existing owner-selected staging project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app`; it did not perform hosting, DNS, Vercel, analytics or production-deployment work. Browser and Admin SDK configuration both resolved to that exact project, and the required client/Admin environment variables were present without their values being printed. No environment file or credential was added to Git.
+
+### Real staging acceptance
+
+- An unauthenticated `/admin` request redirected to login. Invalid credentials produced the generic rejection message. The owner-authorized administrator authenticated through Firebase Authentication, received the secure server session, retained access across navigation and refresh, and could load Dashboard, Projects, Media, Resources, Tips, Featured Content, Enquiries, Site Content and Settings from the staging repositories. Logout removed access, protected navigation redirected to login, and the private attachment route returned `401` afterward.
+- The dashboard displayed live staging counts and protected `adminDashboardContent` data. Existing staging projects, resources and tips were read from Firestore; no browser `localStorage` repository was involved. The unused legacy enquiry-state component was removed.
+- A bounded staging quote submission exercised the actual server route, Firestore persistence, consent/retention metadata, private sanitized photograph storage, administrator search/detail, allowed status update, attributed server-timestamped note, refresh persistence and authenticated photo delivery. The photo route remained private/no-store and failed after logout. The exact quote, note, deduplication and Storage fixtures created by this run were removed; a follow-up read confirmed zero fixture records remained.
+- The editorial Media Library reported `APPROVED STAGING` only while the exact-project feature gate was present. A small generated, non-sensitive image exercised the real server-side upload/processing path and produced a protected administrator media record. Its exact Firestore and Storage fixtures were removed after the pass. The staging server was then stopped, restoring all live gates to their default-off state; `.env.local` was not changed.
+- The complete emulator suite remains the exhaustive mutation/negative-security regression layer for Projects, galleries, Resources/articles, Tips, Featured Content, Site Content/services, Settings, Enquiries, editorial media and private quote photographs. It covers authorization, validation, duplicate slugs, drafts/publication, ordering, reference integrity, sanitization, idempotency, private-object boundaries and failure recovery. The bounded live pass intentionally did not overwrite existing approved fixed documents merely to repeat those destructive permutations.
+
+### Browser evidence
+
+The isolated Edge harness completed desktop `1440 × 1000`, tablet `768 × 1024`, mobile `390 × 844` and narrow mobile `360 × 740`. It measured 72 public/admin route-and-viewport combinations. Every page returned the expected result with one H1, one main landmark, zero unlabeled controls and `scrollWidth === innerWidth`. Public and administrator responsive menus, keyboard Escape behavior, quote submission, authenticated enquiry management, refresh persistence, logout and post-logout photo denial passed. The final structured result contained zero application console errors, failed requests or unexpected HTTP responses. Evidence was written outside the repository under `%TEMP%\fes-phase-e-acceptance`.
+
+### Defects found and fixed
+
+- Saving a new Site Content or Service draft could hide its last valid published snapshot because public readers also required the record's current status to be `Published`. Public repositories now return the independently stored published snapshot until an explicit republish replaces it; regression coverage verifies page and service draft isolation.
+- Enquiry mapping discarded the stored nested consent acknowledgement, photograph acknowledgement, acknowledgement timestamp and attachment dimensions/type/size/status. The protected administrator DTO and detail view now expose those approved fields without exposing private Storage paths.
+- Removed the unused legacy `localStorage` enquiry-state component and its obsolete single-note field. The active enquiry implementation remains Firebase-backed.
+- Corrected stale administrator copy that described Firestore-backed Tips, Services, Enquiries, staging Media and Settings behavior as mock, preview-only or disconnected.
+
+### Final verification
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated all 29 static pages. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 19 files / 97 tests. |
+
+The non-fatal Google metadata lookup warnings are the Admin SDK probing an unavailable metadata server while the emulator suite runs; all 97 assertions passed. No password, token, private key, OAuth credential, session cookie, `.env.local` or customer information is included in this audit or intended commit.
+
+### Remaining limitations
+
+- The supplied administrator password was disclosed in project chat and still requires owner rotation plus session review. The replacement must not be shared in chat.
+- Live quote/editorial feature gates remain default-off. This acceptance does not authorize continuous live customer collection, production deployment, Rules/IAM/ACL changes or billing changes.
+- Existing historical staging records remain clearly labelled test content. Final approved business content, image rights, administrator roster and production operational approvals remain owner responsibilities.
+
+**Administrator/Firebase acceptance status:** implementation and local/emulator regression verification are complete, and the bounded real-staging authentication, persistence, private-photo and responsive browser paths passed. Production activation remains separately approval-gated.
 
 ## Phase F launch-readiness preparation - 20 October 2026
 
