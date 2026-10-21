@@ -49,7 +49,7 @@ Isolated headless Microsoft Edge acceptance passed at desktop 1440 × 1000, mobi
 
 **Phase D5 status:** implementation-complete, emulator-tested and browser-accepted. Live customer collection remains disabled pending the operational gates and separate activation authorization. Phase E has not started. The next recommended action is an owner-reviewed bounded staging acceptance and retention/access runbook, followed by authorization for Phase E end-to-end testing.
 
-The verified Phase D5 implementation and acceptance evidence were committed as IMPLEMENTATION_COMMIT_TO_BE_RECORDED; the exact hash is recorded by the immediate audit follow-up commit.
+The verified Phase D5 implementation and acceptance evidence were committed as 2b92624a6070eec381d24000d0aa2eff10226c4e (feat: add secure administrator enquiry management). This exact hash is recorded by the immediate audit follow-up commit.
 
 ## Phase D4 secure customer quote photo attachments - 20 October 2026
 
