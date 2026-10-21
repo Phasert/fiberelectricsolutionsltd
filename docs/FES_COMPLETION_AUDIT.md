@@ -5,6 +5,55 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase F launch-readiness preparation - 20 October 2026
+
+This is the current authoritative project status. Historical phase sections below remain evidence only and must not be interpreted as current instructions. Phase F preparation began from clean, synchronized `main` at `c4026182330e84ab8caacc482623fe99f4cae283`; the verified Phase E implementation commit `acfa7cdddd5826af94c8fce990dea4f5bd619a10` and audit follow-up were present locally and on `origin/main`.
+
+### Safe preparation completed
+
+- Expanded `docs/FES_OPERATIONS_RUNBOOK.md` instead of duplicating procedures. It now contains a severity-ranked launch gate register and classifies every remaining item as `CAN PREPARE NOW`, `OWNER ACTION REQUIRED` or `REQUIRES EXPLICIT LIVE AUTHORIZATION`.
+- Documented an exact bounded staging procedure with named-target prerequisites, individually authorized feature gates, labelled non-sensitive fixtures, negative authorization checks, abort conditions, evidence requirements, explicit fixture cleanup authority and restoration of previous gate values.
+- Added actionable administrator access-review, 12-month retention/deletion dry-run, backup/export and isolated restore-verification procedures.
+- Added monitoring/incident preparation, production-like Lighthouse/network/device evidence, cross-browser/accessibility evidence, production smoke testing, rollback and final go/no-go checklists.
+- No feature, public/admin design, Firebase configuration, live gate, Rules, IAM/ACL, billing, DNS, hosting, analytics, secret or production resource was changed. This preparation performs no live write and grants no deployment authorization.
+
+### Current gate classification
+
+**High severity / launch blockers**
+
+- `OWNER ACTION REQUIRED`: rotate the disclosed administrator password, review/revoke unexpected sessions and provide confirmation without sharing the replacement secret.
+- `REQUIRES EXPLICIT LIVE AUTHORIZATION`: approve a bounded live staging window naming the exact project/bucket, gates, fixtures, operator, monitoring contact, cleanup authority and rollback owner.
+- `OWNER ACTION REQUIRED`: grant/arrange a read-only deployed review and name the reviewer for Firestore Rules, Storage Rules, IAM/ACL posture and configured secret names.
+- `REQUIRES EXPLICIT LIVE AUTHORIZATION`: any Rules deployment, IAM/ACL change, secret creation/rotation or live feature-gate change.
+
+**Operational approvals**
+
+- `CAN PREPARE NOW`: the retention dry-run, backup/restore, access-review, monitoring/incident and rollback procedures are documented and may be exercised with emulator fixtures.
+- `OWNER ACTION REQUIRED`: name the deletion preparer/approver, legal-hold authority, backup/recovery owners and accepted RPO/RTO; approve the administrator roster and review cadence; name monitoring/incident recipients and thresholds; approve abuse/upload limits, recovery expectations, launch/rollback owners, final business content and image rights.
+- `REQUIRES EXPLICIT LIVE AUTHORIZATION`: any staging/production export, restore, deletion, alert/quota/lifecycle configuration or destructive fixture cleanup.
+
+**Final launch evidence**
+
+- `CAN PREPARE NOW`: Lighthouse, network/device, cross-browser, accessibility and production smoke-test checklists are documented.
+- `REQUIRES EXPLICIT LIVE AUTHORIZATION`: run those procedures against a named production-like deployment and use any live test-data path.
+- `OWNER ACTION REQUIRED`: decide DNS, hosting, analytics and cookie behavior; complete stakeholder UAT and issue the final go/no-go decision.
+- `REQUIRES EXPLICIT LIVE AUTHORIZATION`: deploy hosting/analytics or production configuration, change DNS or publish the production release.
+
+### Preparation verification
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated all 29 static pages. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 19 files / 97 tests. |
+
+The repeated Google metadata lookup warnings during emulator tests were non-fatal; the suite completed successfully and no live Firebase service was used. Documentation-only preparation exposed no application defect, so no feature or UI change was made.
+
+**Phase F status:** preparation is documentation-complete, but Phase F is not complete and the website is not production-approved. The repository is technically ready for an owner-authorized bounded staging acceptance because the procedures, local verification baseline, fail-closed gates and rollback checklist exist. Execution remains blocked by credential rotation/session review, written live authorization, deployed security/configuration review and named operational owners. Quote submissions, quote photographs and editorial uploads remain disabled.
+
+The recommended next action is for the owner to complete the high-severity decisions in the runbook, especially password rotation and the signed bounded-staging authorization. Codex can then perform only the specifically authorized read-only review and bounded staging steps; production deployment remains a later, separately authorized go/no-go action.
+
 ## Phase E comprehensive QA and launch readiness - 20 October 2026
 
 Phase E was completed from the clean, synchronized `C:\fes-dev\fiberelectricsolutionsltd` baseline at `fee063be1f8afcd344b86e0dc33b11f9c95fa37d`. Testing used the local Firebase Auth, Firestore and Storage emulators and an isolated Microsoft Edge profile. The administrator credentials supplied by the owner were injected only into the emulator seed and browser process environment; they were not written to source, output evidence or Git. No production deployment, live Firebase write, rule/IAM/ACL/billing change or feature-gate activation occurred.
