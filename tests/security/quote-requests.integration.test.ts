@@ -22,7 +22,7 @@ describe("Phase D3 quote submissions",()=>{
     const response=await request(transport());
     expect(response.status).toBe(201);
     const result=await response.json(),saved=await getAdminFirestore().collection("quoteRequests").doc(result.reference).get();
-    expect(saved.data()).toMatchObject({schemaVersion:1,status:"New",attachments:[],consent:{acknowledged:true,version:"emulator-test-v1"},source:{channel:"website"}});
+    expect(saved.data()).toMatchObject({schemaVersion:1,status:"New",attachments:[],consent:{acknowledged:true,version:"privacy-notice-2026-10-20-v1"},source:{channel:"website"}});
     expect(saved.get("source.ipHash")).toMatch(/^[a-f0-9]{64}$/);
     expect(saved.get("source.userAgentHash")).toMatch(/^[a-f0-9]{64}$/);
     expect(saved.data()).not.toHaveProperty("submissionKey");

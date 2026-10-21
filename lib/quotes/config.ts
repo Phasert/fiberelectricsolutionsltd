@@ -1,6 +1,8 @@
 import "server-only";
 
 export const APPROVED_QUOTE_PROJECT_ID = "fesr-c3ae1";
+export const APPROVED_QUOTE_RETENTION_DAYS = 365;
+export const APPROVED_QUOTE_CONSENT_VERSION = "privacy-notice-2026-10-20-v1";
 export type QuoteSubmissionMode = "emulator" | "live-disabled" | "approved-staging";
 
 export function getQuoteSubmissionConfig() {
@@ -20,7 +22,7 @@ export function getQuoteSubmissionConfig() {
 
   const mode: QuoteSubmissionMode = emulator ? "emulator" : liveRequested ? "approved-staging" : "live-disabled";
   const attachmentLimits={maxFiles:4,maxFileBytes:5*1024*1024,maxTotalBytes:12*1024*1024,maxPixels:20_000_000,maxDimension:8_000,outputMaxDimension:2_000};
-  return { mode, projectId, consentVersion: emulator ? "emulator-test-v1" : consentVersion, retentionDays: emulator ? 30 : retentionDays, abuseHashSecret: emulator ? "local-emulator-only-abuse-hash-secret" : abuseHashSecret, maxBodyBytes: 16 * 1024, maxMultipartBodyBytes:attachmentLimits.maxTotalBytes+256*1024,attachmentsEnabled:emulator||(mode==="approved-staging"&&photoUploadsApproved&&photoConsentApproved),attachmentLimits,rateLimit: 5, rateWindowMs: 15 * 60 * 1000, duplicateWindowMs: 10 * 60 * 1000 };
+  return { mode, projectId, consentVersion: emulator ? APPROVED_QUOTE_CONSENT_VERSION : consentVersion, retentionDays: emulator ? APPROVED_QUOTE_RETENTION_DAYS : retentionDays, abuseHashSecret: emulator ? "local-emulator-only-abuse-hash-secret" : abuseHashSecret, maxBodyBytes: 16 * 1024, maxMultipartBodyBytes:attachmentLimits.maxTotalBytes+256*1024,attachmentsEnabled:emulator||(mode==="approved-staging"&&photoUploadsApproved&&photoConsentApproved),attachmentLimits,rateLimit: 5, rateWindowMs: 15 * 60 * 1000, duplicateWindowMs: 10 * 60 * 1000 };
 }
 
 export function requireQuoteSubmissionsEnabled() {

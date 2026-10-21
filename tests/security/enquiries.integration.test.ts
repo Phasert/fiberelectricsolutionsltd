@@ -1,0 +1,27 @@
+import {afterEach,describe,expect,it} from "vitest";
+import sharp from "sharp";
+import {Timestamp} from "firebase-admin/firestore";
+import {GET as readAttachment} from "../../app/api/admin/enquiries/[id]/attachments/[attachmentId]/route";
+import {PATCH as patchEnquiry} from "../../app/api/admin/enquiries/[id]/route";
+import {POST as postNote} from "../../app/api/admin/enquiries/[id]/notes/route";
+import {getAdminFirestore,getAdminStorage} from "../../lib/firebase/admin";
+import {addEnquiryNote,getAdminEnquiry,listAdminEnquiries,readEnquiryAttachment,updateEnquiryStatus} from "../../lib/enquiries/repository";
+import {APPROVED_QUOTE_CONSENT_VERSION,APPROVED_QUOTE_RETENTION_DAYS,getQuoteSubmissionConfig} from "../../lib/quotes/config";
+
+const origin="http://localhost:3000",actor={uid:"approved",email:"approved@example.test"},id="d5-enquiry";
+async function seed(){
+  const path=`quote-photos/private/requests/${id}/fixture/photo-1.webp`,bytes=await sharp({create:{width:20,height:12,channels:3,background:"#74233a"}}).webp().toBuffer();
+  await getAdminStorage().bucket().file(path).save(bytes,{contentType:"image/webp"});
+  await getAdminFirestore().collection("quoteRequests").doc(id).set({name:"D5 Emulator Customer",email:"customer@example.test",phone:"8685550101",preferredContact:"Email",service:"Electrical",selectedServiceIds:[],location:"Emulator fixture",propertyType:"Commercial",description:"D5 administrator workflow fixture.",preferredTimeframe:"",status:"New",submittedAt:Timestamp.fromDate(new Date("2026-10-20T12:00:00Z")),updatedAt:Timestamp.fromDate(new Date("2026-10-20T12:00:00Z")),retentionUntil:Timestamp.fromDate(new Date("2027-10-20T12:00:00Z")),consentVersion:APPROVED_QUOTE_CONSENT_VERSION,attachments:[{id:"photo-1",storagePath:path,mimeType:"image/webp",status:"Ready"}]});
+  return path;
+}
+afterEach(async()=>{const ref=getAdminFirestore().collection("quoteRequests").doc(id),notes=await ref.collection("notes").get();for(const note of notes.docs)await note.ref.delete();await ref.delete();const [files]=await getAdminStorage().bucket().getFiles({prefix:`quote-photos/private/requests/${id}/`});await Promise.all(files.map(file=>file.delete().catch(()=>undefined)));});
+
+describe("Phase D5 administrator enquiry management",()=>{
+  it("lists and reads persisted enquiries without exposing private object paths",async()=>{await seed();const list=await listAdminEnquiries(),item=await getAdminEnquiry(id);expect(list.map(value=>value.id)).toContain(id);expect(item).toMatchObject({id,status:"New",consentVersion:APPROVED_QUOTE_CONSENT_VERSION});expect(item?.attachments[0]).toBe(`/api/admin/enquiries/${id}/attachments/photo-1`);expect(JSON.stringify(item)).not.toContain("quote-photos/private")});
+  it("persists valid status changes and rejects invalid states",async()=>{await seed();await updateEnquiryStatus(id,"Reviewing",actor);expect((await getAdminFirestore().collection("quoteRequests").doc(id).get()).data()).toMatchObject({status:"Reviewing",updatedBy:"approved"});await expect(updateEnquiryStatus(id,"Invalid" as never,actor)).rejects.toThrow()});
+  it("records private notes with administrator attribution and timestamps",async()=>{await seed();const note=await addEnquiryNote(id,{body:"Customer contacted; awaiting site details."},actor),item=await getAdminEnquiry(id);expect(note).toMatchObject({authorUid:"approved",authorEmail:"approved@example.test"});expect(item?.notes?.[0]?.body).toContain("awaiting site details");await expect(addEnquiryNote(id,{body:""},actor)).rejects.toThrow();await expect(addEnquiryNote(id,{body:"x".repeat(2001)},actor)).rejects.toThrow()});
+  it("reads a scoped private photograph server-side and rejects path escape",async()=>{await seed();const photo=await readEnquiryAttachment(id,"photo-1");expect(photo.mimeType).toBe("image/webp");expect((await sharp(photo.bytes).metadata()).format).toBe("webp");await getAdminFirestore().collection("quoteRequests").doc(id).update({attachments:[{id:"bad",storagePath:"editorial/public/derivatives/file.webp"}]});await expect(readEnquiryAttachment(id,"bad")).rejects.toThrow("ATTACHMENT_NOT_FOUND")});
+  it("rejects unauthenticated reads and mutations and untrusted writes",async()=>{await seed();expect((await readAttachment(new Request(`${origin}/api/admin/enquiries/${id}/attachments/photo-1`),{params:Promise.resolve({id,attachmentId:"photo-1"})})).status).toBe(401);expect((await patchEnquiry(new Request(`${origin}/api/admin/enquiries/${id}`,{method:"PATCH",headers:{origin:"https://attacker.example","content-type":"application/json"},body:JSON.stringify({status:"Closed"})}),{params:Promise.resolve({id})})).status).toBe(403);expect((await postNote(new Request(`${origin}/api/admin/enquiries/${id}/notes`,{method:"POST",headers:{origin:"https://attacker.example","content-type":"application/json"},body:JSON.stringify({body:"unsafe"})}),{params:Promise.resolve({id})})).status).toBe(403)});
+  it("uses the approved version and 12-month policy in emulator fixtures without enabling live mode",()=>{const config=getQuoteSubmissionConfig();expect(config.mode).toBe("emulator");expect(config.consentVersion).toBe(APPROVED_QUOTE_CONSENT_VERSION);expect(config.retentionDays).toBe(APPROVED_QUOTE_RETENTION_DAYS);expect(APPROVED_QUOTE_RETENTION_DAYS).toBe(365)});
+});

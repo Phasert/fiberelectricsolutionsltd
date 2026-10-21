@@ -5,6 +5,52 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase D5 administrator enquiry management - 20 October 2026
+
+Phase D5 was implemented from the clean, synchronized C:\fes-dev\fiberelectricsolutionsltd baseline at f9d2e505b55d78b5d16acd8a555e08e9b142e4f1. Development and acceptance used only the local Firebase Auth, Firestore and Storage emulators. Live quote submissions, customer-photo uploads and editorial uploads remain disabled; no Firebase rule, IAM/ACL, bucket, billing, lifecycle or production resource was changed.
+
+### Client-confirmed privacy decisions
+
+- The public /privacy notice explains the quotation information and optional sanitized photographs collected, their purpose, access by active authorized FES administrators, the private-photo boundary, the approved 12-month retention period and the contact address fiberelectric@gmail.com.
+- The quote review step uses a required, initially unchecked acknowledgement linked to the Privacy Notice. Stored enquiries record durable version privacy-notice-2026-10-20-v1; emulator records now use that approved version instead of a temporary test label.
+- The policy baseline is 365 days for enquiries and photographs. Automatic production deletion remains unscheduled and disabled until deletion authority, backup/recovery and legal-hold procedures are reviewed and tested.
+- All active administrator accounts with the established admin role may access enquiries and private photographs. No broader staff role or public access path was created.
+- .env.example records the approved decisions while retaining QUOTE_SUBMISSIONS_LIVE_ENABLED=false, QUOTE_PHOTO_UPLOADS_LIVE_ENABLED=false and an empty server-only abuse-hash secret. Published Business Settings were not overwritten.
+
+### Firebase-backed administrator workflow
+
+- Replaced the localStorage/mock enquiry list and detail source with server-only Firebase Admin SDK reads from quoteRequests. Protected pages are dynamic and remain behind the active-administrator session gate.
+- The dashboard provides status totals, customer/reference/contact search, status filters, newest/oldest/recently-updated sorting, ten-record pagination and honest empty states.
+- Detail pages display stored customer/job data, consent/retention metadata and private customer photographs. The browser receives only session-protected attachment routes; private Storage paths and credentials are never serialized.
+- Photograph delivery independently verifies the administrator session, constrains every object to the matching quote-photos/private/requests/{enquiryId}/ namespace, rejects traversal or cross-namespace paths, returns private/no-store plus nosniff, and never creates a public download URL.
+- Status changes are limited to New, Reviewing, Contacted and Closed and persist transactionally with updatedAt/updatedBy. Internal notes are append-only subcollection records limited to 2,000 characters with administrator UID, email and server timestamp. Mutation routes enforce trusted origin and independently verify the administrator session.
+- Busy, unsaved, validation, server-error and save-confirmation states are responsive and accessible. Statuses and attributed notes persist after refresh.
+
+### Verification and browser acceptance
+
+| Command | Exit | Result |
+|---|---:|---|
+| bun run lint | 0 | ESLint completed without diagnostics. |
+| bun run typecheck | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| bun run build | 0 | Next.js 16.3.8 production build compiled, typechecked and generated 29 static pages; D5 administrator/API routes are dynamic and /privacy is static. |
+| bun run test | 0 | Firebase Auth, Firestore and Storage emulator suite passed 18 files / 95 tests. |
+
+Six new D5 integration tests cover list/detail persistence and path sanitization, valid and invalid status changes, attributed/timestamped notes and limits, scoped private-photo reads and cross-namespace rejection, anonymous/untrusted route rejection, and the approved consent-version/365-day policy. All 89 pre-D5 tests remain green. The first full run found an old D3 consent-version expectation and a request-scope issue in the anonymous photo-route test; both were corrected before the clean 95/95 result.
+
+Isolated headless Microsoft Edge acceptance passed at desktop 1440 × 1000, mobile 390 × 844 and mobile 360 × 740. Each viewport verified the Privacy Notice, approved email and 12-month wording; submitted a labelled emulator enquiry with a private photograph; authenticated as the approved emulator administrator; searched the real dashboard; opened the detail and private image; changed New to Reviewing; added an attributed note; refreshed; and confirmed both changes persisted. All twelve measured page/stage combinations reported no horizontal overflow, one H1 and a main landmark. The run reported zero console errors, failed requests or unexpected HTTP errors. Screenshots were written outside the repository under %TEMP%\fes-d5-acceptance.
+
+### Remaining operational gates
+
+- [ ] Review and test the expiry report, backup/export, recovery, legal-hold and permanent-deletion authority before scheduling 12-month production cleanup. No automatic deletion is active.
+- [ ] Confirm final required/optional quote fields and obtain any desired external legal review of the client-approved notice; this audit is not legal advice.
+- [ ] Establish administrator onboarding/offboarding and periodic access review for accounts permitted to view customer enquiries and photographs.
+- [ ] Configure the live abuse-hash secret securely, monitoring/incident recipients and bounded staging-test data; never commit the secret.
+- [ ] Separately authorize a bounded live staging test and any required deployed Rules/IAM/lifecycle change. This phase grants no production deployment or live-collection approval.
+
+**Phase D5 status:** implementation-complete, emulator-tested and browser-accepted. Live customer collection remains disabled pending the operational gates and separate activation authorization. Phase E has not started. The next recommended action is an owner-reviewed bounded staging acceptance and retention/access runbook, followed by authorization for Phase E end-to-end testing.
+
+The verified Phase D5 implementation and acceptance evidence were committed as IMPLEMENTATION_COMMIT_TO_BE_RECORDED; the exact hash is recorded by the immediate audit follow-up commit.
+
 ## Phase D4 secure customer quote photo attachments - 20 October 2026
 
 Phase D4 was implemented only from the clean, synchronized `C:\fes-dev\fiberelectricsolutionsltd` baseline at `a9cb2f31b28a87609f711e7134d0ac9883fb9858`. All implementation, Storage writes and browser acceptance used the local Firebase emulators. Live customer submissions and live photo uploads remain disabled; no live object, Firebase rule, IAM/ACL setting, bucket configuration, billing setting or deployment was changed.

@@ -38,8 +38,13 @@ export interface Enquiry extends Omit<QuoteRequestCustomerInput, "propertyType">
   updatedAt?:string;
   status:EnquiryStatus;
   attachments:string[];
+  consentVersion?:string;
+  retentionUntil?:string;
+  notes?:EnquiryNote[];
+  /** Legacy mock-only field retained until the fixture file is removed. */
   note?:string;
 }
+export interface EnquiryNote { id:string; body:string; authorUid:string; authorEmail:string; createdAt:string; }
 export interface MediaItem {
   id:string;
   name:string;
