@@ -86,6 +86,19 @@ Operational procedure:
 
 Shared, temporary or previously disclosed passwords must be rotated. Access reviews must include enquiry and private-photograph permissions.
 
+### Secure password rotation and session invalidation
+
+This is an owner action. Never send the replacement password through chat, source control, screenshots, tickets or the website Settings interface.
+
+1. Confirm the exact Firebase Authentication user and matching active `admins/{uid}` record. Record only the UID/email, approver and time—not credentials.
+2. The account owner changes the password directly through an owner-controlled Firebase/Auth workflow and stores it in the approved password manager. Codex must not handle or verify the replacement value.
+3. Immediately revoke the user's refresh tokens with the Firebase Console or an owner-authorized Admin SDK operation. A password change alone is not accepted as evidence that every existing application session ended.
+4. Review Firebase Authentication last-sign-in/account activity and the approved administrator roster. Disable the user and investigate if any session or account activity is unexpected.
+5. Close every browser session. Verify an old `__session` cookie is rejected on the next protected request, `/admin` redirects to login, and a fresh login with the rotated credential creates a new session.
+6. Record the rotation date, token-revocation time, reviewer, unexpected-session result and next access-review date. Do not record the password, cookie or token.
+
+Implemented behavior: an administrator session lasts at most 12 hours; the cookie is HttpOnly, SameSite=Lax, path-scoped to `/`, and Secure in production. Login requires an ID token authenticated within the preceding five minutes. Every protected session verification checks Firebase revocation, the Authentication disabled state and the current active `admin` document. Application logout clears the cookie and revokes that user's refresh tokens, thereby invalidating the user's other existing FES sessions on their next verification. This global effect must be included in administrator support guidance.
+
 ### Administrator access-review checklist
 
 1. Export or view the current Authentication users and matching `admins/{uid}` records using an owner-approved read-only method.
@@ -119,6 +132,27 @@ The following live gates remain false until separately approved:
 - EDITORIAL_MEDIA_LIVE_ENABLED
 
 The approved quote policy values are privacy approval true, consent version privacy-notice-2026-10-20-v1 and retention 365 days. The server-only abuse-hash secret must be generated securely, contain at least 32 unpredictable characters, and be stored only in the deployment secret manager. Firebase private keys, service-account files, passwords and tokens must never enter Git, browser variables, public settings, screenshots or support logs.
+
+## Production configuration readiness matrix
+
+| Area | Verified/configured | Missing or approval-gated before production |
+|---|---|---|
+| Firebase target | Staging project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app` are verified. Client and Admin SDK target guards exist. | Owner must name whether production uses this project or a separate production project and approve the exact project/bucket before deployment. |
+| Authentication | Approved-admin checks, recent-login requirement, 12-hour revocation-aware sessions and logout revocation are implemented. | Rotate the disclosed credential, review sessions, approve the administrator roster and onboarding/offboarding owner. |
+| Firestore/Storage Rules | Repository rules deny all browser Firestore reads/writes and all browser Storage access; server routes use Admin SDK authorization. Emulator tests pass. | Compare deployed Rules versions with reviewed repository rules; deployment requires explicit authorization. Review IAM/ACL inheritance separately. |
+| Environment/secrets | `.env.example` separates public Firebase identifiers from server-only credentials. Live gates fail closed and staging target guards are implemented. | Configure production secrets in the host secret manager, create a production abuse-hash secret, approve gate values and complete a redacted four-eyes environment review. |
+| Uploads/private delivery | File count/size/pixel/type validation, metadata stripping, private quote namespace and authenticated no-store delivery exist. | Approve live quotas, monitoring, recovery, retention/deletion ownership and the exact public editorial-delivery model. |
+| Retention | Every enquiry receives a 365-day deadline. The helper removes scoped private photographs and notes; legal holds are excluded. | Approve dry-run/deletion authority, durable audit evidence, backup/restore target and RPO/RTO. Automatic cleanup remains disabled. |
+| Monitoring/incidents | Failure modes and incident checklist are documented. | Name primary/backup recipients, thresholds, channels, response times and authority to disable gates or roll back. Configure/test alerts only with explicit authorization. |
+| Hosting/deployment | Production build succeeds and a smoke/rollback procedure exists. | Owner selects host/project, runtime, region, secret injection, build/start settings, deployment permissions and release/rollback owners. |
+| Domain/DNS/HTTPS/email | Application supports a canonical `SITE_URL`; public contact email is content-managed. | Owner approves domain/records, DNS owner, HTTPS/certificate result, canonical redirects, sender/reply addresses, SPF/DKIM/DMARC and whether transactional email is in scope. |
+| Public content | Draft/published isolation and approved Settings behavior are implemented. | Owner signs off business name, contacts, hours, SEO, services, projects, resources, tips, featured selections, privacy content and every image right/attribution. |
+
+## Intended customer journey and communication gaps
+
+The implemented launch journey is: customer visits the public website; reviews published services/content; opens Request a Quote; enters job and contact details; optionally attaches validated photographs; acknowledges the linked Privacy Notice; submits once through the idempotent server route; receives an on-page reference; and an authorized administrator later finds, reviews, annotates and updates the enquiry in the protected dashboard.
+
+The application currently stores the enquiry; it does **not** prove that anybody is notified. No automatic customer confirmation email/SMS/WhatsApp message, administrator alert, mailbox integration, delivery retry, bounce handling or service-level response timer is implemented. Before launch the owner must decide whether the on-page reference alone is acceptable. If notifications are required, approve the provider, sender identity, recipients, templates, privacy/logging rules, retry policy and failure owner as a separately scoped change. Do not advertise an email confirmation or response time until that capability exists and is verified.
 
 ## Bounded staging acceptance
 
@@ -169,6 +203,19 @@ No item in this section may be run against a live target until the owner names a
 - Record result, tester, timestamp, release hash and go/no-go owner. A failed critical control is a no-go.
 
 ## Production launch and rollback
+
+### Ordered Phase F launch checklist
+
+1. **Owner approvals:** sign the administrator roster, privacy/retention operating process, content and image rights, upload/abuse limits, monitoring contacts, hosting/domain choices, launch owner and rollback owner. Record accepted exceptions with severity and due date.
+2. **Credential security:** rotate the disclosed administrator credential, revoke refresh tokens, review account activity/sessions and prove the old session is rejected without recording any credential.
+3. **Production configuration:** four-eyes review the exact Firebase project/bucket, canonical `SITE_URL`, production runtime/build settings, secret names/presence, feature gates and safe defaults. Keep all live gates off during deployment.
+4. **Rules and permissions:** review deployed Firestore Rules, Storage Rules, IAM/ACL inheritance, administrator records and least-privilege service identity. Any change/deployment requires explicit authorization and a rollback version.
+5. **Content:** approve Business Settings, contact actions, hours, services, projects, resources, tips, featured content, privacy text, SEO and image rights. Confirm drafts/test fixtures are not public.
+6. **Domain and hosting:** owner configures the selected host, domain/DNS and HTTPS; verify canonical redirects, certificate, robots/sitemap intent, email DNS decisions and ownership access. These are preparation instructions, not authorization for Codex to change them.
+7. **Controlled deployment:** deploy the verified commit in the approved window with a named operator and rollback owner. Record configuration/release identifiers; do not enable customer-write gates yet.
+8. **Smoke testing:** execute public, administrator, security, accessibility, cross-browser, network/device and production-like Lighthouse checklists. If authorized, enable only the bounded gate needed for labelled fixtures, then remove fixtures and restore the prior gate state.
+9. **Monitoring:** verify application errors, auth failures, rate limiting, upload rejection, private-photo denial and cleanup failures reach the named recipients. Confirm acknowledgement and escalation paths.
+10. **Go/no-go and rollback:** owner reviews evidence and explicitly decides. On no-go, keep/restore write gates off and execute the rollback checklist. On go, enable only separately authorized live capabilities, monitor closely and retain the signed launch record.
 
 Launch prerequisites:
 

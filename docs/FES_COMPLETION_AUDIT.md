@@ -5,6 +5,36 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Final readiness and launch preparation - 21 October 2026
+
+Preparation continued from clean, synchronized `main` at `77b571507ee4f75299c66431b95610ab7a905efc`. The 97-test and 72-browser-check Firebase/admin acceptance was not unnecessarily repeated. No live feature gate, Firebase infrastructure, Rules, IAM/ACL, lifecycle, billing, DNS, hosting or production deployment was changed.
+
+### Security and operational findings
+
+- Administrator sessions are limited to 12 hours. The session cookie is HttpOnly, SameSite=Lax and Secure in production; login accepts only an ID token authenticated in the preceding five minutes. Every protected check verifies token revocation, the Firebase Authentication disabled state and the current active administrator record. Logout clears the local cookie and revokes the user's refresh tokens, affecting all that user's existing FES sessions on their next verification.
+- Password rotation is still unverified and remains a critical owner action. The runbook now gives an exact rotation, refresh-token revocation, session review and old-cookie rejection procedure without requesting or recording the replacement secret.
+- The approved retention baseline remains 365 days. Review confirmed that private photograph paths are scoped beneath their enquiry and included in deletion. A genuine safety defect was corrected: expiry cleanup now skips `legalHold: true`, and explicit deletion refuses held enquiries. Successful deletion now recursively removes enquiry notes as well as the parent after private-object removal.
+- New emulator regression coverage proves photographs and notes are removed, held records remain, a simulated Storage deletion failure leaves the enquiry and its data available for safe retry, and a later retry succeeds. Automatic production deletion remains disabled because durable deletion audit evidence, backup/restore ownership, RPO/RTO and the cross-service partial-failure operating decision still require approval.
+- The production matrix now distinguishes verified application controls from missing owner decisions for target projects, deployed Rules/IAM, secrets, upload limits, monitoring, hosting, DNS/HTTPS/email and final content.
+- The documented customer journey ends with an on-page reference and administrator dashboard record. Automatic customer confirmation and administrator notification email/SMS/WhatsApp are not implemented. The owner must either accept that launch behavior or separately approve a notification provider, identities, recipients, templates, retry/bounce handling and failure ownership.
+
+### Phase E and Phase F status
+
+Phase E engineering acceptance remains complete: all contracted administrator/customer workflows are implemented and the latest comprehensive evidence is green. Phase E does not constitute production approval. Phase F is launch-prepared, not complete; launch remains blocked by owner credential rotation/session review, deployed security/IAM review, retention/backup/recovery owners, monitoring recipients, final content/image-rights approval, production target/configuration, production-like evidence and stakeholder go/no-go.
+
+The runbook contains an ordered ten-step launch procedure: owner approvals; credential security; production configuration; Rules/permissions; content; domain/hosting; controlled deployment with gates off; smoke testing; monitoring; and explicit go/no-go or rollback. Instructions are separate from deployment authority.
+
+### Verification
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated all 29 static pages. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 19 files / 98 tests. |
+
+The additional test covers the legal-hold, recursive-note cleanup and recoverable Storage-failure path. The recurring Admin SDK metadata-server lookup warning was non-fatal. No live service or customer record was used.
+
 ## Firebase-backed administrator acceptance - 21 October 2026
 
 This is the newest implementation and verification entry. Testing used the existing owner-selected staging project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app`; it did not perform hosting, DNS, Vercel, analytics or production-deployment work. Browser and Admin SDK configuration both resolved to that exact project, and the required client/Admin environment variables were present without their values being printed. No environment file or credential was added to Git.
