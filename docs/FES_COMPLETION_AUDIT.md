@@ -66,7 +66,7 @@ All 95 pre-Phase-E tests remain green. The two new tests cover cache separation.
 
 **Phase E status:** comprehensive emulator-backed QA is complete and verified. The codebase is ready for the owner-controlled Phase F launch-preparation process, but it is not approved for production or live customer collection while the high- and medium-severity gates above remain open. The next recommended action is owner review of `docs/FES_OPERATIONS_RUNBOOK.md`, credential rotation and written authorization for a bounded staging acceptance; do not enable a live gate merely by starting Phase F.
 
-The verified Phase E implementation and audit evidence are committed in the following Git history; the exact implementation commit is recorded by the immediate audit follow-up commit.
+The verified Phase E implementation, emulator suite, isolated Edge harness, operational runbook and acceptance evidence were committed as `acfa7cdddd5826af94c8fce990dea4f5bd619a10` (`test: complete Phase E launch readiness QA`). This exact hash is recorded by the immediate audit follow-up commit.
 
 ## Phase D5 administrator enquiry management - 20 October 2026
 
