@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BookOpenText, ChevronRight, FilePlus2, FolderKanban, Lightbulb, MessageSquareText, Network, Sparkles, Zap } from "lucide-react";
-import { AdminPageHeader, MockNotice, StatCard, StatusBadge } from "@/components/admin/admin-ui";
+import { AdminPageHeader, StatCard, StatusBadge } from "@/components/admin/admin-ui";
 import { adminRepository } from "@/lib/admin/repository";
 import { getAuthorizedAdminDashboardContent } from "@/lib/content/admin-dashboard-repository";
 
@@ -21,20 +21,19 @@ export default async function AdminDashboard() {
 
   return <>
     <AdminPageHeader title="Dashboard" description="Manage the content that keeps the FES website current." action={{ label: "Add project", href: "/admin/projects/new" }} />
-    <MockNotice />
     <section className="mb-6 rounded-lg border border-black/[.075] bg-white p-5" aria-labelledby="firebase-content-heading">
       <h2 id="firebase-content-heading" className="text-sm font-bold text-ink">Firebase foundation content</h2>
       <p className="mt-1 text-xs text-ink/40">Read-only records from the protected adminDashboardContent collection.</p>
       {firebaseContent.length ? <ul className="mt-4 grid gap-2">{firebaseContent.map((item) => <li key={item.id} className="border-l-2 border-wine/40 pl-3"><p className="text-sm font-bold">{item.title}</p><p className="text-xs text-ink/50">{item.summary}</p></li>)}</ul> : <p className="mt-4 text-sm text-ink/50">No foundation content records have been added.</p>}
     </section>
     <section aria-labelledby="content-overview-heading">
-      <div className="mb-3 flex items-center justify-between"><h2 id="content-overview-heading" className="text-sm font-bold text-ink">Content overview</h2><p className="text-xs text-ink/35">Current mock content</p></div>
+      <div className="mb-3 flex items-center justify-between"><h2 id="content-overview-heading" className="text-sm font-bold text-ink">Content overview</h2><p className="text-xs text-ink/35">Current managed content</p></div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Projects" value={projects.length} detail={`${projects.filter((project) => project.status === "Draft").length} drafts`} icon={FolderKanban} />
         <StatCard label="Electrical" value={projects.filter((project) => project.category === "Electrical").length} detail="Project entries" icon={Zap} />
         <StatCard label="Fiber" value={projects.filter((project) => project.category === "Fiber").length} detail="Project entries" icon={Network} />
         <StatCard label="Resources" value={resources.length} detail="Articles and links" icon={BookOpenText} />
-        <StatCard label="Enquiries" value={enquiries.length} detail="Mock requests" icon={MessageSquareText} />
+        <StatCard label="Enquiries" value={enquiries.length} detail="Customer requests" icon={MessageSquareText} />
       </div>
     </section>
     <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,.65fr)]">

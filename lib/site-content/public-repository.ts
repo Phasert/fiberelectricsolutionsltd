@@ -3,6 +3,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { aboutContentSchema, ctaContentSchema, homepageContentSchema, servicePageContentSchema, sectionSchema, type SiteContentSection } from "@/lib/site-content/schemas";
 import { PUBLIC_SERVICES_TAG, PUBLIC_SITE_CONTENT_TAG } from "@/lib/site-content/public-cache";
 import type { PublicAboutContent, PublicCta, PublicHomepageContent, PublicService, PublicServicePageContent, ServiceKind } from "@/types/content";
@@ -42,7 +43,7 @@ export async function listPublicServicesUncached(categoryValue: string): Promise
   }).toSorted((left, right) => left.displayOrder - right.displayOrder || left.title.localeCompare(right.title));
 }
 
-const getPageCached = unstable_cache(getPublicSiteContentUncached, ["public-site-content-v1"], { tags: [PUBLIC_SITE_CONTENT_TAG], revalidate: 3600 });
-const listServicesCached = unstable_cache(listPublicServicesUncached, ["public-services-v1"], { tags: [PUBLIC_SERVICES_TAG], revalidate: 3600 });
+const getPageCached = unstable_cache(getPublicSiteContentUncached, ["public-site-content-v1",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SITE_CONTENT_TAG], revalidate: 3600 });
+const listServicesCached = unstable_cache(listPublicServicesUncached, ["public-services-v1",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SERVICES_TAG], revalidate: 3600 });
 export const getPublicSiteContent = cache((section: SiteContentSection) => getPageCached(section));
 export const listPublicServices = cache((category: ServiceKind) => listServicesCached(category));

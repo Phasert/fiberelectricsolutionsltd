@@ -4,6 +4,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_HOMEPAGE_FEATURED_TAG } from "@/lib/featured/public-cache";
 import { listPublicProjectsUncached } from "@/lib/projects/public-repository";
 import { listPublicResourcesUncached } from "@/lib/resources/public-repository";
@@ -57,7 +58,7 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
   return { project, resource, tips };
 }
 
-const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v1"], {
+const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v1",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_HOMEPAGE_FEATURED_TAG],
   revalidate: 3600,
 });

@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_RESOURCES_TAG } from "@/lib/resources/public-cache";
 import { sanitizeRichText } from "@/lib/resources/schemas";
 import { getPublicMediaUrl } from "@/lib/media/public-repository";
@@ -116,8 +117,8 @@ export async function getPublicArticleBySlugUncached(slug: string): Promise<Publ
   return resource && "slug" in resource && resource.slug === slug ? resource : null;
 }
 
-const listCached = unstable_cache(listPublicResourcesUncached, ["public-resources-list-v2"], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
-const getArticleCached = unstable_cache(getPublicArticleBySlugUncached, ["public-article-by-slug-v2"], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
+const listCached = unstable_cache(listPublicResourcesUncached, ["public-resources-list-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
+const getArticleCached = unstable_cache(getPublicArticleBySlugUncached, ["public-article-by-slug-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
 
 export const listPublicResources = cache(listCached);
 export const getPublicArticleBySlug = cache(getArticleCached);

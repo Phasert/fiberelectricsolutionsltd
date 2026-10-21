@@ -4,6 +4,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { publicBusinessSettingsSchema } from "@/lib/settings/schema";
 import { PUBLIC_BUSINESS_SETTINGS_TAG } from "@/lib/settings/public-cache";
 import type { PublicBusinessSettings, PublicContactLink } from "@/types/content";
@@ -77,7 +78,7 @@ export async function getPublicBusinessSettingsUncached(): Promise<PublicBusines
   };
 }
 
-const getCached = unstable_cache(getPublicBusinessSettingsUncached, ["public-business-settings-v1"], {
+const getCached = unstable_cache(getPublicBusinessSettingsUncached, ["public-business-settings-v1",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_BUSINESS_SETTINGS_TAG],
   revalidate: 3600,
 });

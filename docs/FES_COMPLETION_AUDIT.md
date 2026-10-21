@@ -5,6 +5,69 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Phase E comprehensive QA and launch readiness - 20 October 2026
+
+Phase E was completed from the clean, synchronized `C:\fes-dev\fiberelectricsolutionsltd` baseline at `fee063be1f8afcd344b86e0dc33b11f9c95fa37d`. Testing used the local Firebase Auth, Firestore and Storage emulators and an isolated Microsoft Edge profile. The administrator credentials supplied by the owner were injected only into the emulator seed and browser process environment; they were not written to source, output evidence or Git. No production deployment, live Firebase write, rule/IAM/ACL/billing change or feature-gate activation occurred.
+
+### Comprehensive browser acceptance
+
+- The new repeatable `scripts/phase-e-browser-acceptance.mjs` harness covered four exact viewports: desktop `1440 × 1000`, tablet `768 × 1024`, mobile `390 × 844` and narrow mobile `360 × 740`.
+- At every viewport it loaded the homepage, About, Electrical, Fiber Optic, Projects, Resources, Request a Quote and Privacy routes plus the protected dashboard, Projects, Media, Resources, Tips, Featured Content, Enquiries, Site Content and Settings interfaces. Seventy-two route/viewport measurements returned the expected page, one H1, a main landmark, no unlabeled form controls and `scrollWidth === innerWidth`.
+- The public navigation and responsive administrator sidebar were exercised at narrow widths. Controls remained usable with no clipped layout or horizontal overflow.
+- The quote journey submitted a labelled emulator enquiry with a sanitized private photograph, recorded the reference, and then authenticated using the owner-supplied approved emulator administrator account. The dashboard search opened the real enquiry; status and internal-note changes persisted after refresh; logout redirected to login; protected routes redirected when signed out; and the private photograph endpoint returned 401 after logout.
+- The successful final pass reported zero application console errors, failed requests or unexpected HTTP responses. Warm local development `DOMContentLoaded` observations ranged from 94 ms to 416 ms; these are regression observations, not production Lighthouse scores or an Internet performance guarantee. Screenshots and the structured run output were written outside the repository under `%TEMP%\fes-phase-e-acceptance`.
+
+### Defects discovered and corrected
+
+- Public Firestore caches previously reused environment-agnostic Next.js cache keys, allowing stale staging references to leak into emulator acceptance and cause controlled media 404s. Public projects, resources, settings, site content and featured-content repositories now include the Firebase project plus emulator/live mode in their cache namespace. Two regression tests prove same-project emulator/live isolation and cross-project isolation.
+- The quote photograph input lacked an accessible name. It now exposes `Upload site photographs` to assistive technology.
+- The Privacy page nested a second `main` landmark beneath the root layout. It now has exactly one main landmark.
+- The responsive administrator menu now toggles correctly, including keyboard Escape behavior, and the acceptance harness waits for hydration before asserting its accessible state.
+- The administrator landing page no longer labels real managed content or customer requests as mock data.
+- The emulator seed supports a runtime-only QA administrator without hardcoding credentials. The disclosed password must be rotated before any bounded live staging or production acceptance.
+
+### Security and operational review
+
+- The final diff scan found no API keys, passwords, OAuth tokens, service-account JSON, private keys or `.env.local`. Browser credentials remain runtime-only. Customer details are not logged by the new harness.
+- All browser Firestore and Storage paths remain deny-by-default; administrator mutations and private-photo delivery retain independent session/origin checks. The Phase D2 editorial upload, D3 customer-submission and D4 customer-photo live gates remain disabled.
+- Public DTOs and media routes continue to exclude private originals, unpublished media and administrator metadata. The browser test confirmed private-photo denial after logout.
+- `docs/FES_OPERATIONS_RUNBOOK.md` now documents retention dry-runs, backup/recovery and legal holds; administrator onboarding/offboarding and access review; monitoring, incidents and abuse; environment/secrets control; bounded staging acceptance; and production launch/rollback. It is an operational proposal and does not authorize deletion, activation or deployment.
+
+### Final verification
+
+| Command | Exit | Result |
+|---|---:|---|
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated all 29 static pages; protected and API routes remain dynamic. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 19 files / 97 tests. |
+
+All 95 pre-Phase-E tests remain green. The two new tests cover cache separation. An intermediate typecheck rejected the new test's unnecessarily broad `ProcessEnv` casts; the helper was narrowed to an explicit optional input contract, unsafe casts were removed, and the complete successful verification above was then rerun.
+
+### Launch gates and Phase F handoff
+
+**High severity / launch blockers**
+
+- [ ] Rotate the administrator password disclosed in project chat and confirm the account has no unexpected sessions before any live acceptance.
+- [ ] Explicitly authorize bounded live staging tests and each live gate. Quote submissions, quote photographs and editorial uploads remain off.
+- [ ] Review deployed Firestore/Storage Rules, IAM/ACL inheritance and secrets in the target environment before production deployment. Emulator results do not prove deployed-policy parity.
+
+**Medium severity / operational approvals**
+
+- [ ] Approve the runbook owners for 12-month expiry reporting, backup/export, restore testing, legal holds and irreversible deletion. Automatic cleanup remains disabled.
+- [ ] Approve the administrator roster, onboarding/offboarding process and recurring access-review cadence for customer enquiries and photographs.
+- [ ] Approve monitoring/incident recipients, alert thresholds, upload/abuse quotas, recovery expectations and a rollback owner.
+- [ ] Confirm approved business/settings content, image rights and final public content before launch; safe empty states do not replace content approval.
+
+**Low severity / final launch evidence**
+
+- [ ] Run production-like Lighthouse and network/device testing in the authorized deployment environment; local warm-load observations are not a substitute.
+- [ ] Complete final cross-browser smoke testing, DNS/hosting/analytics/cookie decisions, accessibility review and stakeholder acceptance in Phase F.
+
+**Phase E status:** comprehensive emulator-backed QA is complete and verified. The codebase is ready for the owner-controlled Phase F launch-preparation process, but it is not approved for production or live customer collection while the high- and medium-severity gates above remain open. The next recommended action is owner review of `docs/FES_OPERATIONS_RUNBOOK.md`, credential rotation and written authorization for a bounded staging acceptance; do not enable a live gate merely by starting Phase F.
+
+The verified Phase E implementation and audit evidence are committed in the following Git history; the exact implementation commit is recorded by the immediate audit follow-up commit.
+
 ## Phase D5 administrator enquiry management - 20 October 2026
 
 Phase D5 was implemented from the clean, synchronized C:\fes-dev\fiberelectricsolutionsltd baseline at f9d2e505b55d78b5d16acd8a555e08e9b142e4f1. Development and acceptance used only the local Firebase Auth, Firestore and Storage emulators. Live quote submissions, customer-photo uploads and editorial uploads remain disabled; no Firebase rule, IAM/ACL, bucket, billing, lifecycle or production resource was changed.

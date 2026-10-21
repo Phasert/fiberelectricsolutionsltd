@@ -15,11 +15,16 @@ const users = [
   { uid: "browser-unapproved", email: "unapproved@example.test", disabled: false },
   { uid: "browser-disabled", email: "disabled@example.test", disabled: true },
 ];
+const requestedEmail=process.env.FES_QA_ADMIN_EMAIL?.trim();
+const requestedPassword=process.env.FES_QA_ADMIN_PASSWORD;
+if(requestedEmail&&requestedPassword)users.push({uid:"browser-owner-approved",email:requestedEmail,disabled:false,password:requestedPassword});
 
 for (const user of users) {
-  await auth.createUser({ ...user, password }).catch(() => auth.updateUser(user.uid, { email: user.email, password, disabled: user.disabled }));
+  const userPassword="password" in user?user.password:password;
+  await auth.createUser({ uid:user.uid,email:user.email,disabled:user.disabled,password:userPassword }).catch(() => auth.updateUser(user.uid, { email: user.email, password:userPassword, disabled: user.disabled }));
 }
 await firestore.collection("admins").doc("browser-approved").set({ email: "approved@example.test", displayName: "Browser Test Admin", role: "admin", active: true });
 await firestore.collection("admins").doc("browser-disabled").set({ email: "disabled@example.test", displayName: "Disabled Browser Admin", role: "admin", active: true });
+if(requestedEmail)await firestore.collection("admins").doc("browser-owner-approved").set({email:requestedEmail,displayName:"Owner-approved QA Admin",role:"admin",active:true});
 await firestore.collection("adminDashboardContent").doc("browser-foundation").set({ title: "Firebase emulator connected", summary: "Read-only dashboard content loaded through the authorized server repository.", status: "draft", updatedAt: "2026-10-15T00:00:00.000Z" });
 console.log("Seeded emulator-only approved, unapproved, and disabled accounts.");

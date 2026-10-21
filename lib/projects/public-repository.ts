@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_PROJECTS_TAG } from "@/lib/projects/public-cache";
 import { getPublicMediaUrl } from "@/lib/media/public-repository";
 import type { ProjectCategory, ProjectImage, PublicProject } from "@/types/content";
@@ -95,11 +96,11 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   return project?.slug === slug ? project : null;
 }
 
-const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v1"], {
+const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v1",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });
-const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v1"], {
+const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v1",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });
