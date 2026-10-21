@@ -54,6 +54,8 @@ The repeated Google metadata lookup warnings during emulator tests were non-fata
 
 The recommended next action is for the owner to complete the high-severity decisions in the runbook, especially password rotation and the signed bounded-staging authorization. Codex can then perform only the specifically authorized read-only review and bounded staging steps; production deployment remains a later, separately authorized go/no-go action.
 
+The verified Phase F preparation and expanded operations runbook were committed as `0244c502ff31deced652f2de6047c00e87c2f29a` (`docs: prepare Phase F launch readiness`). This exact hash is recorded by the immediate audit follow-up commit.
+
 ## Phase E comprehensive QA and launch readiness - 20 October 2026
 
 Phase E was completed from the clean, synchronized `C:\fes-dev\fiberelectricsolutionsltd` baseline at `fee063be1f8afcd344b86e0dc33b11f9c95fa37d`. Testing used the local Firebase Auth, Firestore and Storage emulators and an isolated Microsoft Edge profile. The administrator credentials supplied by the owner were injected only into the emulator seed and browser process environment; they were not written to source, output evidence or Git. No production deployment, live Firebase write, rule/IAM/ACL/billing change or feature-gate activation occurred.
