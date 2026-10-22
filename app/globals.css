@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../app";
+@source "../components";
 
 @theme {
   --color-wine: #7d1028;
