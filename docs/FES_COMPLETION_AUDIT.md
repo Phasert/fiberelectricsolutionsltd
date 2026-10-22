@@ -5,6 +5,40 @@
 **Contract baseline:** RS Technology Group x Fiber & Electric Solutions Ltd. Website Design & Development Proposal, dated 5 October 2026
 **Repository baseline:** working tree as inspected on 14 October 2026; the tree contained pre-existing modified and untracked frontend/admin work. This audit adds only this document.
 
+## Controlled live staging activation - 21 October 2026
+
+The owner explicitly authorized live functionality for controlled testing against Firebase project `fesr-c3ae1` and Storage bucket `fesr-c3ae1.firebasestorage.app`. The ignored local `.env.local` now enables quotation submissions, optional quotation photographs and editorial-media processing only for that exact project and bucket. It also supplies the approved consent version, 365-day retention period and an independently generated abuse-hash secret. No value from `.env.local`, service-account credential, token, cookie or customer information is included in Git or this audit.
+
+### Independently verified live behavior
+
+- A repeatable acceptance harness at `scripts/live-staging-acceptance.mjs` fails closed unless both the configured project and bucket exactly match the approved staging target. It obtains an approved administrator session without accepting, storing or printing an administrator password.
+- A clearly labelled synthetic quotation was submitted through the real application route. Firestore stored the acknowledgement, approved consent version and a retention deadline exactly 365 days after submission. Its optional photograph was validated and stored beneath the private quotation namespace.
+- The authenticated administrator could immediately open the new enquiry and retrieve its photograph through the protected `private, no-store` route. The same photograph request without a session returned `401`; no permanent public URL or private object path was exposed to the browser.
+- A generated, non-sensitive editorial image passed the actual server upload and processing route. Firestore reached `Ready`, the original remained in the private originals namespace, and optimized public derivatives were created. A published synthetic project referenced that media and became available through the server-only public project repository.
+- Negative checks confirmed anonymous Media Library access is denied and malformed quotation input is rejected. Existing request throttling, idempotency/deduplication, strict schemas, image decoding limits and emulator failure-path coverage remain in force.
+- The exact synthetic quotation, private photograph, project, slug, media record, reverse-reference record and editorial Storage objects created by the acceptance were removed. Follow-up reads confirmed the quotation and media records no longer existed.
+
+### Security, infrastructure and operating boundary
+
+- Browser Firestore and Storage access remains deny-by-default. All tested writes used authenticated server routes and the Firebase Admin SDK. Firestore Rules, Storage Rules, IAM/ACLs, bucket configuration, lifecycle, region and billing were not changed or deployed.
+- Current limits remain five quotation attempts per protected source per 15 minutes; four customer photographs, 5 MB each and 12 MB total; and 20 editorial uploads per administrator per day with the configured 10 MB/40-megapixel editorial bounds. These controls reduce accidental or abusive usage but are not a substitute for provider-side budget alerts and named incident recipients.
+- Activation currently exists only in the ignored local staging environment. No Vercel/hosting environment was configured, no public deployment was performed and no production traffic was switched. A real online test can proceed only after the same approved non-secret flags and separately managed secrets/credentials are configured in a named staging host and that deployment is separately authorized.
+- Administrator password rotation remains unverified and is still required before production use. The live acceptance did not use or reveal the disclosed password.
+
+### Verification
+
+| Check | Exit | Result |
+|---|---:|---|
+| Controlled live staging harness | 0 | Approved administrator session, real quotation/photo, editorial-media processing, publication and administrator enquiry access passed; synthetic quote and media cleanup confirmed. |
+| `bun run lint` | 0 | ESLint completed without diagnostics. |
+| `bun run typecheck` | 0 | Next.js route types generated and TypeScript completed without diagnostics. |
+| `bun run build` | 0 | Next.js 16.3.8 production build compiled, typechecked and generated all 29 static pages. |
+| `bun run test` | 0 | Firebase Auth, Firestore and Storage emulator suite passed 19 files / 98 tests. |
+
+The emulator run emitted the existing non-fatal Admin SDK metadata-server lookup warnings; all assertions passed. The production build read the approved ignored local staging environment but performed no write or deployment.
+
+**Status:** the application is technically functional against the real staging Firestore and Storage services for controlled testing. Production deployment and customer-facing activation remain unauthorized. Basic application quotas are verified; owner configuration of cloud budget/usage alerts, monitoring recipients and incident ownership remains outstanding.
+
 ## Final readiness and launch preparation - 21 October 2026
 
 Preparation continued from clean, synchronized `main` at `77b571507ee4f75299c66431b95610ab7a905efc`. The 97-test and 72-browser-check Firebase/admin acceptance was not unnecessarily repeated. No live feature gate, Firebase infrastructure, Rules, IAM/ACL, lifecycle, billing, DNS, hosting or production deployment was changed.
