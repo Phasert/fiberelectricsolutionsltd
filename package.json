@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "node scripts/run-typecheck.mjs",
     "test:security": "vitest run tests/security",
+    "test:email": "vitest run tests/email",
     "test:emulators": "firebase emulators:exec --project fes-local --only auth,firestore,storage \"bun run test:security\"",
     "test": "bun run test:emulators",
     "emulators:seed": "node scripts/seed-firebase-emulator.mjs"
@@ -23,6 +24,7 @@
     "firebase-admin": "^14.5.0",
     "lucide-react": "0.468.0",
     "next": "16.3.8",
+    "nodemailer": "10.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",

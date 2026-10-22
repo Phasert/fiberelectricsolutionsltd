@@ -5,6 +5,7 @@ import { getQuoteSubmissionConfig } from "@/lib/quotes/config";
 import { createQuoteRequest } from "@/lib/quotes/repository";
 import { quoteSubmissionTransportSchema } from "@/lib/quotes/schemas";
 import {prepareQuoteAttachments} from "@/lib/quotes/attachments";
+import { logEmailFailure, sendQuoteEmails } from "@/lib/email/delivery";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,12 @@ export async function POST(request: Request) {
     const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const prepared=await prepareQuoteAttachments(files,config.attachmentLimits);
     const result = await createQuoteRequest(transport.quote, { ip: forwarded || "unknown", userAgent: request.headers.get("user-agent") || "unknown" },prepared);
-    return NextResponse.json({ ok: true, reference: result.id, duplicate: result.duplicate }, { status: result.duplicate ? 200 : 201 });
+    let emailAcceptedBySmtp = false;
+    if (!result.duplicate) {
+      try { await sendQuoteEmails(transport.quote, result.id); emailAcceptedBySmtp = true; }
+      catch (error) { logEmailFailure("quote", error); }
+    }
+    return NextResponse.json({ ok: true, reference: result.id, duplicate: result.duplicate, emailAcceptedBySmtp }, { status: result.duplicate ? 200 : 201 });
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof ZodError) return NextResponse.json({ error: "Check the highlighted information and try again." }, { status: 400 });
     const code = error instanceof Error ? error.message : "";
