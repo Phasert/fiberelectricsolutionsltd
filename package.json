@@ -10,6 +10,7 @@
     "typecheck": "node scripts/run-typecheck.mjs",
     "test:security": "vitest run tests/security",
     "test:email": "vitest run tests/email",
+    "test:mobile-nav": "node scripts/mobile-nav-browser-acceptance.mjs",
     "test:emulators": "firebase emulators:exec --project fes-local --only auth,firestore,storage \"bun run test:security\"",
     "test": "bun run test:emulators",
     "emulators:seed": "node scripts/seed-firebase-emulator.mjs"

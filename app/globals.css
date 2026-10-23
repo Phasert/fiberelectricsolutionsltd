@@ -15,8 +15,9 @@
 
 :root { color-scheme: light; --nav-height: 5.25rem; }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-height) + 1rem); }
 body { margin: 0; background: #f4f1ed; color: #141315; font-family: Arial, "Helvetica Neue", sans-serif; }
+main [id] { scroll-margin-top: calc(var(--nav-height) + 1rem); }
 ::selection { background: #7d1028; color: white; }
 a { text-underline-offset: .2em; }
 button, a, input, textarea, select { outline-offset: 3px; }
