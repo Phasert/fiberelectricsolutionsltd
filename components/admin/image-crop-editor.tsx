@@ -11,11 +11,11 @@ const aspectOptions: Array<{ value: MediaAspectRatio; label: string }> = [
 ];
 const fixedRatios: Partial<Record<MediaAspectRatio, number>> = { "1:1": 1, "4:3": 4 / 3, "16:9": 16 / 9, "9:16": 9 / 16 };
 
-export function ImageCropEditor({ src, name, initialCrop, onCancel, onApply }: { src: string; name: string; initialCrop?: MediaCrop; onCancel: () => void; onApply: (crop: MediaCrop) => void | Promise<void> }) {
+export function ImageCropEditor({ src, name, initialCrop, defaultAspectRatio="original", onCancel, onApply }: { src: string; name: string; initialCrop?: MediaCrop; defaultAspectRatio?:MediaAspectRatio; onCancel: () => void; onApply: (crop: MediaCrop) => void | Promise<void> }) {
   const [position, setPosition] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(initialCrop?.rotation ?? 0);
-  const [aspectRatio, setAspectRatio] = useState<MediaAspectRatio>(initialCrop?.aspectRatio ?? "original");
+  const [aspectRatio, setAspectRatio] = useState<MediaAspectRatio>(initialCrop?.aspectRatio ?? defaultAspectRatio);
   const [naturalRatio, setNaturalRatio] = useState(4 / 3);
   const [freeformRatio, setFreeformRatio] = useState(4 / 3);
   const [area, setArea] = useState<Area | null>(initialCrop ? { x: initialCrop.x, y: initialCrop.y, width: initialCrop.width, height: initialCrop.height } : null);
@@ -28,7 +28,7 @@ export function ImageCropEditor({ src, name, initialCrop, onCancel, onApply }: {
     return () => { document.body.style.overflow = previous; };
   }, []);
 
-  const reset = () => { setPosition({ x: 0, y: 0 }); setZoom(1); setRotation(0); setAspectRatio("original"); setFreeformRatio(4 / 3); setArea(null); };
+  const reset = () => { setPosition({ x: 0, y: 0 }); setZoom(1); setRotation(0); setAspectRatio(defaultAspectRatio); setFreeformRatio(4 / 3); setArea(null); };
   const apply = async () => {
     if (!area) return;
     setSaving(true);
