@@ -2,7 +2,7 @@
 
 import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { getFirebaseClient } from "@/lib/firebase/client";
 
 export function LoginForm() {
@@ -10,6 +10,17 @@ export function LoginForm() {
   const [show, setShow] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submit(new FormData(event.currentTarget));
+  }
+
+  function handlePasswordReset() {
+    const form = document.getElementById("admin-login-form");
+    if (!(form instanceof HTMLFormElement)) return;
+    void resetPassword(new FormData(form));
+  }
 
   async function submit(formData: FormData) {
     setLoading(true); setMessage("");
@@ -37,10 +48,10 @@ export function LoginForm() {
     finally { setLoading(false); }
   }
 
-  return <form action={submit} className="mt-8 grid gap-5">
+  return <form id="admin-login-form" onSubmit={handleSubmit} className="mt-8 grid gap-5">
     <label className="grid gap-2 text-sm font-bold">Email address<input name="email" type="email" required autoComplete="email" className="min-h-12 border border-black/15 px-4 font-normal" /></label>
     <label className="grid gap-2 text-sm font-bold">Password<span className="flex"><input name="password" type={show ? "text" : "password"} required autoComplete="current-password" className="min-h-12 min-w-0 flex-1 border border-black/15 px-4 font-normal" /><button type="button" onClick={() => setShow((value) => !value)} className="border border-l-0 border-black/15 px-4 text-xs font-bold">{show ? "Hide" : "Show"}</button></span></label>
-    <div className="flex justify-end text-sm"><button type="submit" formAction={resetPassword} formNoValidate disabled={loading} className="font-bold text-wine">Forgot password?</button></div>
+    <div className="flex justify-end text-sm"><button type="button" onClick={handlePasswordReset} disabled={loading} className="font-bold text-wine">Forgot password?</button></div>
     {message && <p role="status" aria-live="polite" className="bg-amber-50 p-3 text-sm text-amber-900">{message}</p>}
     <button type="submit" disabled={loading} className="min-h-12 bg-wine px-5 font-bold text-white disabled:opacity-60">{loading ? "Signing in…" : "Sign in"}</button>
   </form>;
