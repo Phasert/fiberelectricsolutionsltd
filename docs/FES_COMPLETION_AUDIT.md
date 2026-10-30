@@ -1693,3 +1693,23 @@ The slice should:
 This is the most important next task because every contracted functional feature—admin CRUD, publishing, media and enquiries—depends on a trustworthy identity and data boundary. It also prevents the current mock/public duplication from becoming the permanent architecture.
 
 Phase A is complete and the baseline is clean. Proceed with this authentication/repository slice without combining it with a wholesale admin rewrite or quote upload implementation.
+
+## 14. Media cropper and public image reliability update (2026-10-29)
+
+- Added a responsive administrator image editor using `react-easy-crop`, with drag/reposition, 1–4× zoom, 90° rotation, reset/cancel/apply controls, and Original, Freeform, 1:1, 4:3, 16:9 and 9:16 ratios.
+- New uploads can be cropped before upload. Existing editorial images can be edited again because crop metadata is stored in Firestore and derivatives are regenerated from the protected original; originals are never overwritten or made public.
+- Public `sm`, `md` and `lg` WebP derivatives retain immutable caching for current versioned URLs. A stale page-cache URL now serves the current eligible derivative with `no-store` instead of returning a blank 404 during the cache-revalidation window.
+- The public eligibility check remains publication-aware, and the administrator original endpoint remains session-protected. Customer enquiry photographs were not added to any public route and Storage rules were not weakened.
+- Intentional card/hero crops continue to use `object-cover`; expanded gallery viewing uses `object-contain` so the complete image remains visible.
+- Added image processing coverage for landscape, portrait, square, ultra-wide and tall sources, rotation/cropping, and rejected out-of-bounds crops.
+- Replaced the previous generated SVG favicon with the client-supplied FES logo as the Next.js app icon.
+
+### Verification
+
+| Check | Result |
+|---|---:|
+| `bun run test:unit` | PASS (7 tests) |
+| `bun run lint` | PASS |
+| `bun run typecheck` | PASS |
+| `bun run test:emulators` | PASS (98 tests) |
+| `bun run build` | PASS (Next.js 16.3.8 production build) |

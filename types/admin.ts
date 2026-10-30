@@ -21,6 +21,8 @@ export interface QuoteRequestCustomerInput {
 }
 
 export interface ProjectGalleryItem { mediaId:string; alt:string; caption:string; order:number; }
+export type MediaAspectRatio = "original"|"freeform"|"1:1"|"4:3"|"16:9"|"9:16";
+export interface MediaCrop { x:number; y:number; width:number; height:number; rotation:0|90|180|270; aspectRatio:MediaAspectRatio; }
 export interface AdminProject { id:string; slug:string; title:string; category:ProjectCategory; summary:string; location:string; period:string; status:PublishStatus; featured:boolean; image:string; coverMediaId:string|null; gallery:ProjectGalleryItem[]; galleryCount:number; updatedAt:string; }
 export interface AdminResource { id:string; slug:string; title:string; kind:"FES article"|"Company update"|"External resource"; category:"Electrical"|"Fiber Optic"|"Company Updates"; summary:string; source?:string; externalUrl?:string; status:PublishStatus; featured?:boolean; publishedAt?:string; updatedAt:string; coverImage?:string; coverMediaId?:string|null; content?: Record<string, unknown>; }
 export interface AdminTip { id:string; type:"Do"|"Don’t"; title:string; body:string; enabled:boolean; order:number; }
@@ -65,6 +67,7 @@ export interface MediaItem {
   category:ProjectCategory;
   isCover?:boolean;
   createdAt:string;
+  crop?:MediaCrop|null;
 }
 
 export interface BusinessHoursDay {

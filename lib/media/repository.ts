@@ -4,7 +4,8 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminStorage } from "@/lib/firebase/admin";
 import { getEditorialMediaConfig, requireEditorialStorageEnabled } from "@/lib/media/config";
 import { validateEditorialImage } from "@/lib/media/image-validation";
-import { mediaMetadataInputSchema, mediaPatchSchema, type EditorialMediaRecord, type MediaDerivative } from "@/lib/media/schemas";
+import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,mediaMetadataInputSchema, mediaPatchSchema, type EditorialMediaRecord, type MediaDerivative } from "@/lib/media/schemas";
+import { decodeAndProcessImage } from "@/lib/media/processing";
 import type { MediaItem } from "@/types/admin";
 
 const collection = () => getAdminFirestore().collection("media");
@@ -20,7 +21,7 @@ const pendingPath = (id:string, token:string) => `editorial/private/pending/${id
 
 function toItem(id:string,data:FirebaseFirestore.DocumentData,projects:Map<string,{title:string;category:string}>):MediaItem {
   const projectId=typeof data.projectId==="string"?data.projectId:undefined,project=projectId?projects.get(projectId):undefined;
-  return {id,name:String(data.originalName??"image"),src:`/api/admin/media/${id}/file`,type:data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":"WEBP",size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt)};
+  return {id,name:String(data.originalName??"image"),src:`/api/admin/media/${id}/file`,type:data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":"WEBP",size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null};
 }
 
 export async function listAdminMedia(){const db=getAdminFirestore(),[media,projects]=await Promise.all([collection().orderBy("createdAt","desc").get(),db.collection("projects").get()]),projectMap=new Map(projects.docs.map(doc=>[doc.id,{title:String(doc.data().title??""),category:String(doc.data().category??"Combined")}])) ;return media.docs.flatMap(doc=>doc.data().kind==="editorial-image"&&doc.data().status!=="Deleted"?[toItem(doc.id,doc.data(),projectMap)]:[])}
@@ -58,7 +59,21 @@ export async function uploadEditorialMedia(input:{bytes:Uint8Array;mimeType:stri
   }
 }
 
-export async function updateMediaMetadata(id:string,input:unknown,uid:string){const value=mediaPatchSchema.parse(input),ref=collection().doc(id);const snapshot=await ref.get();if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");await ref.update({...value,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid})}
+export async function updateMediaMetadata(id:string,input:unknown,uid:string){
+  const value=mediaPatchSchema.parse(input),ref=collection().doc(id),snapshot=await ref.get();
+  if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");
+  if(value.crop!==undefined){
+    requireEditorialStorageEnabled();const current=snapshot.data() as EditorialMediaRecord;
+    if(current.status!=="Ready")throw new Error("MEDIA_NOT_READY");
+    const [original]=await getAdminStorage().bucket().file(current.storagePath).download(),version=`v${Date.now().toString(36)}`;
+    const processed=await decodeAndProcessImage({bytes:original,mimeType:current.mimeType,maxPixels:EDITORIAL_MEDIA_MAX_PIXELS,maxDimension:EDITORIAL_MEDIA_MAX_DIMENSION,version,crop:value.crop});
+    const derivatives:MediaDerivative[]=[];
+    for(const derivative of processed.derivatives){const path=derivativePath(id,version,derivative.descriptor.variant);await getAdminStorage().bucket().file(path).save(derivative.bytes,{resumable:false,metadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable",metadata:{mediaId:id,kind:"editorial-public-derivative",checksum:derivative.descriptor.checksum,version}}});derivatives.push({...derivative.descriptor,storagePath:path})}
+    await ref.update({...value,version,derivatives,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
+    await Promise.all(current.derivatives.map(item=>getAdminStorage().bucket().file(item.storagePath).delete({ignoreNotFound:true}).catch(()=>undefined)));return;
+  }
+  await ref.update({...value,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
+}
 
 const includesId=(value:unknown,id:string):boolean=>value===id||(Array.isArray(value)&&value.some(item=>includesId(item,id)))||(Boolean(value)&&typeof value==="object"&&Object.values(value as Record<string,unknown>).some(item=>includesId(item,id)));
 export async function findMediaReferences(id:string){const reverse=await references().doc(id).get();if(reverse.exists)return Array.isArray(reverse.data()?.references)?reverse.data()!.references:[];const db=getAdminFirestore(),sources=["projects","resources","siteContent","services","businessSettings","featuredContent"],snapshots=await Promise.all(sources.map(name=>db.collection(name).get()));return snapshots.flatMap((snapshot,index)=>snapshot.docs.filter(doc=>includesId(doc.data(),id)).map(doc=>`${sources[index]}/${doc.id}`))}

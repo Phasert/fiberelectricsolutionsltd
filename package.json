@@ -11,6 +11,7 @@
     "test:security": "vitest run tests/security",
     "test:email": "vitest run tests/email",
     "test:mobile-nav": "node scripts/mobile-nav-browser-acceptance.mjs",
+    "test:unit": "vitest run tests/unit",
     "test:emulators": "firebase emulators:exec --project fes-local --only auth,firestore,storage \"bun run test:security\"",
     "test": "bun run test:emulators",
     "emulators:seed": "node scripts/seed-firebase-emulator.mjs"
@@ -28,6 +29,7 @@
     "nodemailer": "10.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-easy-crop": "^6.2.4",
     "server-only": "^0.0.1",
     "sharp": "0.34.5",
     "tailwindcss": "^4.3.0",
