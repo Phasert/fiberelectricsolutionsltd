@@ -92,6 +92,8 @@ async function normalize(id: string, raw: unknown): Promise<PublicArticle | Publ
   };
 }
 
+export async function getPublicResourceByIdUncached(id:string):Promise<PublicArticle|PublicExternalResource|null>{if(!z.string().trim().min(1).max(128).safeParse(id).success)return null;const document=await getAdminFirestore().collection("resources").doc(id).get();return document.exists?normalize(document.id,document.data()):null}
+
 export interface PublicResources { articles: PublicArticle[]; externalResources: PublicExternalResource[]; }
 
 export async function listPublicResourcesUncached(): Promise<PublicResources> {

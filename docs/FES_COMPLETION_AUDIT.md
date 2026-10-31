@@ -1713,3 +1713,12 @@ Phase A is complete and the baseline is clean. Proceed with this authentication/
 | `bun run typecheck` | PASS |
 | `bun run test:emulators` | PASS (98 tests) |
 | `bun run build` | PASS (Next.js 16.3.8 production build) |
+
+## 15. Security, scalability and performance audit (2026-10-30)
+
+The full measured audit is recorded in `docs/FES_SECURITY_PERFORMANCE_AUDIT.md`.
+
+- Fixed critical Next.js/Sharp advisories, added browser security headers, corrected Vercel production canonical/indexing fallback, bounded enquiry reads, distributed contact rate limiting, and reduced repeated Firebase reads.
+- Final checks: lint PASS; typecheck PASS; unit 11/11; email 11/11; Firebase emulator/security 100/100; Next.js 16.4.3 build PASS.
+- Sequential deployed Lighthouse lab results were 99–100 mobile and 100 desktop on six page targets, with zero measured CLS. Field INP was unavailable.
+- Current deployed build remains **NO-GO** until this audited revision is deployed and post-deploy headers, CSP, robots, sitemap and auth are verified.

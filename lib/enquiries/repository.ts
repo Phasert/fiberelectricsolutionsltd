@@ -21,10 +21,14 @@ function mapEnquiry(id:string,data:Record<string,unknown>,notes:EnquiryNote[]=[]
   return {id,name:String(data.name??""),email:typeof data.email==="string"?data.email:undefined,phone:typeof data.phone==="string"?data.phone:undefined,contact:typeof data.email==="string"?data.email:typeof data.phone==="string"?data.phone:undefined,preferredContact:preferredContact==="Phone"||preferredContact==="Email"||preferredContact==="WhatsApp"?preferredContact:undefined,service:(data.service==="Electrical"||data.service==="Fiber Optic"||data.service==="Both Services"||data.service==="Not Sure Yet")?data.service:"Not Sure Yet",selectedServiceIds:Array.isArray(data.selectedServiceIds)?data.selectedServiceIds.filter((item):item is string=>typeof item==="string"):[],location:String(data.location??""),propertyType:String(data.propertyType??""),description:String(data.description??""),preferredTimeframe:typeof data.preferredTimeframe==="string"?data.preferredTimeframe:undefined,submittedAt:displayDate(submittedAtIso),submittedAtIso,updatedAt:toIso(data.updatedAt),status:enquiryStatusSchema.catch("New").parse(data.status),attachments,attachmentDetails,consentAcknowledged:consent.acknowledged===true,photoConsentAcknowledged:consent.photoAcknowledged===true,consentAcknowledgedAt:toIso(consent.acknowledgedAt),consentVersion:typeof consent.version==="string"?consent.version:typeof data.consentVersion==="string"?data.consentVersion:undefined,retentionUntil:toIso(data.retentionUntil),notes};
 }
 
-export async function listAdminEnquiries():Promise<Enquiry[]> {
-  const snapshot=await getAdminFirestore().collection("quoteRequests").orderBy("submittedAt","desc").get();
-  return snapshot.docs.map((doc)=>mapEnquiry(doc.id,doc.data()));
+export async function listAdminEnquiriesPage(cursor?:string,limit=25):Promise<{items:Enquiry[];nextCursor:string|null}> {
+  const db=getAdminFirestore(),collection=db.collection("quoteRequests");
+  let query:FirebaseFirestore.Query=collection.orderBy("submittedAt","desc");
+  if(cursor&&/^[A-Za-z0-9_-]{1,128}$/.test(cursor)){const cursorDocument=await collection.doc(cursor).get();if(cursorDocument.exists)query=query.startAfter(cursorDocument)}
+  const snapshot=await query.limit(limit+1).get(),documents=snapshot.docs.slice(0,limit);
+  return{items:documents.map((doc)=>mapEnquiry(doc.id,doc.data())),nextCursor:snapshot.size>limit?documents.at(-1)?.id??null:null};
 }
+export async function listAdminEnquiries():Promise<Enquiry[]> { return (await listAdminEnquiriesPage()).items; }
 
 export async function getAdminEnquiry(id:string):Promise<Enquiry|undefined> {
   const db=getAdminFirestore(),ref=db.collection("quoteRequests").doc(id),[snapshot,notesSnapshot]=await Promise.all([ref.get(),ref.collection("notes").orderBy("createdAt","asc").get()]);

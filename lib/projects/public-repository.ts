@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_PROJECTS_TAG } from "@/lib/projects/public-cache";
-import { getPublicMediaUrl } from "@/lib/media/public-repository";
+import { getPublicMediaUrl, getPublicMediaUrls } from "@/lib/media/public-repository";
 import type { ProjectCategory, ProjectImage, PublicProject } from "@/types/content";
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100);
@@ -52,9 +52,10 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
-  const gallery: ProjectImage[] = await Promise.all(project.gallery
+  const mediaUrls=await getPublicMediaUrls(project.gallery.map(item=>item.mediaId),"lg");
+  const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(async item => ({ src: await getPublicMediaUrl(item.mediaId,"lg") ?? placeholder, alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) })));
+    .map(item => ({ src: mediaUrls.get(item.mediaId) ?? placeholder, alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) }));
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
 
   return {
@@ -74,6 +75,8 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
     ...(toIsoDate(project.updatedAt) ? { updatedAt: toIsoDate(project.updatedAt) } : {}),
   };
 }
+
+export async function getPublicProjectByIdUncached(id:string):Promise<PublicProject|null>{if(!z.string().trim().min(1).max(128).safeParse(id).success)return null;const document=await getAdminFirestore().collection("projects").doc(id).get();return document.exists?normalizeProject(document.id,document.data()):null}
 
 export async function listPublicProjectsUncached(): Promise<PublicProject[]> {
   const snapshot = await getAdminFirestore().collection("projects").where("status", "==", "Published").get();

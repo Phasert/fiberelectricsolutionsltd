@@ -14,6 +14,9 @@ function normalizeSiteUrl(value: string | undefined) {
   }
 }
 
-export const configuredSiteUrl = normalizeSiteUrl(process.env.SITE_URL);
+const vercelProductionUrl = process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : undefined;
+export const configuredSiteUrl = normalizeSiteUrl(process.env.SITE_URL) ?? normalizeSiteUrl(vercelProductionUrl);
 export const siteUrl = configuredSiteUrl ?? LOCAL_SITE_URL;
-export const isProductionIndexingEnabled = process.env.NODE_ENV === "production" && configuredSiteUrl !== null;
+export const isProductionIndexingEnabled = process.env.NODE_ENV === "production" && configuredSiteUrl !== null && process.env.VERCEL_ENV !== "preview";

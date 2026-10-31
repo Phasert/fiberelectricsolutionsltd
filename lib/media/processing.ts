@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import sharp from "sharp";
+import sharp, {type Metadata} from "sharp";
 import type { EditorialMimeType, MediaDerivative } from "@/lib/media/schemas";
 import type { MediaCrop } from "@/types/admin";
 
@@ -9,7 +9,7 @@ const variants = [{ variant: "sm" as const, width: 640 }, { variant: "md" as con
 const checksum = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 export async function decodeAndProcessImage(input: { bytes: Uint8Array; mimeType: EditorialMimeType; maxPixels: number; maxDimension: number; version: string; crop?:MediaCrop|null }) {
-  let metadata: sharp.Metadata;
+  let metadata: Metadata;
   try {
     metadata = await sharp(input.bytes, { failOn: "error", limitInputPixels: input.maxPixels, sequentialRead: true }).metadata();
   } catch {

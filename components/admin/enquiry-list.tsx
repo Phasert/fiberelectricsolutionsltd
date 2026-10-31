@@ -10,18 +10,16 @@ const statuses: ("All" | EnquiryStatus)[] = ["All", "New", "Reviewing", "Contact
 const tone = (status: EnquiryStatus) => status === "New" ? "info" : status === "Reviewing" ? "warn" : status === "Contacted" ? "good" : "neutral";
 const time = (value?: string) => value ? new Date(value).getTime() : 0;
 
-export function EnquiryList({ items }: { items: Enquiry[] }) {
+export function EnquiryList({ items,nextCursor }: { items: Enquiry[];nextCursor?:string|null }) {
   const [status, setStatus] = useState<(typeof statuses)[number]>("All");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("newest");
-  const [page,setPage]=useState(1);
   const counts = useMemo(() => Object.fromEntries(statuses.slice(1).map(value => [value, items.filter(item => item.status === value).length])), [items]);
   const visible = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return items.filter(item => (status === "All" || item.status === status) && (!normalized || [item.name, item.email, item.phone, item.id].some(value => value?.toLowerCase().includes(normalized))))
       .sort((a, b) => sort === "oldest" ? time(a.submittedAtIso) - time(b.submittedAtIso) : sort === "updated" ? time(b.updatedAt) - time(a.updatedAt) : time(b.submittedAtIso) - time(a.submittedAtIso));
   }, [items, query, sort, status]);
-  const pageCount=Math.max(1,Math.ceil(visible.length/10)),safePage=Math.min(page,pageCount),paged=visible.slice((safePage-1)*10,safePage*10);
 
   return <div className="space-y-6">
     <section aria-label="Enquiry summary" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
@@ -39,12 +37,12 @@ export function EnquiryList({ items }: { items: Enquiry[] }) {
       </div>
       {visible.length ? <div>
         <div className="hidden grid-cols-[minmax(12rem,1.3fr)_.7fr_.8fr_.65fr_auto] gap-4 border-b border-black/[.07] bg-paper/65 px-5 py-3 text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40 md:grid"><span>Customer</span><span>Service</span><span>Submitted</span><span>Status</span><span>Action</span></div>
-        {paged.map(item => <article key={item.id} className="grid gap-4 border-b border-black/[.07] p-4 last:border-0 md:grid-cols-[minmax(12rem,1.3fr)_.7fr_.8fr_.65fr_auto] md:items-center md:px-5">
+        {visible.map(item => <article key={item.id} className="grid gap-4 border-b border-black/[.07] p-4 last:border-0 md:grid-cols-[minmax(12rem,1.3fr)_.7fr_.8fr_.65fr_auto] md:items-center md:px-5">
           <div className="min-w-0"><p className="truncate font-bold text-ink">{item.name}</p><p className="mt-1 truncate text-xs text-ink/45">{item.email ?? item.contact ?? "No contact information"}</p><p className="mt-1 text-[.65rem] font-bold uppercase tracking-wider text-ink/35">{item.id}</p></div>
           <Field label="Service">{item.service}</Field><Field label="Submitted">{item.submittedAt}</Field><div><span className="mb-1.5 block text-[.62rem] font-black uppercase tracking-wider text-ink/35 md:hidden">Status</span><StatusBadge tone={tone(item.status)}>{item.status}</StatusBadge></div>
           <Link href={`/admin/enquiries/${item.id}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-wine/20 px-3 text-xs font-bold text-wine transition-colors hover:bg-wine hover:text-white">View details <ArrowRight size={14}/></Link>
         </article>)}
-        {pageCount>1&&<nav aria-label="Enquiry pages" className="flex items-center justify-between gap-3 border-t border-black/[.07] p-4"><button type="button" disabled={safePage===1} onClick={()=>setPage(value=>Math.max(1,value-1))} className="min-h-10 rounded-md border border-black/10 px-4 text-sm font-bold disabled:opacity-40">Previous</button><p className="text-xs text-ink/50">Page {safePage} of {pageCount}</p><button type="button" disabled={safePage===pageCount} onClick={()=>setPage(value=>Math.min(pageCount,value+1))} className="min-h-10 rounded-md border border-black/10 px-4 text-sm font-bold disabled:opacity-40">Next</button></nav>}
+        {nextCursor&&<nav aria-label="Enquiry pages" className="flex justify-end border-t border-black/[.07] p-4"><Link href={`/admin/enquiries?after=${encodeURIComponent(nextCursor)}`} className="inline-flex min-h-10 items-center rounded-md border border-black/10 px-4 text-sm font-bold">Next 25 enquiries</Link></nav>}
       </div> : <div className="p-5 sm:p-8"><EmptyState title={items.length ? "No quote requests found" : "No quote requests yet"} body={items.length ? "Try changing the search term or status filter." : "No customer quotation requests are currently stored in Firebase."}/></div>}
     </section>
   </div>;

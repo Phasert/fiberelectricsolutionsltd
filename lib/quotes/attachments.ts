@@ -1,7 +1,7 @@
 import "server-only";
 
 import {createHash} from "node:crypto";
-import sharp from "sharp";
+import sharp,{type Metadata} from "sharp";
 
 export type PreparedQuoteAttachment={checksum:string;bytes:Buffer;width:number;height:number;sizeBytes:number;mimeType:"image/webp"};
 const detectedType=(bytes:Uint8Array)=>bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255?"image/jpeg":bytes.length>=8&&[137,80,78,71,13,10,26,10].every((value,index)=>bytes[index]===value)?"image/png":bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&String.fromCharCode(...bytes.slice(8,12))==="WEBP"?"image/webp":null;
@@ -15,7 +15,7 @@ export async function prepareQuoteAttachments(files:File[],limits:{maxFiles:numb
     if(!file.size||file.size>limits.maxFileBytes)throw new Error("QUOTE_ATTACHMENT_SIZE_INVALID");
     const input=new Uint8Array(await file.arrayBuffer());
     if(detectedType(input)!==file.type)throw new Error("QUOTE_ATTACHMENT_SIGNATURE_INVALID");
-    let metadata:sharp.Metadata;
+    let metadata:Metadata;
     try{metadata=await sharp(input,{failOn:"error",limitInputPixels:limits.maxPixels,sequentialRead:true}).metadata();}catch{throw new Error("QUOTE_ATTACHMENT_DECODE_INVALID")}
     const width=metadata.width??0,height=metadata.height??0;
     if(!width||!height||width>limits.maxDimension||height>limits.maxDimension||width*height>limits.maxPixels)throw new Error("QUOTE_ATTACHMENT_DIMENSIONS_INVALID");

@@ -1,4 +1,4 @@
-import { getAdminEnquiry, listAdminEnquiries } from "@/lib/enquiries/repository";
+import { getAdminEnquiry, listAdminEnquiries, listAdminEnquiriesPage } from "@/lib/enquiries/repository";
 import { listAdminMedia } from "@/lib/media/repository";
 import { getAdminProject, listAdminProjects } from "@/lib/projects/repository";
 import { getAdminResource, listAdminResources } from "@/lib/resources/repository";
@@ -14,6 +14,7 @@ export const adminRepository = {
   getTips: listAdminTips,
   getFeaturedSelection,
   getEnquiries: listAdminEnquiries,
+  getEnquiriesPage: listAdminEnquiriesPage,
   getEnquiry: getAdminEnquiry,
   getMedia: listAdminMedia,
   getProjectMedia: async (projectId:string) => (await listAdminMedia()).filter(item => item.projectId === projectId),

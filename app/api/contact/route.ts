@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const elapsed = Date.now() - input.startedAt;
     if (elapsed < 1_500 || elapsed > 2 * 60 * 60 * 1000) return NextResponse.json({ error: "Please review the form and try again." }, { status: 400 });
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    enforceContactRateLimit(`${ip}|${request.headers.get("user-agent") || "unknown"}`);
+    await enforceContactRateLimit(`${ip}|${request.headers.get("user-agent") || "unknown"}`);
     await sendContactEmails(input);
     return NextResponse.json({ ok: true, acceptedBySmtp: true }, { status: 200 });
   } catch (error) {

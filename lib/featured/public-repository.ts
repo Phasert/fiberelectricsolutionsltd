@@ -6,8 +6,8 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_HOMEPAGE_FEATURED_TAG } from "@/lib/featured/public-cache";
-import { listPublicProjectsUncached } from "@/lib/projects/public-repository";
-import { listPublicResourcesUncached } from "@/lib/resources/public-repository";
+import { getPublicProjectByIdUncached } from "@/lib/projects/public-repository";
+import { getPublicResourceByIdUncached } from "@/lib/resources/public-repository";
 import type { PublicFeaturedContent, PublicTip } from "@/types/content";
 
 const idSchema = z.string().trim().min(1).max(128);
@@ -37,17 +37,14 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
   const selection = selectionSchema.safeParse(selectionDocument.data());
   if (!selection.success) return empty;
 
-  const [projects, resources, ...tipDocuments] = await Promise.all([
-    listPublicProjectsUncached(),
-    listPublicResourcesUncached(),
+  const [selectedProject, selectedResource, ...tipDocuments] = await Promise.all([
+    getPublicProjectByIdUncached(selection.data.projectId),
+    selection.data.resourceId?getPublicResourceByIdUncached(selection.data.resourceId):Promise.resolve(null),
     ...selection.data.tipIds.map((id) => database.collection("tips").doc(id).get()),
   ]);
 
-  const project = projects.find((item) => item.id === selection.data.projectId && !isClearlyLabelledFixture(item.title, item.summary)) ?? null;
-  const allResources = [...resources.articles, ...resources.externalResources];
-  const resource = selection.data.resourceId
-    ? allResources.find((item) => item.id === selection.data.resourceId && !isClearlyLabelledFixture(item.title, item.summary)) ?? null
-    : null;
+  const project = selectedProject&&!isClearlyLabelledFixture(selectedProject.title,selectedProject.summary)?selectedProject:null;
+  const resource = selectedResource&&!isClearlyLabelledFixture(selectedResource.title,selectedResource.summary)?selectedResource:null;
   const tips: PublicTip[] = tipDocuments.flatMap((document) => {
     if (!document.exists) return [];
     const parsed = tipSchema.safeParse(document.data());
