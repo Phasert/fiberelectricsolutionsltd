@@ -33,6 +33,8 @@ Development and production builds intentionally use Next.js's supported Webpack 
 
 Copy `.env.example` to a local environment file when deployment values are available. `SITE_URL` must be set to the client-approved canonical origin before production indexing is enabled. Demo projects and sample resources are visible automatically in development, hidden by default in production, and can be enabled only for an explicitly non-public preview with `NEXT_PUBLIC_ENABLE_DEMO_CONTENT=true`.
 
+See [Homepage slideshow management](docs/HOMEPAGE_SLIDESHOWS.md) for the Media Library publishing workflow.
+
 ## Structure
 
 - `app/` — routes, metadata, sitemap and robots configuration

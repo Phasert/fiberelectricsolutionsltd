@@ -68,7 +68,11 @@ export interface MediaItem {
   isCover?:boolean;
   createdAt:string;
   crop?:MediaCrop|null;
+  slideshow?:SlideshowAssignment|null;
 }
+
+export type SlideshowPlacement="hero"|"electrical"|"fiber";
+export interface SlideshowAssignment { placement:SlideshowPlacement;order:number;alt:string;focalPoint:{x:number;y:number};published:boolean; }
 
 export interface BusinessHoursDay {
   day: string;
