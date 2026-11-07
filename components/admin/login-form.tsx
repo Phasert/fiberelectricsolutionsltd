@@ -48,9 +48,9 @@ export function LoginForm() {
     finally { setLoading(false); }
   }
 
-  return <form id="admin-login-form" onSubmit={handleSubmit} className="mt-8 grid gap-5">
-    <label className="grid gap-2 text-sm font-bold">Email address<input name="email" type="email" required autoComplete="email" className="min-h-12 border border-black/15 px-4 font-normal" /></label>
-    <label className="grid gap-2 text-sm font-bold">Password<span className="flex"><input name="password" type={show ? "text" : "password"} required autoComplete="current-password" className="min-h-12 min-w-0 flex-1 border border-black/15 px-4 font-normal" /><button type="button" onClick={() => setShow((value) => !value)} className="border border-l-0 border-black/15 px-4 text-xs font-bold">{show ? "Hide" : "Show"}</button></span></label>
+  return <form id="admin-login-form" onSubmit={handleSubmit} className="mt-8 grid min-w-0 gap-5">
+    <label className="grid min-w-0 gap-2 text-sm font-bold">Email address<input name="email" type="email" required autoComplete="email" className="min-h-12 min-w-0 w-full border border-black/15 px-4 font-normal" /></label>
+    <label className="grid min-w-0 gap-2 text-sm font-bold">Password<span className="flex min-w-0"><input name="password" type={show ? "text" : "password"} required autoComplete="current-password" className="min-h-12 min-w-0 flex-1 border border-black/15 px-4 font-normal" /><button type="button" onClick={() => setShow((value) => !value)} className="shrink-0 border border-l-0 border-black/15 px-4 text-xs font-bold">{show ? "Hide" : "Show"}</button></span></label>
     <div className="flex justify-end text-sm"><button type="button" onClick={handlePasswordReset} disabled={loading} className="font-bold text-wine">Forgot password?</button></div>
     {message && <p role="status" aria-live="polite" className="bg-amber-50 p-3 text-sm text-amber-900">{message}</p>}
     <button type="submit" disabled={loading} className="min-h-12 bg-wine px-5 font-bold text-white disabled:opacity-60">{loading ? "Signing in…" : "Sign in"}</button>

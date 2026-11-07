@@ -8,7 +8,7 @@ Administrators can create a project with only a name, optionally add a short des
 - Videos: MP4 and QuickTime MOV; 150 MB by default. The server verifies an ISO media container signature and preserves the original. Browser-compatible video is served only when referenced by a published project.
 - HEIC/HEIF: accepted by the archive preparation report but marked `requires-conversion`. Convert to a browser-safe image before admin upload while retaining the HEIC original outside Git.
 
-Limits are configurable with `EDITORIAL_MEDIA_MAX_BYTES`, `EDITORIAL_VIDEO_MAX_BYTES`, and `EDITORIAL_MEDIA_DAILY_ADMIN_LIMIT`. Storage uploads remain protected by the existing server-only administrator session and approved-staging feature gate.
+Limits are configurable with `EDITORIAL_MEDIA_MAX_BYTES`, `EDITORIAL_VIDEO_MAX_BYTES`, and `EDITORIAL_MEDIA_DAILY_ADMIN_LIMIT`. Storage uploads remain protected by the existing server-only administrator session and an explicit, fail-closed target registry. Live uploads require `EDITORIAL_MEDIA_LIVE_ENABLED=true`, `EDITORIAL_MEDIA_LIVE_ENVIRONMENT=staging|production`, and exact matching project and bucket allowlist values. The registered targets are staging `fesr-c3ae1` / `fesr-c3ae1.firebasestorage.app` and production `fesproject-45db0` / `fesproject-45db0.firebasestorage.app`; arbitrary environment values cannot authorize another target.
 
 ## Preparing a ZIP
 
@@ -71,7 +71,27 @@ The migration preserves the complete source ZIP—12 images and 12 videos—unde
 
 The Featured Work slideshow uses the existing manual previous/next, dot, and pause controls; automatic advancement stops during interaction and for reduced-motion users. Portrait images use `object-contain` without zoom transforms so electrical equipment is not clipped. The general electrical-and-fiber hero remains unchanged.
 
-Firebase target audit (6 Nov 2026): `.firebaserc` defaults local tooling to the `fes-local` emulator project. The current local environment names `fesproject-45db0` and its Storage bucket, while the source-controlled editorial allowlist is hard-pinned to staging project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app`. This mismatch intentionally causes `MEDIA_LIVE_TARGET_INVALID`; therefore no live upload or draft creation can occur. Before any production-data action, the owner must explicitly identify and approve the intended Firebase project/bucket and the allowlist must be reconciled without weakening admin-session, trusted-origin, or deny-all client rules.
+Firebase target audit (7 Nov 2026): `.firebaserc` continues to default local tooling to the `fes-local` emulator project. The deployed browser bundle independently resolves Firebase Authentication to production project `fesproject-45db0`; the application configuration names bucket `fesproject-45db0.firebasestorage.app`. Editorial media now uses an immutable two-environment registry instead of a staging-only constant. This change adds an explicit production option while preserving staging protection, administrator sessions, trusted-origin checks, and deny-all browser client rules. The live gate remains off by default and this audit does not authorize a production write.
+
+For a read-only migration preflight, use either Application Default Credentials via `GOOGLE_APPLICATION_CREDENTIALS` pointing to an untracked file outside the repository, or the existing ignored `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` pair. The identity needs only Firestore read access (for example `roles/datastore.viewer`) and Storage metadata/object read access (for example `roles/storage.objectViewer`) on `fesproject-45db0`. Never commit a key or place it in screenshots or logs. Run `node --env-file=.env.local scripts/migrate-tommys-brentwood.mjs --check-remote`; it performs no writes. A separate, explicitly approved write identity is required for the later import.
+
+### Production-readiness evidence — 7 Nov 2026
+
+- The credentialed `--check-remote` preflight passed against `fesproject-45db0` and bucket `fesproject-45db0.firebasestorage.app`. The bucket exists; the private archive object does not yet exist.
+- No `projects/tommys-brentwood`, `projectSlugs/tommys-brentwood`, `projectMigrations/tommys-brentwood`, `mediaImportArchives/tommys-brentwood`, or any of the five deterministic media IDs exists. No duplicate media checksum was found.
+- Anonymous production Firestore and Storage listing probes both returned HTTP 403. Repository deny-all client rules also passed the local emulator suite; no production rules were changed.
+- Two independent dry-runs produced byte-identical plans (SHA-256 `9892563966d91adf3acfa7a48c5af76159cdf6bb55a83d949d34b061679584e0`). The apply path uses deterministic document/object IDs, checksum conflict guards, merge writes, preserved creation timestamps, and transactional slug/reference updates.
+- Lint, route/type generation, 21 unit tests, 101 Firebase emulator tests, and the production build passed. The browser matrix passed at 1440, 768, 390, and 360 pixels for all eight admin workspaces, the public routes, `/projects`, and `/projects/tommys-brentwood`, with no overflow, unlabelled controls, failed requests, unexpected responses, or actionable console errors.
+- The migration remains a Draft-only plan unless the separate `--publish` flag is deliberately supplied. Do not use `--publish` for the initial production import.
+
+After explicit owner approval, the exact production Draft import command is:
+
+```powershell
+$env:FES_APPROVED_FIREBASE_PROJECT='fesproject-45db0'
+node --env-file=.env.local scripts/migrate-tommys-brentwood.mjs --check-remote --apply --allow-production
+```
+
+This command will upload the complete 24-file ZIP privately, upload the five reviewed JPEG originals plus responsive WebP derivatives, and create the project, slug, migration marker, archive inventory, five media, and five media-reference records. It will not publish or feature the project. Run the read-only command once more immediately before the approved write window and stop on any newly reported conflict.
 
 ## Storage layout
 
