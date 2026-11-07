@@ -111,11 +111,12 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   return project?.slug === slug ? project : null;
 }
 
-const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v1",FIREBASE_CACHE_NAMESPACE], {
+// v2 cold-starts the managed project read path after the Tommy's Brentwood cutover.
+const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v2",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });
-const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v1",FIREBASE_CACHE_NAMESPACE], {
+const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v2",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });
