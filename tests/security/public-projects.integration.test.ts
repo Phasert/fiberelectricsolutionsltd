@@ -85,6 +85,18 @@ describe("Phase D1a public projects", () => {
     await reference.update({ status: "Published" });
   });
 
+  it("keeps the legacy Tommy's fallback until migration, then suppresses it after managed deletion", async () => {
+    const database = getAdminFirestore();
+    const migration = database.collection("projectMigrations").doc("tommys-brentwood");
+    const slugReference = database.collection("projectSlugs").doc("tommys-brentwood");
+    await Promise.all([migration.delete(), slugReference.delete()]);
+    expect((await getPublicProjectBySlugUncached("tommys-brentwood"))?.id).toBe("curated-tommys-brentwood");
+    await migration.set({ projectId: "tommys-brentwood", legacyFallbackSuppressed: true });
+    expect(await getPublicProjectBySlugUncached("tommys-brentwood")).toBeNull();
+    expect((await listPublicProjectsUncached()).some((item) => item.slug === "tommys-brentwood")).toBe(false);
+    await migration.delete();
+  });
+
   it("preserves gallery order and text while using safe missing-media fallbacks", async () => {
     const projectRecord = await getPublicProjectBySlugUncached(publishedSlug);
     expect(projectRecord?.gallery.map(image => image.alt)).toEqual(["First ordered test image", "Second ordered test image"]);

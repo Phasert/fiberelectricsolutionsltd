@@ -81,14 +81,17 @@ export async function getPublicProjectByIdUncached(id:string):Promise<PublicProj
 
 export async function listPublicProjectsUncached(): Promise<PublicProject[]> {
   const database = getAdminFirestore();
-  const [snapshot, ...managedSlugDocuments] = await Promise.all([
+  const [snapshot, ...managedDocuments] = await Promise.all([
     database.collection("projects").where("status", "==", "Published").get(),
-    ...curatedProjects.map((project) => database.collection("projectSlugs").doc(project.slug).get()),
+    ...curatedProjects.flatMap((project) => [
+      database.collection("projectSlugs").doc(project.slug).get(),
+      database.collection("projectMigrations").doc(project.slug).get(),
+    ]),
   ]);
   const managed=(await Promise.all(snapshot.docs
     .map(document => normalizeProject(document.id, document.data()))))
     .filter((project): project is PublicProject => project !== null);
-  const managedSlugs = new Set(managedSlugDocuments.filter((document) => document.exists).map((document) => document.id));
+  const managedSlugs = new Set(managedDocuments.filter((document) => document.exists).map((document) => document.id));
   const merged=new Map(curatedProjects.filter((project) => !managedSlugs.has(project.slug)).map(project=>[project.slug,project]));
   managed.forEach(project=>merged.set(project.slug,project));
   return [...merged.values()].toSorted((left, right) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title));
@@ -98,8 +101,8 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   if (!slugSchema.safeParse(slug).success) return null;
   const curated=curatedProjects.find(project=>project.slug===slug);
   const database = getAdminFirestore();
-  const slugDocument = await database.collection("projectSlugs").doc(slug).get();
-  if (!slugDocument.exists) return curated??null;
+  const [slugDocument,migrationDocument] = await Promise.all([database.collection("projectSlugs").doc(slug).get(),database.collection("projectMigrations").doc(slug).get()]);
+  if (!slugDocument.exists) return migrationDocument.exists?null:curated??null;
   const projectId = slugDocument.get("projectId");
   if (typeof projectId !== "string" || !projectId) return null;
   const projectDocument = await database.collection("projects").doc(projectId).get();

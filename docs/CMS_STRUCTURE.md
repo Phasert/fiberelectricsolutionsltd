@@ -26,7 +26,7 @@ Public media eligibility is derived from published references. Private originals
 
 Tommy's Brentwood currently has a temporary code-backed fallback. `scripts/migrate-tommys-brentwood.mjs` prepares an idempotent Firebase project, five media records, optimized derivatives, reverse references and the slug record.
 
-The script is dry-run by default:
+The script is dry-run by default and validates the source archive checksum, all five converted JPEGs, dimensions and the exact record plan without importing Firebase packages or making network calls:
 
 ```powershell
 bun run cms:migrate:tommys
@@ -35,6 +35,12 @@ bun run cms:migrate:tommys
 An emulator write requires `--apply`. A non-emulator write is additionally blocked unless `--allow-production` is supplied and `FES_APPROVED_FIREBASE_PROJECT` exactly matches the configured Firebase project. Production application and publication require explicit approval.
 
 After a managed `projectSlugs/tommys-brentwood` record exists, Firestore becomes authoritative. Drafting or unpublishing that project removes it from the public project list, homepage fallback and public route. Previously cached or downloaded media cannot be revoked retroactively.
+
+The approved migration also writes `projectMigrations/tommys-brentwood`. This permanent marker prevents the temporary code fallback from returning if the managed project is later deleted. The fallback is not suppressed until the approved Firebase migration successfully creates the marker and managed records.
+
+The complete 24-file ZIP is preserved privately at `editorial/private/source-archives/tommys-brentwood/<archive-sha256>.zip` and recorded in `mediaImportArchives/tommys-brentwood`. Only the five approved conversions become reusable Media Library records initially; the other 19 originals remain in the private archive for later review or import and are not discarded or published.
+
+Use `--check-remote` with read credentials to check the project, slug, marker, archive, media IDs and media checksums for conflicts without writing. The apply path is repeatable: IDs and storage versions are deterministic, matching records are merged, original creation timestamps are retained, and conflicting IDs, slugs or duplicate checksums stop the run.
 
 ## Operational limitations
 

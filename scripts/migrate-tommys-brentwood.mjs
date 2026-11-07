@@ -2,73 +2,40 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { getStorage } from "firebase-admin/storage";
-import sharp from "sharp";
 
-const apply = process.argv.includes("--apply");
-const publish = process.argv.includes("--publish");
-const allowProduction = process.argv.includes("--allow-production");
-const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
-const emulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST);
-const projectRefId = "tommys-brentwood";
-const slug = "tommys-brentwood";
-const actor = process.env.FES_MIGRATION_ACTOR_UID || "migration:tommys-brentwood";
-const base = path.resolve("public/images/projects/tommys-brentwood");
-const assets = [
-  ["img-0637", "img_0637.jpg", "Two open electrical panelboards mounted within a framed interior"],
-  ["img-0670", "img_0670.jpg", "Open electrical panel with a main breaker, copper busbars and yellow cabling"],
-  ["img-0775", "img_0775.jpg", "Wide view of electrical equipment and cabling in an equipment room"],
-  ["img-0776", "img_0776.jpg", "Open breaker panel with copper busbars and colored cabling"],
-  ["img-0777", "img_0777.jpg", "Wide view of electrical equipment installed in an equipment room"],
+const ARCHIVE_SHA="b0e4bfe38b5b89f6ae772753e12c848396b6ef552a305406740c0ed95e73ef71";
+const COUNTS={total:24,images:12,videos:12,selected:5,preservedUnselected:19};
+const apply=process.argv.includes("--apply"),publish=process.argv.includes("--publish"),allowProduction=process.argv.includes("--allow-production"),checkRemote=process.argv.includes("--check-remote")||apply;
+const projectId=process.env.FIREBASE_PROJECT_ID||process.env.GCLOUD_PROJECT||process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,bucketName=process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+const emulator=Boolean(process.env.FIRESTORE_EMULATOR_HOST&&process.env.FIREBASE_STORAGE_EMULATOR_HOST),slug="tommys-brentwood",actor=process.env.FES_MIGRATION_ACTOR_UID||"migration:tommys-brentwood";
+const imageBase=path.resolve("public/images/projects/tommys-brentwood"),archivePath=path.resolve("public/Tommys Brent wood-1-001.zip"),archiveStoragePath=`editorial/private/source-archives/${slug}/${ARCHIVE_SHA}.zip`;
+const selections=[
+ ["img-0637","img_0637.jpg","IMG_0637.HEIC","Two open electrical panelboards mounted within a framed interior","Clear overview of two panelboards and the installation context."],
+ ["img-0670","img_0670.jpg","IMG_0670.HEIC","Open electrical panel with a main breaker, copper busbars and yellow cabling","Strong detailed equipment view; selected as the project cover."],
+ ["img-0775","img_0775.jpg","IMG_0775.HEIC","Wide view of electrical equipment and cabling in an equipment room","Shows the broader equipment-room installation."],
+ ["img-0776","img_0776.jpg","IMG_0776.HEIC","Open breaker panel with copper busbars and colored cabling","Useful close-up with distinct cabling and busbar detail."],
+ ["img-0777","img_0777.jpg","IMG_0777.HEIC","Wide view of electrical equipment installed in an equipment room","Completes the gallery with a second contextual room view."],
 ];
-
-if (apply && (!projectId || !bucketName)) throw new Error("Set FIREBASE_PROJECT_ID and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET.");
-if (apply && !emulator && !allowProduction) throw new Error("Production writes are blocked. Obtain approval, then pass --allow-production.");
-if (apply && !emulator && process.env.FES_APPROVED_FIREBASE_PROJECT !== projectId) throw new Error("Set FES_APPROVED_FIREBASE_PROJECT to the exact approved target project.");
-
-const prepared = [];
-for (const [suffix, filename, alt] of assets) {
-  const bytes = await readFile(path.join(base, filename));
-  const metadata = await sharp(bytes).metadata();
-  if (!metadata.width || !metadata.height) throw new Error(`Could not read ${filename}.`);
-  prepared.push({ id: `tommys-brentwood-${suffix}`, filename, alt, bytes, width: metadata.width, height: metadata.height, checksum: createHash("sha256").update(bytes).digest("hex") });
-}
-
-console.log(JSON.stringify({ mode: apply ? "apply" : "dry-run", target: projectId || "not-configured", emulator, publish, project: { id: projectRefId, slug, media: prepared.map(({ id, filename, checksum }) => ({ id, filename, checksum })) } }, null, 2));
-if (!apply) {
-  console.log("Dry run complete. No Firebase or Storage data was changed.");
-  process.exit(0);
-}
-
-const app = getApps()[0] || initializeApp({ projectId, credential: applicationDefault(), storageBucket: bucketName });
-const db = getFirestore(app);
-const bucket = getStorage(app).bucket();
-const existingSlug = await db.collection("projectSlugs").doc(slug).get();
-if (existingSlug.exists && existingSlug.get("projectId") !== projectRefId) throw new Error("SLUG_CONFLICT");
-
-for (const asset of prepared) {
-  const version = `sha256-${asset.checksum.slice(0, 16)}`;
-  const originalPath = `editorial/private/originals/${asset.id}/${version}/source.jpg`;
-  const derivatives = [];
-  await bucket.file(originalPath).save(asset.bytes, { resumable: false, metadata: { contentType: "image/jpeg", cacheControl: "private, max-age=0, no-store" } });
-  for (const [variant, width] of [["sm", 640], ["md", 1280], ["lg", 1920]]) {
-    const output = await sharp(asset.bytes).rotate().resize({ width, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer({ resolveWithObject: true });
-    const storagePath = `editorial/public/derivatives/${asset.id}/${version}/${variant}.webp`;
-    const checksum = createHash("sha256").update(output.data).digest("hex");
-    await bucket.file(storagePath).save(output.data, { resumable: false, metadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000, immutable" } });
-    derivatives.push({ variant, storagePath, mimeType: "image/webp", sizeBytes: output.data.length, width: output.info.width, height: output.info.height, checksum, version });
-  }
-  await db.collection("media").doc(asset.id).set({ schemaVersion: 2, kind: "editorial-image", status: "Ready", originalName: asset.filename, storagePath: originalPath, mimeType: "image/jpeg", sizeBytes: asset.bytes.length, width: asset.width, height: asset.height, pixelCount: asset.width * asset.height, checksum: asset.checksum, version, derivatives, failureCode: null, alt: asset.alt, caption: "", category: "Electrical", projectId: projectRefId, roles: ["project-gallery"], updatedAt: FieldValue.serverTimestamp(), updatedBy: actor, createdAt: FieldValue.serverTimestamp(), createdBy: actor }, { merge: true });
-}
-
-const gallery = prepared.map((asset, order) => ({ mediaId: asset.id, alt: asset.alt, caption: "", order }));
-const project = { title: "Tommy's Brentwood", slug, category: "Electrical", summary: "", location: "", period: "", status: publish ? "Published" : "Draft", featured: false, gallery, coverMediaId: prepared[1].id, updatedAt: FieldValue.serverTimestamp(), updatedBy: actor };
-await db.runTransaction(async (transaction) => {
-  transaction.set(db.collection("projectSlugs").doc(slug), { projectId: projectRefId, createdAt: FieldValue.serverTimestamp() }, { merge: true });
-  transaction.set(db.collection("projects").doc(projectRefId), { ...project, createdAt: FieldValue.serverTimestamp(), createdBy: actor, publishedAt: publish ? FieldValue.serverTimestamp() : null }, { merge: true });
-  for (const asset of prepared) transaction.set(db.collection("mediaReferences").doc(asset.id), { references: [`projects/${projectRefId}:gallery`], updatedAt: FieldValue.serverTimestamp(), updatedBy: actor }, { merge: true });
-});
-console.log(`Migrated Tommy's Brentwood as ${project.status}.`);
+function jpegDimensions(bytes){if(bytes[0]!==255||bytes[1]!==216)throw new Error("MEDIA_SIGNATURE_INVALID");let offset=2;while(offset+9<bytes.length){if(bytes[offset]!==255){offset++;continue}const marker=bytes[offset+1],length=bytes.readUInt16BE(offset+2);if(marker>=192&&marker<=195)return{height:bytes.readUInt16BE(offset+5),width:bytes.readUInt16BE(offset+7)};if(length<2)break;offset+=2+length}throw new Error("MEDIA_DIMENSIONS_INVALID")}
+const archiveBytes=await readFile(archivePath),archiveChecksum=createHash("sha256").update(archiveBytes).digest("hex");
+if(archiveChecksum!==ARCHIVE_SHA)throw new Error("SOURCE_ARCHIVE_CHECKSUM_MISMATCH");
+const prepared=[];
+for(const[suffix,filename,originalName,alt,reason]of selections){const bytes=await readFile(path.join(imageBase,filename)),{width,height}=jpegDimensions(bytes);prepared.push({id:`tommys-brentwood-${suffix}`,filename,originalName,alt,reason,bytes,width,height,checksum:createHash("sha256").update(bytes).digest("hex")})}
+const plan={mode:apply?"apply":"dry-run",target:{projectId:projectId||"not-configured",bucket:bucketName||"not-configured",emulator},sourceArchive:{localPath:archivePath,checksum:archiveChecksum,counts:COUNTS,privateStoragePath:archiveStoragePath},records:{project:`projects/${slug}`,slug:`projectSlugs/${slug}`,migrationMarker:`projectMigrations/${slug}`,archive:`mediaImportArchives/${slug}`,media:prepared.map(({id,filename,originalName,checksum,reason})=>({id:`media/${id}`,filename,originalName,checksum,reason})),references:prepared.map(({id})=>`mediaReferences/${id}`)},publication:publish?"Published":"Draft",remotePreflight:checkRemote?"requested":"not-run (use --check-remote with read credentials)"};
+console.log(JSON.stringify(plan,null,2));
+if(!checkRemote){console.log("Dry run complete. Five converted JPEGs and the complete 24-file source archive passed local validation. No Firebase or Storage data was changed.");process.exit(0)}
+if(!projectId||!bucketName)throw new Error("Set FIREBASE_PROJECT_ID and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET for remote preflight.");
+if(apply&&!emulator&&!allowProduction)throw new Error("Production writes are blocked. Obtain approval, then pass --allow-production.");
+if(apply&&!emulator&&process.env.FES_APPROVED_FIREBASE_PROJECT!==projectId)throw new Error("Set FES_APPROVED_FIREBASE_PROJECT to the exact approved target project.");
+const[{applicationDefault,getApps,initializeApp},{FieldValue,getFirestore},{getStorage},sharpModule]=await Promise.all([import("firebase-admin/app"),import("firebase-admin/firestore"),import("firebase-admin/storage"),import("sharp")]);
+const sharp=sharpModule.default,app=getApps()[0]||initializeApp({projectId,credential:applicationDefault(),storageBucket:bucketName}),db=getFirestore(app),bucket=getStorage(app).bucket();
+const[existingProject,existingSlug,existingMarker,existingArchive,...existingMedia]=await db.getAll(db.collection("projects").doc(slug),db.collection("projectSlugs").doc(slug),db.collection("projectMigrations").doc(slug),db.collection("mediaImportArchives").doc(slug),...prepared.map(asset=>db.collection("media").doc(asset.id)));
+if(existingSlug.exists&&existingSlug.get("projectId")!==slug)throw new Error("SLUG_CONFLICT");
+for(let index=0;index<prepared.length;index++){const existing=existingMedia[index],asset=prepared[index];if(existing.exists&&existing.get("checksum")!==asset.checksum)throw new Error(`MEDIA_ID_CONFLICT:${asset.id}`);const duplicate=await db.collection("media").where("checksum","==",asset.checksum).limit(2).get();if(duplicate.docs.some(document=>document.id!==asset.id))throw new Error(`MEDIA_CHECKSUM_DUPLICATE:${asset.id}`)}
+console.log(JSON.stringify({remotePreflight:"passed",existing:{project:existingProject.exists,slug:existingSlug.exists,migrationMarker:existingMarker.exists,archive:existingArchive.exists,media:existingMedia.map((document,index)=>({id:prepared[index].id,exists:document.exists,checksumMatches:!document.exists||document.get("checksum")===prepared[index].checksum}))},action:apply?"write":"none"},null,2));
+if(!apply){console.log("Remote preflight complete. No Firebase or Storage data was changed.");process.exit(0)}
+await bucket.file(archiveStoragePath).save(archiveBytes,{resumable:true,metadata:{contentType:"application/zip",cacheControl:"private, max-age=0, no-store",metadata:{checksum:archiveChecksum,projectSlug:slug}}});
+for(let index=0;index<prepared.length;index++){const asset=prepared[index],existing=existingMedia[index],version=`sha256-${asset.checksum.slice(0,16)}`,originalPath=`editorial/private/originals/${asset.id}/${version}/source.jpg`,derivatives=[];await bucket.file(originalPath).save(asset.bytes,{resumable:false,metadata:{contentType:"image/jpeg",cacheControl:"private, max-age=0, no-store"}});for(const[variant,width]of[["sm",640],["md",1280],["lg",1920]]){const output=await sharp(asset.bytes).rotate().resize({width,withoutEnlargement:true}).webp({quality:82}).toBuffer({resolveWithObject:true}),storagePath=`editorial/public/derivatives/${asset.id}/${version}/${variant}.webp`,checksum=createHash("sha256").update(output.data).digest("hex");await bucket.file(storagePath).save(output.data,{resumable:false,metadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable"}});derivatives.push({variant,storagePath,mimeType:"image/webp",sizeBytes:output.data.length,width:output.info.width,height:output.info.height,checksum,version})}await db.collection("media").doc(asset.id).set({schemaVersion:2,kind:"editorial-image",status:"Ready",originalName:asset.originalName,convertedName:asset.filename,sourceArchiveId:slug,storagePath:originalPath,mimeType:"image/jpeg",sizeBytes:asset.bytes.length,width:asset.width,height:asset.height,pixelCount:asset.width*asset.height,checksum:asset.checksum,version,derivatives,failureCode:null,alt:asset.alt,caption:"",category:"Electrical",projectId:slug,roles:["project-gallery"],updatedAt:FieldValue.serverTimestamp(),updatedBy:actor,...(!existing.exists?{createdAt:FieldValue.serverTimestamp(),createdBy:actor}:{})},{merge:true})}
+const gallery=prepared.map((asset,order)=>({mediaId:asset.id,alt:asset.alt,caption:"",order}));
+await db.runTransaction(async transaction=>{transaction.set(db.collection("projectSlugs").doc(slug),{projectId:slug,createdAt:existingSlug.get("createdAt")||FieldValue.serverTimestamp()},{merge:true});transaction.set(db.collection("projectMigrations").doc(slug),{projectId:slug,legacyFallbackSuppressed:true,sourceArchiveChecksum:archiveChecksum,migratedAt:FieldValue.serverTimestamp(),migratedBy:actor},{merge:true});transaction.set(db.collection("mediaImportArchives").doc(slug),{checksum:archiveChecksum,storagePath:archiveStoragePath,counts:COUNTS,selectedMediaIds:prepared.map(asset=>asset.id),status:"Preserved",updatedAt:FieldValue.serverTimestamp(),updatedBy:actor,...(!existingArchive.exists?{createdAt:FieldValue.serverTimestamp(),createdBy:actor}:{})},{merge:true});transaction.set(db.collection("projects").doc(slug),{title:"Tommy's Brentwood",slug,category:"Electrical",summary:"",location:"",period:"",status:publish?"Published":"Draft",featured:false,gallery,coverMediaId:prepared[1].id,updatedAt:FieldValue.serverTimestamp(),updatedBy:actor,...(!existingProject.exists?{createdAt:FieldValue.serverTimestamp(),createdBy:actor}:{}),...(publish&&!existingProject.get("publishedAt")?{publishedAt:FieldValue.serverTimestamp()}:{})},{merge:true});for(const asset of prepared)transaction.set(db.collection("mediaReferences").doc(asset.id),{references:[`projects/${slug}:gallery`],updatedAt:FieldValue.serverTimestamp(),updatedBy:actor},{merge:true})});
+console.log(`Migrated Tommy's Brentwood as ${publish?"Published":"Draft"}. The complete 24-file archive is preserved privately.`);
