@@ -80,11 +80,16 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
 export async function getPublicProjectByIdUncached(id:string):Promise<PublicProject|null>{const curated=curatedProjects.find(project=>project.id===id);if(curated)return curated;if(!z.string().trim().min(1).max(128).safeParse(id).success)return null;const document=await getAdminFirestore().collection("projects").doc(id).get();return document.exists?normalizeProject(document.id,document.data()):null}
 
 export async function listPublicProjectsUncached(): Promise<PublicProject[]> {
-  const snapshot = await getAdminFirestore().collection("projects").where("status", "==", "Published").get();
+  const database = getAdminFirestore();
+  const [snapshot, ...managedSlugDocuments] = await Promise.all([
+    database.collection("projects").where("status", "==", "Published").get(),
+    ...curatedProjects.map((project) => database.collection("projectSlugs").doc(project.slug).get()),
+  ]);
   const managed=(await Promise.all(snapshot.docs
     .map(document => normalizeProject(document.id, document.data()))))
     .filter((project): project is PublicProject => project !== null);
-  const merged=new Map(curatedProjects.map(project=>[project.slug,project]));
+  const managedSlugs = new Set(managedSlugDocuments.filter((document) => document.exists).map((document) => document.id));
+  const merged=new Map(curatedProjects.filter((project) => !managedSlugs.has(project.slug)).map(project=>[project.slug,project]));
   managed.forEach(project=>merged.set(project.slug,project));
   return [...merged.values()].toSorted((left, right) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title));
 }
@@ -96,11 +101,11 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   const slugDocument = await database.collection("projectSlugs").doc(slug).get();
   if (!slugDocument.exists) return curated??null;
   const projectId = slugDocument.get("projectId");
-  if (typeof projectId !== "string" || !projectId) return curated??null;
+  if (typeof projectId !== "string" || !projectId) return null;
   const projectDocument = await database.collection("projects").doc(projectId).get();
-  if (!projectDocument.exists) return curated??null;
+  if (!projectDocument.exists) return null;
   const project = await normalizeProject(projectDocument.id, projectDocument.data());
-  return project?.slug === slug ? project : curated??null;
+  return project?.slug === slug ? project : null;
 }
 
 const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v1",FIREBASE_CACHE_NAMESPACE], {

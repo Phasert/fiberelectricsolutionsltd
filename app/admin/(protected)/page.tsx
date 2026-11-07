@@ -7,9 +7,9 @@ import { getAuthorizedAdminDashboardContent } from "@/lib/content/admin-dashboar
 const quickActions = [
   { label: "Add project", description: "Create a new portfolio entry", href: "/admin/projects/new", icon: FolderKanban },
   { label: "Add article", description: "Write an insight or update", href: "/admin/resources/new", icon: FilePlus2 },
-  { label: "Add tip", description: "Add practical homepage guidance", href: "/admin/tips", icon: Lightbulb },
+  { label: "Add tip", description: "Add practical homepage guidance", href: "/admin/articles-tips#tips-heading", icon: Lightbulb },
   { label: "View enquiries", description: "Review quote requests", href: "/admin/enquiries", icon: MessageSquareText },
-  { label: "Featured content", description: "Choose homepage highlights", href: "/admin/featured", icon: Sparkles },
+  { label: "Manage homepage", description: "Choose homepage highlights", href: "/admin/homepage", icon: Sparkles },
 ];
 
 export default async function AdminDashboard() {

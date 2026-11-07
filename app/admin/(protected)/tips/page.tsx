@@ -1,3 +1,5 @@
-import { TipsManager } from "@/components/admin/tips-manager";
-import { adminRepository } from "@/lib/admin/repository";
-export default async function TipsPage(){const tips=await adminRepository.getTips();return <TipsManager initial={tips}/>}
+import { redirect } from "next/navigation";
+
+export default function TipsPage() {
+  redirect("/admin/articles-tips");
+}

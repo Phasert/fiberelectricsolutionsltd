@@ -13,7 +13,7 @@ function normalizeOrder(tips: AdminTip[]) {
   return tips.map((tip, index) => ({ ...tip, order: index + 1 }));
 }
 
-export function TipsManager({ initial }: { initial: AdminTip[] }) {
+export function TipsManager({ initial, embedded = false }: { initial: AdminTip[]; embedded?: boolean }) {
   const [tips, setTips] = useState(() => [...initial].sort((a, b) => a.order - b.order));
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [draft, setDraft] = useState<DraftTip>(emptyDraft);
@@ -111,7 +111,7 @@ export function TipsManager({ initial }: { initial: AdminTip[] }) {
   }
 
   return <>
-    <AdminPageHeader title="Tips / Do’s & Don’ts" description="Keep the compact homepage guidance current, useful and easy to scan." actionNode={<button type="button" onClick={openAdd} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-wine px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-wine-dark"><Plus size={17} /> Add tip</button>} />
+    {embedded ? <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 className="text-lg font-bold">Tips</h2><p className="mt-1 text-sm text-ink/50">Short practical guidance displayed in the existing homepage tips area.</p></div><button type="button" onClick={openAdd} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-wine px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-wine-dark"><Plus size={17} /> Add tip</button></div> : <AdminPageHeader title="Tips / Do’s & Don’ts" description="Keep the compact homepage guidance current, useful and easy to scan." actionNode={<button type="button" onClick={openAdd} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-wine px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-wine-dark"><Plus size={17} /> Add tip</button>} />}
 
     <section aria-labelledby="tips-list-heading" className="mb-5 rounded-lg border border-black/[.075] bg-white shadow-[0_1px_2px_rgba(20,19,21,.025)]">
       <div className="flex flex-col gap-3 border-b border-black/[.07] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
