@@ -54,11 +54,14 @@ export interface MediaItem {
   id:string;
   name:string;
   src:string;
-  type:"JPG"|"PNG"|"WEBP";
+  kind:"image"|"video";
+  type:"JPG"|"PNG"|"WEBP"|"MP4"|"MOV";
   size:string;
   sizeBytes:number;
   width:number;
   height:number;
+  durationSeconds?:number|null;
+  posterSrc?:string|null;
   alt:string;
   caption:string;
   status:"Pending"|"Processing"|"Ready"|"Failed"|"Deleting";

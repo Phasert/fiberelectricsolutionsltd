@@ -1,0 +1,34 @@
+{
+  "project": {
+    "name": "Tommy’s Brentwood",
+    "slug": "tommys-brentwood",
+    "description": "",
+    "status": "Draft",
+    "featured": false
+  },
+  "cover": {
+    "file": "IMG_0670.HEIC",
+    "capturedLocal": "2025-08-02T11:49:18-04:00",
+    "focalPoint": { "x": 50, "y": 35 },
+    "alt": "Open electrical panel with a main breaker, copper busbars and yellow cabling"
+  },
+  "gallery": [
+    { "order": 0, "file": "IMG_0637.HEIC", "capturedLocal": "2025-07-09T15:20:57-04:00", "alt": "Two open electrical panelboards mounted within a framed interior" },
+    { "order": 1, "file": "IMG_0670.HEIC", "capturedLocal": "2025-08-02T11:49:18-04:00", "alt": "Open electrical panel with a main breaker, copper busbars and yellow cabling" },
+    { "order": 2, "file": "IMG_0775.HEIC", "capturedLocal": "2025-09-10T13:18:50-04:00", "alt": "Wide view of electrical equipment and cabling in an equipment room" },
+    { "order": 3, "file": "IMG_0776.HEIC", "capturedLocal": "2025-09-10T15:53:00-04:00", "alt": "Open breaker panel with copper busbars and colored cabling" },
+    { "order": 4, "file": "IMG_0777.HEIC", "capturedLocal": "2025-09-11T11:18:46-04:00", "alt": "Wide view of electrical equipment installed in an equipment room" }
+  ],
+  "featuredWorkStillOrder": ["IMG_0670.HEIC", "IMG_0776.HEIC", "IMG_0775.HEIC"],
+  "excluded": [
+    { "file": "IMG_0778.PNG", "reason": "Unrelated image of a child on a ride; never use on the FES website." },
+    { "file": "IMG_0634.HEIC", "reason": "Identifiable worker; exclude unless FES confirms public-use approval." },
+    { "file": "IMG_1864.HEIC", "reason": "Identifiable worker; exclude unless FES confirms public-use approval." }
+  ],
+  "videoReview": {
+    "candidate": "IMG_0661.MOV",
+    "capturedLocal": "2025-07-23T10:19:19-04:00",
+    "durationSeconds": 10.498,
+    "status": "Pending full-quality human review; do not import yet."
+  }
+}

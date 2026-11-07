@@ -28,9 +28,10 @@ export function getEditorialMediaConfig() {
     projectId,
     bucket,
     maxBytes: positiveInteger(10 * 1024 * 1024).parse(process.env.EDITORIAL_MEDIA_MAX_BYTES),
+    maxVideoBytes: positiveInteger(150 * 1024 * 1024).parse(process.env.EDITORIAL_VIDEO_MAX_BYTES),
     maxPixels: positiveInteger(40_000_000).parse(process.env.EDITORIAL_MEDIA_MAX_PIXELS),
     maxDimension: positiveInteger(12_000).parse(process.env.EDITORIAL_MEDIA_MAX_DIMENSION),
-    dailyAdminLimit: positiveInteger(20).parse(process.env.EDITORIAL_MEDIA_DAILY_ADMIN_LIMIT),
+    dailyAdminLimit: positiveInteger(100).parse(process.env.EDITORIAL_MEDIA_DAILY_ADMIN_LIMIT),
   };
 }
 

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_PROJECTS_TAG } from "@/lib/projects/public-cache";
-import { getPublicMediaUrl, getPublicMediaUrls } from "@/lib/media/public-repository";
+import { getPublicMediaDetails, getPublicMediaUrl } from "@/lib/media/public-repository";
 import type { ProjectCategory, ProjectImage, PublicProject } from "@/types/content";
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100);
@@ -14,7 +14,7 @@ const storedProjectSchema = z.object({
   slug: slugSchema,
   title: z.string().trim().min(1).max(120),
   category: z.enum(["Electrical", "Fiber", "Combined"]),
-  summary: z.string().trim().min(1).max(500),
+  summary: z.string().trim().max(500).default(""),
   description: z.string().trim().max(10_000).optional(),
   location: z.string().trim().max(120).optional().default(""),
   period: z.string().trim().max(80).optional().default(""),
@@ -26,7 +26,7 @@ const storedProjectSchema = z.object({
     alt: z.string().trim().min(1).max(180),
     caption: z.string().trim().max(300).optional().default(""),
     order: z.number().int().min(0).max(100),
-  })).max(30).optional().default([]),
+  })).max(200).optional().default([]),
   publishedAt: z.unknown().optional(),
   updatedAt: z.unknown().optional(),
 });
@@ -52,10 +52,10 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
-  const mediaUrls=await getPublicMediaUrls(project.gallery.map(item=>item.mediaId),"lg");
+  const mediaDetails=await getPublicMediaDetails(project.gallery.map(item=>item.mediaId),"lg");
   const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(item => ({ src: mediaUrls.get(item.mediaId) ?? placeholder, alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) }));
+    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) }));
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
 
   return {
@@ -67,7 +67,7 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
     ...(project.description ? { description: project.description } : {}),
     ...(project.location ? { location: project.location } : {}),
     ...(project.period ? { period: project.period } : {}),
-    featuredImage: await getPublicMediaUrl(cover?.mediaId,"md") ?? placeholder,
+    featuredImage: (mediaDetails.get(cover?.mediaId??"")?.type==="image"?await getPublicMediaUrl(cover?.mediaId,"md"):mediaDetails.get(cover?.mediaId??"")?.poster) ?? placeholder,
     featuredImageAlt: cover?.alt || `${project.title} project image placeholder`,
     gallery,
     featured: project.featured,

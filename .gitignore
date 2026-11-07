@@ -185,3 +185,7 @@ yarn-error.log*
 
 # temporary review files
 /tmp/
+
+# Client media archives and local import working files must never be committed.
+/public/*.zip
+/media-imports/

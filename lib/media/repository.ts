@@ -1,10 +1,10 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminStorage } from "@/lib/firebase/admin";
 import { getEditorialMediaConfig, requireEditorialStorageEnabled } from "@/lib/media/config";
 import { validateEditorialImage } from "@/lib/media/image-validation";
-import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,mediaMetadataInputSchema, mediaPatchSchema, type EditorialMediaRecord, type MediaDerivative } from "@/lib/media/schemas";
+import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,editorialVideoMimeSchema,mediaMetadataInputSchema, mediaPatchSchema, type EditorialMediaRecord, type EditorialVideoRecord, type MediaDerivative } from "@/lib/media/schemas";
 import { decodeAndProcessImage } from "@/lib/media/processing";
 import type { MediaItem } from "@/types/admin";
 
@@ -14,18 +14,20 @@ export const isEditorialStorageEmulator = () => getEditorialMediaConfig().mode =
 export const getEditorialStorageMode = () => getEditorialMediaConfig().mode;
 const displaySize = (n:number) => n < 1048576 ? `${Math.round(n/1024)} KB` : `${(n/1048576).toFixed(1)} MB`;
 const displayDate = (value:unknown) => value instanceof Timestamp ? value.toDate().toISOString() : new Date(String(value ?? 0)).toISOString();
-const extensions: Record<string,string> = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp" };
+const extensions: Record<string,string> = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "video/mp4":"mp4", "video/quicktime":"mov" };
 const derivativePath = (id:string, version:string, variant:string) => `editorial/public/derivatives/${id}/${version}/${variant}.webp`;
 const originalPath = (id:string, version:string, mimeType:string) => `editorial/private/originals/${id}/${version}/source.${extensions[mimeType]}`;
 const pendingPath = (id:string, token:string) => `editorial/private/pending/${id}/${token}.upload`;
 
 function toItem(id:string,data:FirebaseFirestore.DocumentData,projects:Map<string,{title:string;category:string}>):MediaItem {
   const projectId=typeof data.projectId==="string"?data.projectId:undefined,project=projectId?projects.get(projectId):undefined;
-  return {id,name:String(data.originalName??"image"),src:`/api/admin/media/${id}/file`,type:data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":"WEBP",size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null,slideshow:data.slideshow??null};
+  const kind=data.kind==="editorial-video"?"video":"image";
+  const type=data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":data.mimeType==="image/webp"?"WEBP":data.mimeType==="video/quicktime"?"MOV":"MP4";
+  return {id,name:String(data.originalName??"media"),src:`/api/admin/media/${id}/file`,kind,type,size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),durationSeconds:data.durationSeconds??null,posterSrc:data.posterMediaId?`/api/admin/media/${data.posterMediaId}/file`:null,alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null,slideshow:data.slideshow??null};
 }
 
-export async function listAdminMedia(){const db=getAdminFirestore(),[media,projects]=await Promise.all([collection().orderBy("createdAt","desc").get(),db.collection("projects").get()]),projectMap=new Map(projects.docs.map(doc=>[doc.id,{title:String(doc.data().title??""),category:String(doc.data().category??"Combined")}])) ;return media.docs.flatMap(doc=>doc.data().kind==="editorial-image"&&doc.data().status!=="Deleted"?[toItem(doc.id,doc.data(),projectMap)]:[])}
-export async function getMediaRecord(id:string){const snapshot=await collection().doc(id).get();return snapshot.exists?snapshot.data() as EditorialMediaRecord:null}
+export async function listAdminMedia(){const db=getAdminFirestore(),[media,projects]=await Promise.all([collection().orderBy("createdAt","desc").get(),db.collection("projects").get()]),projectMap=new Map(projects.docs.map(doc=>[doc.id,{title:String(doc.data().title??""),category:String(doc.data().category??"Combined")}])) ;return media.docs.flatMap(doc=>["editorial-image","editorial-video"].includes(doc.data().kind)&&doc.data().status!=="Deleted"?[toItem(doc.id,doc.data(),projectMap)]:[])}
+export async function getMediaRecord(id:string){const snapshot=await collection().doc(id).get();return snapshot.exists?snapshot.data() as EditorialMediaRecord|EditorialVideoRecord:null}
 
 async function enforceDailyLimit(uid:string, limit:number) {
   const snapshot = await collection().where("createdBy", "==", uid).get();
@@ -36,6 +38,7 @@ async function enforceDailyLimit(uid:string, limit:number) {
 export async function uploadEditorialMedia(input:{bytes:Uint8Array;mimeType:string;originalName:string;metadata:unknown},uid:string){
   const config=requireEditorialStorageEnabled(),metadata=mediaMetadataInputSchema.parse(input.metadata);
   await enforceDailyLimit(uid,config.dailyAdminLimit);
+  if(editorialVideoMimeSchema.safeParse(input.mimeType).success)return uploadEditorialVideo(input,metadata,uid,config.maxVideoBytes);
   const ref=collection().doc(),version=`v${Date.now().toString(36)}`,token=randomUUID(),temporaryPath=pendingPath(ref.id,token),temporary=getAdminStorage().bucket().file(temporaryPath);
   await ref.create({schemaVersion:2,kind:"editorial-image",status:"Pending",...metadata,originalName:input.originalName.replace(/[\u0000-\u001f\u007f]/g,"").trim().slice(0,180),storagePath:"",mimeType:input.mimeType,sizeBytes:input.bytes.length,width:0,height:0,pixelCount:0,checksum:"",version,derivatives:[],failureCode:null,temporaryPath,createdAt:FieldValue.serverTimestamp(),createdBy:uid,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
   const written:string[]=[];
@@ -59,12 +62,23 @@ export async function uploadEditorialMedia(input:{bytes:Uint8Array;mimeType:stri
   }
 }
 
+async function uploadEditorialVideo(input:{bytes:Uint8Array;mimeType:string;originalName:string},metadata:ReturnType<typeof mediaMetadataInputSchema.parse>,uid:string,maxBytes:number){
+  if(!input.bytes.length||input.bytes.length>maxBytes)throw new Error("MEDIA_SIZE_INVALID");
+  if(input.bytes.length<12||Buffer.from(input.bytes.slice(4,8)).toString("ascii")!=="ftyp")throw new Error("MEDIA_SIGNATURE_INVALID");
+  const mimeType=editorialVideoMimeSchema.parse(input.mimeType),checksum=createHash("sha256").update(input.bytes).digest("hex");
+  const duplicate=await collection().where("checksum","==",checksum).where("status","==","Ready").limit(1).get();
+  if(!duplicate.empty)throw new Error("MEDIA_DUPLICATE");
+  const ref=collection().doc(),version=`v${Date.now().toString(36)}`,storagePath=originalPath(ref.id,version,mimeType);
+  await ref.create({schemaVersion:2,kind:"editorial-video",status:"Processing",...metadata,originalName:input.originalName.replace(/[\u0000-\u001f\u007f]/g,"").trim().slice(0,180),storagePath:"",mimeType,sizeBytes:input.bytes.length,width:0,height:0,durationSeconds:null,checksum,version,derivatives:[],posterMediaId:null,failureCode:null,createdAt:FieldValue.serverTimestamp(),createdBy:uid,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
+  try{await getAdminStorage().bucket().file(storagePath).save(Buffer.from(input.bytes),{resumable:true,metadata:{contentType:mimeType,cacheControl:"private, max-age=0, no-store",metadata:{mediaId:ref.id,kind:"editorial-private-video",checksum}}});await ref.update({status:"Ready",storagePath,readyAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});return ref.id}catch(error){await getAdminStorage().bucket().file(storagePath).delete({ignoreNotFound:true}).catch(()=>undefined);await ref.update({status:"Failed",failureCode:"MEDIA_PROCESSING_FAILED",updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});throw error}
+}
+
 export async function updateMediaMetadata(id:string,input:unknown,uid:string){
   const value=mediaPatchSchema.parse(input),ref=collection().doc(id),snapshot=await ref.get();
   if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");
   if(value.crop!==undefined){
     requireEditorialStorageEnabled();const current=snapshot.data() as EditorialMediaRecord;
-    if(current.status!=="Ready")throw new Error("MEDIA_NOT_READY");
+    if(current.kind!=="editorial-image"||current.status!=="Ready")throw new Error("MEDIA_NOT_READY");
     const [original]=await getAdminStorage().bucket().file(current.storagePath).download(),version=`v${Date.now().toString(36)}`;
     const processed=await decodeAndProcessImage({bytes:original,mimeType:current.mimeType,maxPixels:EDITORIAL_MEDIA_MAX_PIXELS,maxDimension:EDITORIAL_MEDIA_MAX_DIMENSION,version,crop:value.crop});
     const derivatives:MediaDerivative[]=[];
@@ -85,6 +99,6 @@ export async function deleteEditorialMedia(id:string,uid="system"){
 }
 
 export async function readEditorialMedia(id:string){requireEditorialStorageEnabled();const record=await getMediaRecord(id);if(!record||record.status!=="Ready")throw new Error("MEDIA_NOT_FOUND");const [bytes]=await getAdminStorage().bucket().file(record.storagePath).download();return{bytes,mimeType:record.mimeType}}
-export async function readEditorialDerivative(id:string,variant:"sm"|"md"|"lg"){requireEditorialStorageEnabled();const record=await getMediaRecord(id),derivative=record?.derivatives.find(item=>item.variant===variant);if(!record||record.status!=="Ready"||!derivative)throw new Error("MEDIA_NOT_FOUND");const [bytes]=await getAdminStorage().bucket().file(derivative.storagePath).download();return{bytes,mimeType:derivative.mimeType,etag:`\"${derivative.checksum}\"`,version:derivative.version}}
+export async function readEditorialDerivative(id:string,variant:"sm"|"md"|"lg"){requireEditorialStorageEnabled();const record=await getMediaRecord(id),derivative=record?.kind==="editorial-image"?record.derivatives.find(item=>item.variant===variant):null;if(!record||record.status!=="Ready"||!derivative)throw new Error("MEDIA_NOT_FOUND");const [bytes]=await getAdminStorage().bucket().file(derivative.storagePath).download();return{bytes,mimeType:derivative.mimeType,etag:`\"${derivative.checksum}\"`,version:derivative.version}}
 
 export async function cleanupAbandonedMedia(before=new Date(Date.now()-86400000)){requireEditorialStorageEnabled();const snapshot=await collection().where("status","in",["Pending","Processing","Failed"]).get();let removed=0;for(const doc of snapshot.docs){const data=doc.data(),updated=data.updatedAt instanceof Timestamp?data.updatedAt.toDate():new Date(0);if(updated>before)continue;const paths=[data.temporaryPath,data.storagePath,...(Array.isArray(data.derivatives)?data.derivatives.map((item:{storagePath?:string})=>item.storagePath):[])].filter(Boolean);await Promise.all(paths.map((path:string)=>getAdminStorage().bucket().file(path).delete({ignoreNotFound:true}).catch(()=>undefined)));await doc.ref.update({status:"Deleted",storagePath:null,derivatives:[],deletedAt:FieldValue.serverTimestamp(),deletedBy:"cleanup",updatedAt:FieldValue.serverTimestamp(),updatedBy:"cleanup"});removed++}return removed}

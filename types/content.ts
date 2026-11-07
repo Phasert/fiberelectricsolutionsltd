@@ -2,7 +2,12 @@ export type ServiceKind = "electrical" | "fiber";
 export type ProjectCategory = "Electrical" | "Fiber" | "Combined";
 
 export interface ProjectImage {
+  type?: "image" | "video";
   src: string;
+  poster?: string;
+  width?: number;
+  height?: number;
+  durationSeconds?: number;
   alt?: string;
   caption?: string;
 }
