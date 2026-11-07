@@ -82,16 +82,16 @@ For a read-only migration preflight, use either Application Default Credentials 
 - Anonymous production Firestore and Storage listing probes both returned HTTP 403. Repository deny-all client rules also passed the local emulator suite; no production rules were changed.
 - Two independent dry-runs produced byte-identical plans (SHA-256 `9892563966d91adf3acfa7a48c5af76159cdf6bb55a83d949d34b061679584e0`). The apply path uses deterministic document/object IDs, checksum conflict guards, merge writes, preserved creation timestamps, and transactional slug/reference updates.
 - Lint, route/type generation, 21 unit tests, 101 Firebase emulator tests, and the production build passed. The browser matrix passed at 1440, 768, 390, and 360 pixels for all eight admin workspaces, the public routes, `/projects`, and `/projects/tommys-brentwood`, with no overflow, unlabelled controls, failed requests, unexpected responses, or actionable console errors.
-- The migration remains a Draft-only plan unless the separate `--publish` flag is deliberately supplied. Do not use `--publish` for the initial production import.
+- The default migration remains Draft-only. For the separately authorized zero-downtime cutover, `--publish` is required: the script uploads and verifies every object, creates Ready media records, prepares a complete Draft project while the curated fallback remains active, then atomically publishes the project, claims the slug, writes references/archive inventory, remaps a legacy homepage selection when necessary, and creates the permanent fallback-suppression marker.
 
-After explicit owner approval, the exact production Draft import command is:
+The owner approved the zero-downtime Published import on 7 Nov 2026. The exact command is:
 
 ```powershell
 $env:FES_APPROVED_FIREBASE_PROJECT='fesproject-45db0'
-node --env-file=.env.local scripts/migrate-tommys-brentwood.mjs --check-remote --apply --allow-production
+node --env-file=.env.local scripts/migrate-tommys-brentwood.mjs --check-remote --apply --publish --allow-production
 ```
 
-This command will upload the complete 24-file ZIP privately, upload the five reviewed JPEG originals plus responsive WebP derivatives, and create the project, slug, migration marker, archive inventory, five media, and five media-reference records. It will not publish or feature the project. Run the read-only command once more immediately before the approved write window and stop on any newly reported conflict.
+This command uploads the complete 24-file ZIP privately, uploads and download-verifies the five reviewed JPEG originals plus responsive WebP derivatives, and creates the project, slug, migration marker, archive inventory, five media, and five media-reference records. The marker and Published project cut over in the same transaction only after the prepared Draft and every Ready media record pass verification. A completed rerun is a verified no-op; a partial or conflicting cutover stops. Run the read-only command once more immediately before the approved write window and stop on any newly reported conflict.
 
 ## Storage layout
 
