@@ -44,3 +44,13 @@ export function requireEditorialStorageEnabled() {
   if (config.mode === "live-disabled") throw new Error("LIVE_STORAGE_NOT_APPROVED");
   return config;
 }
+
+export function requireEditorialStorageReadable() {
+  const config = getEditorialMediaConfig();
+  if (config.mode === "emulator") return config;
+  const approved = Object.values(APPROVED_EDITORIAL_TARGETS).some(
+    target => target.projectId === config.projectId && target.bucket === config.bucket,
+  );
+  if (!approved) throw new Error("MEDIA_READ_TARGET_INVALID");
+  return config;
+}
