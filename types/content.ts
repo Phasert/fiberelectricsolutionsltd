@@ -23,6 +23,7 @@ export interface PublicProject {
   period?: string;
   featuredImage: string;
   featuredImageAlt: string;
+  featuredImageFit?: "cover" | "contain";
   gallery: ProjectImage[];
   featured: boolean;
   publishedAt?: string;

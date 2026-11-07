@@ -8,6 +8,7 @@ import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_PROJECTS_TAG } from "@/lib/projects/public-cache";
 import { getPublicMediaDetails, getPublicMediaUrl } from "@/lib/media/public-repository";
 import type { ProjectCategory, ProjectImage, PublicProject } from "@/types/content";
+import { curatedProjects } from "@/lib/projects/curated";
 
 const slugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100);
 const storedProjectSchema = z.object({
@@ -76,27 +77,30 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   };
 }
 
-export async function getPublicProjectByIdUncached(id:string):Promise<PublicProject|null>{if(!z.string().trim().min(1).max(128).safeParse(id).success)return null;const document=await getAdminFirestore().collection("projects").doc(id).get();return document.exists?normalizeProject(document.id,document.data()):null}
+export async function getPublicProjectByIdUncached(id:string):Promise<PublicProject|null>{const curated=curatedProjects.find(project=>project.id===id);if(curated)return curated;if(!z.string().trim().min(1).max(128).safeParse(id).success)return null;const document=await getAdminFirestore().collection("projects").doc(id).get();return document.exists?normalizeProject(document.id,document.data()):null}
 
 export async function listPublicProjectsUncached(): Promise<PublicProject[]> {
   const snapshot = await getAdminFirestore().collection("projects").where("status", "==", "Published").get();
-  return (await Promise.all(snapshot.docs
+  const managed=(await Promise.all(snapshot.docs
     .map(document => normalizeProject(document.id, document.data()))))
-    .filter((project): project is PublicProject => project !== null)
-    .toSorted((left, right) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title));
+    .filter((project): project is PublicProject => project !== null);
+  const merged=new Map(curatedProjects.map(project=>[project.slug,project]));
+  managed.forEach(project=>merged.set(project.slug,project));
+  return [...merged.values()].toSorted((left, right) => (right.publishedAt ?? "").localeCompare(left.publishedAt ?? "") || left.title.localeCompare(right.title));
 }
 
 export async function getPublicProjectBySlugUncached(slug: string): Promise<PublicProject | null> {
   if (!slugSchema.safeParse(slug).success) return null;
+  const curated=curatedProjects.find(project=>project.slug===slug);
   const database = getAdminFirestore();
   const slugDocument = await database.collection("projectSlugs").doc(slug).get();
-  if (!slugDocument.exists) return null;
+  if (!slugDocument.exists) return curated??null;
   const projectId = slugDocument.get("projectId");
-  if (typeof projectId !== "string" || !projectId) return null;
+  if (typeof projectId !== "string" || !projectId) return curated??null;
   const projectDocument = await database.collection("projects").doc(projectId).get();
-  if (!projectDocument.exists) return null;
+  if (!projectDocument.exists) return curated??null;
   const project = await normalizeProject(projectDocument.id, projectDocument.data());
-  return project?.slug === slug ? project : null;
+  return project?.slug === slug ? project : curated??null;
 }
 
 const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v1",FIREBASE_CACHE_NAMESPACE], {

@@ -82,6 +82,7 @@ button, a, input, textarea, select { outline-offset: 3px; }
 .slideshow-image { object-fit: cover; opacity: 0; transform: scale(1.035); transition: opacity 1.15s ease-in-out, transform 7s ease-out; }
 .slideshow-image.is-active { opacity: 1; transform: scale(1.09) translate3d(-.5%, -.35%, 0); }
 .slideshow-image:nth-of-type(even).is-active { transform: scale(1.085) translate3d(.65%, .4%, 0); }
+.slideshow-image-contain, .slideshow-image-contain.is-active, .slideshow-image-contain:nth-of-type(even).is-active { transform: none; }
 .slideshow-controls { position: absolute; z-index: 20; display: flex; align-items: center; gap: .3rem; }
 .slideshow-controls > button { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid rgb(255 255 255 / .24); border-radius: 999px; background: rgb(12 11 12 / .62); color: white; backdrop-filter: blur(8px); transition: background .2s ease, border-color .2s ease; }
 .slideshow-controls > button:hover { border-color: rgb(255 255 255 / .5); background: rgb(125 16 40 / .9); }

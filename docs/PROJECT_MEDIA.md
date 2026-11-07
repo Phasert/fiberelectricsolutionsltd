@@ -63,6 +63,12 @@ The machine's Windows codec can produce local review previews from HEIC, but the
 
 The exact machine-readable draft selection is stored in `scripts/project-import-plans/tommys-brentwood.json`. Production action still requires approval to convert/upload media, create the Firebase draft, select homepage featured content, and later publish. Creating a draft does not authorize publication.
 
+### Code-backed publication
+
+On 6 Nov 2026, the five approved stills were converted offline from HEIC to orientation-preserving 1800-pixel-wide JPEG derivatives and added under `public/images/projects/tommys-brentwood/`. The originals remain ignored and uncommitted. A curated project record now provides `/projects/tommys-brentwood`, the published project listing entry, and a three-image Featured Work slideshow on the homepage. Firebase-managed records with the same slug replace the curated fallback automatically once an approved Firebase target is available, so the static publication does not create a duplicate public project.
+
+The Featured Work slideshow uses the existing manual previous/next, dot, and pause controls; automatic advancement stops during interaction and for reduced-motion users. Portrait images use `object-contain` without zoom transforms so electrical equipment is not clipped. The general electrical-and-fiber hero remains unchanged.
+
 Firebase target audit (6 Nov 2026): `.firebaserc` defaults local tooling to the `fes-local` emulator project. The current local environment names `fesproject-45db0` and its Storage bucket, while the source-controlled editorial allowlist is hard-pinned to staging project `fesr-c3ae1` and bucket `fesr-c3ae1.firebasestorage.app`. This mismatch intentionally causes `MEDIA_LIVE_TARGET_INVALID`; therefore no live upload or draft creation can occur. Before any production-data action, the owner must explicitly identify and approve the intended Firebase project/bucket and the allowlist must be reconciled without weakening admin-session, trusted-origin, or deny-all client rules.
 
 ## Storage layout
