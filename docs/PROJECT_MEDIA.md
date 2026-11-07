@@ -33,7 +33,7 @@ Count reconciliation:
 - Reconciliation: the five MP4 files share basenames and capture times with five HEIC photos and are 1–3 second Live Photo motion components. Excluding those paired components as separate gallery videos produces the album's 19 visible items. No archive files were silently discarded.
 - Exact hash duplicates: none. Invalid or corrupt container signatures found by the local audit: none.
 
-The prepared project remains local and is not present in Firebase:
+Before the authorized production migration, the prepared project was held locally with these intended values:
 
 - Name: `Tommy’s Brentwood`
 - Slug: `tommys-brentwood`
@@ -83,6 +83,14 @@ For a read-only migration preflight, use either Application Default Credentials 
 - Two independent dry-runs produced byte-identical plans (SHA-256 `9892563966d91adf3acfa7a48c5af76159cdf6bb55a83d949d34b061679584e0`). The apply path uses deterministic document/object IDs, checksum conflict guards, merge writes, preserved creation timestamps, and transactional slug/reference updates.
 - Lint, route/type generation, 21 unit tests, 101 Firebase emulator tests, and the production build passed. The browser matrix passed at 1440, 768, 390, and 360 pixels for all eight admin workspaces, the public routes, `/projects`, and `/projects/tommys-brentwood`, with no overflow, unlabelled controls, failed requests, unexpected responses, or actionable console errors.
 - The default migration remains Draft-only. For the separately authorized zero-downtime cutover, `--publish` is required: the script uploads and verifies every object, creates Ready media records, prepares a complete Draft project while the curated fallback remains active, then atomically publishes the project, claims the slug, writes references/archive inventory, remaps a legacy homepage selection when necessary, and creates the permanent fallback-suppression marker.
+
+### Authorized production migration — 7 Nov 2026
+
+The approved migration completed against Firebase project `fesproject-45db0` and Storage bucket `fesproject-45db0.firebasestorage.app`. The post-write authenticated preflight confirmed the project, slug, permanent migration marker, archive inventory, private archive object, and all five deterministic media records exist. Every selected media checksum still matches the reviewed local source. The project is Published with `tommys-brentwood-img-0670` as its cover.
+
+Storage now contains 21 deterministic objects for this import: the complete private 24-file ZIP, five private reviewed JPEG originals, and 15 public WebP derivatives (`sm`, `md`, and `lg` for each selected photograph). The archive inventory records 24 originals—12 images and 12 videos—with five selected and 19 preserved but unpublished. Firestore contains the Published project, slug, fallback-suppression marker, archive inventory, five Ready media records, and five media-reference records.
+
+The initial live check immediately after cutover still returned the curated image URLs from the application's one-hour server data cache. Tommy's Brentwood remained visible on the homepage, Projects listing, and unchanged detail URL during that interval. A clean production deployment is required to cold-start the managed read path; live Firebase-media and administrator verification must be recorded after that deployment before calling the transition complete.
 
 The owner approved the zero-downtime Published import on 7 Nov 2026. The exact command is:
 
