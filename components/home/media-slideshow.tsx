@@ -2,7 +2,7 @@
 import Image from "next/image";
 import {ChevronLeft,ChevronRight,Pause,Play} from "lucide-react";
 import {useCallback,useEffect,useRef,useState} from "react";
-export interface PublicSlide{id:string;src:string;alt:string;focalPoint:{x:number;y:number}}
+export interface PublicSlide{id:string;src:string;alt:string;focalPoint:{x:number;y:number};headline?:string;description?:string;ctaLabel?:string;ctaHref?:string}
 type Props={slides:PublicSlide[];fallback:PublicSlide;priority?:boolean;sizes:string;label:string;controlsClassName?:string;fit?:"cover"|"contain"};
 export function MediaSlideshow({slides,fallback,priority=false,sizes,label,controlsClassName="",fit="cover"}:Props){
  const available=slides.length?slides.slice(0,4):[fallback],[active,setActive]=useState(0),[rendered,setRendered]=useState(()=>new Set([0])),[paused,setPaused]=useState(false),[interacting,setInteracting]=useState(false),[reducedMotion,setReducedMotion]=useState(false),transitionTimer=useRef<ReturnType<typeof setTimeout>>(undefined);

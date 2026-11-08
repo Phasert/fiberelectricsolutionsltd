@@ -81,7 +81,7 @@ export function Header({ settings }: { settings: PublicBusinessSettings | null }
   return <header ref={headerRef} className="sticky top-0 z-50 border-b border-black/8 bg-paper/95 shadow-[0_8px_30px_rgb(20_19_21/.04)] backdrop-blur-xl">
     <div className="shell flex h-[var(--nav-height)] items-center justify-between gap-6">
       <Logo />
-      <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+      <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary navigation">
         <NavLink {...desktopMainLinks[0]} current={active("/")} />
         <div ref={servicesRef} className="relative">
           <button type="button" onClick={() => setServicesOpen((value) => !value)} aria-expanded={servicesOpen} aria-haspopup="true" className={`nav-link gap-1 ${servicesActive ? "nav-link-active" : ""}`}>
@@ -95,7 +95,7 @@ export function Header({ settings }: { settings: PublicBusinessSettings | null }
         {settings?.phone && <ContactIcon href={settings.phone.href} label={`Call ${settings.phone.label}`}><Phone size={16}/></ContactIcon>}
         {settings?.email && <ContactIcon href={settings.email.href} label={`Email ${settings.email.label}`}><Mail size={16}/></ContactIcon>}
         {settings?.whatsapp && <ContactIcon href={settings.whatsapp.href} label={`WhatsApp ${settings.whatsapp.label}`} external><MessageCircle size={16}/></ContactIcon>}
-        <Link href="/request-a-quote" aria-current={active("/request-a-quote") ? "page" : undefined} className="ml-2 bg-wine px-5 py-3 text-xs font-black uppercase tracking-[.1em] text-white transition hover:-translate-y-0.5 hover:bg-wine-dark">Request a quote</Link>
+        <Link href="/request-a-quote" aria-current={active("/request-a-quote") ? "page" : undefined} className="ml-2 bg-wine px-6 py-3.5 text-xs font-black uppercase tracking-[.1em] text-white shadow-[0_8px_24px_rgb(125_16_40/.18)] transition hover:-translate-y-0.5 hover:bg-wine-dark">Request a quote</Link>
       </nav>
       <button ref={menuButtonRef} type="button" onClick={() => open ? closeMobileMenu(true) : setOpen(true)} className="grid size-11 place-items-center border border-ink/15 bg-white lg:hidden" aria-expanded={open} aria-controls="mobile-nav" aria-haspopup="true"><span className="sr-only">{open ? "Close menu" : "Open menu"}</span>{open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}</button>
     </div>

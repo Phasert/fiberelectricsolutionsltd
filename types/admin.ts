@@ -75,7 +75,7 @@ export interface MediaItem {
 }
 
 export type SlideshowPlacement="hero"|"electrical"|"fiber";
-export interface SlideshowAssignment { placement:SlideshowPlacement;order:number;alt:string;focalPoint:{x:number;y:number};published:boolean; }
+export interface SlideshowAssignment { placement:SlideshowPlacement;order:number;alt:string;focalPoint:{x:number;y:number};published:boolean;headline?:string;description?:string;ctaLabel?:string;ctaHref?:string; }
 
 export interface BusinessHoursDay {
   day: string;
