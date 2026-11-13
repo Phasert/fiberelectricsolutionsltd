@@ -18,9 +18,11 @@ const selectionSchema = z.object({
 });
 const tipSchema = z.object({
   type: z.enum(["Do", "Don’t"]),
-  title: z.string().trim().min(1).max(80),
+  title: z.string().trim().max(80).default(""),
   body: z.string().trim().min(1).max(220),
   enabled: z.literal(true),
+  category: z.enum(["Electrical", "Fiber Optic", "General"]).optional().default("General"),
+  imageMediaId: z.string().trim().min(1).max(128).nullable().optional().default(null),
 });
 
 const empty: PublicFeaturedContent = { project: null, resource: null, tips: [] };
@@ -49,7 +51,7 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
     if (!document.exists) return [];
     const parsed = tipSchema.safeParse(document.data());
     if (!parsed.success || isClearlyLabelledFixture(parsed.data.title, parsed.data.body)) return [];
-    return [{ id: document.id, type: parsed.data.type === "Do" ? "do" as const : "dont" as const, title: parsed.data.title, body: parsed.data.body }];
+    return [{ id: document.id, type: parsed.data.type === "Do" ? "do" as const : "dont" as const, title: parsed.data.title, body: parsed.data.body, category: parsed.data.category, ...(parsed.data.imageMediaId ? { image: `/media/${parsed.data.imageMediaId}/md` } : {}) }];
   });
 
   return { project, resource, tips };

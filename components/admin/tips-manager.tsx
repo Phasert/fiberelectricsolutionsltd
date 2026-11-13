@@ -5,9 +5,9 @@ import { ArrowDown, ArrowUp, Check, Eye, Pencil, Plus, Trash2, X } from "lucide-
 import { AdminPageHeader } from "@/components/admin/admin-ui";
 import type { AdminTip } from "@/types/admin";
 
-type DraftTip = Pick<AdminTip, "type" | "title" | "body" | "enabled">;
+type DraftTip = Pick<AdminTip, "type" | "title" | "body" | "enabled" | "category" | "imageMediaId">;
 type EditorState = { mode: "add" } | { mode: "edit"; id: string };
-const emptyDraft: DraftTip = { type: "Do", title: "", body: "", enabled: true };
+const emptyDraft: DraftTip = { type: "Do", title: "", body: "", enabled: true, category: "General", imageMediaId: null };
 
 function normalizeOrder(tips: AdminTip[]) {
   return tips.map((tip, index) => ({ ...tip, order: index + 1 }));
@@ -49,7 +49,7 @@ export function TipsManager({ initial, embedded = false }: { initial: AdminTip[]
     setEditor({ mode: "add" });
   }
   function openEdit(tip: AdminTip) {
-    setDraft({ type: tip.type, title: tip.title, body: tip.body, enabled: tip.enabled });
+    setDraft({ type: tip.type, title: tip.title, body: tip.body, enabled: tip.enabled, category: tip.category, imageMediaId: tip.imageMediaId });
     setErrors({});
     setEditor({ mode: "edit", id: tip.id });
   }
@@ -59,7 +59,6 @@ export function TipsManager({ initial, embedded = false }: { initial: AdminTip[]
   }
   function validate() {
     const nextErrors: typeof errors = {};
-    if (!draft.title.trim()) nextErrors.title = "Enter a short title.";
     if (!draft.body.trim()) nextErrors.body = "Enter a short description.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -81,12 +80,12 @@ export function TipsManager({ initial, embedded = false }: { initial: AdminTip[]
     closeEditor();
   }
   async function toggleTip(tip: AdminTip) {
-    if (!tip.enabled && (!tip.title.trim() || !tip.body.trim())) {
+    if (!tip.enabled && !tip.body.trim()) {
       openEdit(tip);
-      setErrors({ ...(!tip.title.trim() && { title: "Add a title before enabling this tip." }), ...(!tip.body.trim() && { body: "Add a description before enabling this tip." }) });
+      setErrors({ ...(!tip.body.trim() && { body: "Add tip text before publishing this tip." }) });
       return;
     }
-    const response=await fetch(`/api/admin/tips/${tip.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({type:tip.type,title:tip.title,body:tip.body,enabled:!tip.enabled})});
+    const response=await fetch(`/api/admin/tips/${tip.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({type:tip.type,title:tip.title,body:tip.body,enabled:!tip.enabled,category:tip.category,imageMediaId:tip.imageMediaId})});
     if(!response.ok){setMessage("Unable to change this tip.");return}
     setTips((current) => current.map((item) => item.id === tip.id ? { ...item, enabled: !item.enabled } : item));
     setMessage(`“${tip.title}” is now ${tip.enabled ? "disabled" : "enabled"}.`);

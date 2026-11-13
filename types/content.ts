@@ -147,6 +147,8 @@ export interface PublicTip {
   type: "do" | "dont";
   title: string;
   body: string;
+  category?: "Electrical" | "Fiber Optic" | "General";
+  image?: string;
 }
 
 export interface PublicFeaturedContent {

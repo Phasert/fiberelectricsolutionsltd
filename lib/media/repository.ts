@@ -4,7 +4,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminStorage } from "@/lib/firebase/admin";
 import { getEditorialMediaConfig, requireEditorialStorageEnabled, requireEditorialStorageReadable } from "@/lib/media/config";
 import { validateEditorialImage } from "@/lib/media/image-validation";
-import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,editorialVideoMimeSchema,mediaMetadataInputSchema, mediaPatchSchema, type EditorialMediaRecord, type EditorialVideoRecord, type MediaDerivative } from "@/lib/media/schemas";
+import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,editorialVideoMimeSchema,mediaMetadataInputSchema,mediaPatchSchema,mediaSlideshowSchema,type EditorialMediaRecord,type EditorialVideoRecord,type MediaDerivative } from "@/lib/media/schemas";
 import { decodeAndProcessImage } from "@/lib/media/processing";
 import type { MediaItem } from "@/types/admin";
 
@@ -23,7 +23,8 @@ function toItem(id:string,data:FirebaseFirestore.DocumentData,projects:Map<strin
   const projectId=typeof data.projectId==="string"?data.projectId:undefined,project=projectId?projects.get(projectId):undefined;
   const kind=data.kind==="editorial-video"?"video":"image";
   const type=data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":data.mimeType==="image/webp"?"WEBP":data.mimeType==="video/quicktime"?"MOV":"MP4";
-  return {id,name:String(data.originalName??"media"),src:`/api/admin/media/${id}/file`,kind,type,size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),durationSeconds:data.durationSeconds??null,posterSrc:data.posterMediaId?`/api/admin/media/${data.posterMediaId}/file`:null,alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null,slideshow:data.slideshow??null};
+  const slideshow=mediaSlideshowSchema.safeParse(data.slideshow);
+  return {id,name:String(data.originalName??"media"),src:`/api/admin/media/${id}/file`,kind,type,size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),durationSeconds:data.durationSeconds??null,posterSrc:data.posterMediaId?`/api/admin/media/${data.posterMediaId}/file`:null,alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null,slideshow:slideshow.success?slideshow.data:null,galleryPublished:data.galleryPublished===true,galleryOrder:Number.isInteger(data.galleryOrder)?data.galleryOrder:0};
 }
 
 export async function listAdminMedia(){const db=getAdminFirestore(),[media,projects]=await Promise.all([collection().orderBy("createdAt","desc").get(),db.collection("projects").get()]),projectMap=new Map(projects.docs.map(doc=>[doc.id,{title:String(doc.data().title??""),category:String(doc.data().category??"Combined")}])) ;return media.docs.flatMap(doc=>["editorial-image","editorial-video"].includes(doc.data().kind)&&doc.data().status!=="Deleted"?[toItem(doc.id,doc.data(),projectMap)]:[])}
@@ -76,6 +77,7 @@ async function uploadEditorialVideo(input:{bytes:Uint8Array;mimeType:string;orig
 export async function updateMediaMetadata(id:string,input:unknown,uid:string){
   const value=mediaPatchSchema.parse(input),ref=collection().doc(id),snapshot=await ref.get();
   if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");
+  if(value.galleryPublished===true&&snapshot.data()?.status!=="Ready")throw new Error("MEDIA_NOT_READY");
   if(value.crop!==undefined){
     requireEditorialStorageEnabled();const current=snapshot.data() as EditorialMediaRecord;
     if(current.kind!=="editorial-image"||current.status!=="Ready")throw new Error("MEDIA_NOT_READY");
@@ -94,7 +96,7 @@ export async function findMediaReferences(id:string){const reverse=await referen
 
 export async function deleteEditorialMedia(id:string,uid="system"){
   requireEditorialStorageEnabled();const db=getAdminFirestore(),ref=collection().doc(id);let paths:string[]=[];
-  await db.runTransaction(async transaction=>{const snapshot=await transaction.get(ref),reverse=await transaction.get(references().doc(id));if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");if(snapshot.data()?.slideshow)throw new Error("MEDIA_IN_USE");const refs=Array.isArray(reverse.data()?.references)?reverse.data()!.references:[];if(refs.length)throw new Error("MEDIA_IN_USE");const legacyRefs=reverse.exists?[]:await findMediaReferences(id);if(legacyRefs.length)throw new Error("MEDIA_IN_USE");const data=snapshot.data()!;paths=[String(data.storagePath??""),...(Array.isArray(data.derivatives)?data.derivatives.map((item:{storagePath?:string})=>String(item.storagePath??"")):[])].filter(Boolean);transaction.update(ref,{status:"Deleting",deleteRequestedAt:FieldValue.serverTimestamp(),deleteRequestedBy:uid,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid})});
+  await db.runTransaction(async transaction=>{const snapshot=await transaction.get(ref),reverse=await transaction.get(references().doc(id));if(!snapshot.exists||snapshot.data()?.status==="Deleted")throw new Error("MEDIA_NOT_FOUND");if(snapshot.data()?.slideshow||snapshot.data()?.galleryPublished===true)throw new Error("MEDIA_IN_USE");const refs=Array.isArray(reverse.data()?.references)?reverse.data()!.references:[];if(refs.length)throw new Error("MEDIA_IN_USE");const legacyRefs=reverse.exists?[]:await findMediaReferences(id);if(legacyRefs.length)throw new Error("MEDIA_IN_USE");const data=snapshot.data()!;paths=[String(data.storagePath??""),...(Array.isArray(data.derivatives)?data.derivatives.map((item:{storagePath?:string})=>String(item.storagePath??"")):[])].filter(Boolean);transaction.update(ref,{status:"Deleting",deleteRequestedAt:FieldValue.serverTimestamp(),deleteRequestedBy:uid,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid})});
   try{await Promise.all(paths.map(path=>getAdminStorage().bucket().file(path).delete({ignoreNotFound:true})));await ref.update({status:"Deleted",storagePath:null,derivatives:[],deletedAt:FieldValue.serverTimestamp(),deletedBy:uid,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid})}catch{await ref.update({status:"Failed",failureCode:"DELETE_FAILED",updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});throw new Error("MEDIA_DELETE_FAILED")}
 }
 

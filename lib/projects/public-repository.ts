@@ -53,23 +53,21 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
+  const publicTitle = project.category === "Fiber" ? "Fiber Optic Project" : project.category === "Combined" ? "Electrical & Fiber Optic Project" : "Electrical Project";
   const mediaDetails=await getPublicMediaDetails(project.gallery.map(item=>item.mediaId),"lg");
   const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: item.alt, ...(item.caption ? { caption: item.caption } : {}) }));
+    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: item.alt }));
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
 
   return {
     id,
     slug: project.slug,
-    title: project.title,
+    title: publicTitle,
     category: project.category,
-    summary: project.summary,
-    ...(project.description ? { description: project.description } : {}),
-    ...(project.location ? { location: project.location } : {}),
-    ...(project.period ? { period: project.period } : {}),
+    summary: "",
     featuredImage: (mediaDetails.get(cover?.mediaId??"")?.type==="image"?await getPublicMediaUrl(cover?.mediaId,"md"):mediaDetails.get(cover?.mediaId??"")?.poster) ?? placeholder,
-    featuredImageAlt: cover?.alt || `${project.title} project image placeholder`,
+    featuredImageAlt: cover?.alt || `${publicTitle} image`,
     gallery,
     featured: project.featured,
     ...(toIsoDate(project.publishedAt) ? { publishedAt: toIsoDate(project.publishedAt) } : {}),
