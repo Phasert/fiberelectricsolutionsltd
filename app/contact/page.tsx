@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/forms/contact-form";
 import { getPublicBusinessSettings } from "@/lib/settings/public-repository";
 import { formatBusinessHours } from "@/lib/settings/presentation";
+import { siteUrl } from "@/lib/site-config";
 
-export const metadata: Metadata = { title: "Contact FES", description: "Contact Fiber & Electric Solutions Ltd. about electrical and fiber-optic services in Trinidad and Tobago." };
+export const metadata: Metadata = { title: "Contact FES", description: "Contact Fiber & Electric Solutions Ltd. about electrical and fiber-optic services in Trinidad and Tobago.", alternates: { canonical: `${siteUrl}/contact` } };
 
 export default async function ContactPage() {
   const settings = await getPublicBusinessSettings();

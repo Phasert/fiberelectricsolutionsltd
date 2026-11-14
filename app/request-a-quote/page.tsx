@@ -4,7 +4,8 @@ import { electricalServices, fiberServices } from "@/data/content";
 import { getPublicBusinessSettings } from "@/lib/settings/public-repository";
 import { formatBusinessHours } from "@/lib/settings/presentation";
 import { getQuoteSubmissionConfig } from "@/lib/quotes/config";
-export const metadata: Metadata = { title: "Request a Quote", description: "Prepare an electrical or fiber optic quote request for FES." };
+import { siteUrl } from "@/lib/site-config";
+export const metadata: Metadata = { title: "Request an Electrical or Fiber Optic Quote", description: "Request a quote from FES for electrical or fiber optic work in Trinidad & Tobago.", alternates: { canonical: `${siteUrl}/request-a-quote` } };
 export default async function QuotePage({searchParams}:{searchParams:Promise<{service?:string}>}) {
   const {service}=await searchParams;
   const initialService=service==="Electrical"||service==="Fiber Optic"?service:undefined;

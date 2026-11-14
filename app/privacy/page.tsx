@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { siteUrl } from "@/lib/site-config";
 
-export const metadata:Metadata={title:"Privacy Notice",description:"How Fiber & Electric Solutions Ltd. handles quotation request information."};
+export const metadata:Metadata={title:"Privacy Notice",description:"How Fiber & Electric Solutions Ltd. handles quotation request information.",alternates:{canonical:`${siteUrl}/privacy`}};
 
 export default function PrivacyPage(){return <>
   <section className="bg-ink text-white"><div className="shell py-14 sm:py-18"><p className="eyebrow !text-[#db8298]">Customer information</p><h1 className="display mt-5 text-5xl sm:text-6xl">Privacy Notice</h1><p className="mt-5 max-w-2xl leading-7 text-white/65">How Fiber &amp; Electric Solutions Ltd. uses information submitted through its contact and quotation forms.</p></div></section>

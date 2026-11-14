@@ -12,5 +12,5 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   const[projects,resources]=await Promise.all([listPublicProjects(),listPublicResources()]);
   paths=[...paths,...projects.map(project=>`/projects/${project.slug}`),...resources.articles.map(article=>`/resources/${article.slug}`)];
  }
- return paths.map(url=>({url:`${siteUrl}${url}`,changeFrequency:url===""?"monthly":"yearly",priority:url===""?1:.7}));
+ return paths.map(url=>({url:`${siteUrl}${url}`,changeFrequency:url===""?"weekly":url.startsWith("/resources/")||url.startsWith("/projects/")?"monthly":"yearly",priority:url===""?1:(url==="/electrical"||url==="/fiber-optic")?0.9:(url.startsWith("/resources/")||url.startsWith("/projects/"))?0.8:0.7}));
 }

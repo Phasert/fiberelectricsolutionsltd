@@ -13,8 +13,9 @@ import {getPublicSlideshows} from "@/lib/media/public-repository";
 import type { PublicArticle, PublicCta, PublicExternalResource, PublicHomepageContent } from "@/types/content";
 import { tommysBrentwoodFeaturedSlides, tommysBrentwoodProject } from "@/lib/projects/curated";
 import { getPublicProjectBySlug } from "@/lib/projects/public-repository";
+import { siteUrl } from "@/lib/site-config";
 
-export const metadata: Metadata = { title: "Electrical & Fiber Optic Solutions in Trinidad & Tobago", description: "Explore electrical installation and fiber optic services from Fiber & Electric Solutions Ltd. in Trinidad & Tobago." };
+export const metadata: Metadata = { title: "Electrical & Fiber Optic Solutions in Trinidad & Tobago", description: "Explore electrical installation and fiber optic services from Fiber & Electric Solutions Ltd. in Trinidad & Tobago.", alternates: { canonical: siteUrl }, openGraph: { url: siteUrl } };
 
 export const dynamic = "force-dynamic";
 
