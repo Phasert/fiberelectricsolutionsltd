@@ -541,8 +541,11 @@ export function MediaManager({
                     className={field}
                   />
                 </label>
-                <label className="grid gap-1 text-xs font-bold">
-                  Project
+                <details className="rounded-md border border-black/10 bg-paper/50 p-3">
+                  <summary className="cursor-pointer text-xs font-bold text-ink/55">Legacy project assignment</summary>
+                  <p className="mt-2 text-xs leading-5 text-amber-800">For preserved legacy records only. This does not publish the photograph to the public Projects gallery; use Admin → Projects for gallery publication.</p>
+                  <label className="mt-3 grid gap-1 text-xs font-bold">
+                  Legacy record
                   <select
                     value={item.projectId ?? ""}
                     disabled={busy}
@@ -564,7 +567,8 @@ export function MediaManager({
                       </option>
                     ))}
                   </select>
-                </label>
+                  </label>
+                </details>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"

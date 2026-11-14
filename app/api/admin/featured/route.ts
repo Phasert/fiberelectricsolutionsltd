@@ -19,6 +19,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
     if (code === "INELIGIBLE_PROJECT") return NextResponse.json({ error: "The featured project must still be published." }, { status: 409 });
+    if (code === "INELIGIBLE_MEDIA") return NextResponse.json({ error: "The featured photograph must still be published in Projects." }, { status: 409 });
     if (code === "INELIGIBLE_RESOURCE") return NextResponse.json({ error: "The featured resource must still be published." }, { status: 409 });
     if (code === "INELIGIBLE_TIP") return NextResponse.json({ error: "Every featured tip must still be enabled." }, { status: 409 });
     return NextResponse.json({ error: "Featured-content validation failed." }, { status: 400 });

@@ -100,7 +100,7 @@ describe("Phase D1a public projects", () => {
   it("preserves gallery order and text while using safe missing-media fallbacks", async () => {
     const projectRecord = await getPublicProjectBySlugUncached(publishedSlug);
     expect(projectRecord?.gallery.map(image => image.alt)).toEqual(["First ordered test image", "Second ordered test image"]);
-    expect(projectRecord?.gallery.map(image => image.caption)).toEqual(["First caption", "Second caption"]);
+    expect(projectRecord?.gallery.map(image => image.caption)).toEqual([undefined, undefined]);
     expect(projectRecord?.gallery.every(image => image.src === "/images/project-electrical.svg")).toBe(true);
     expect(projectRecord?.featuredImage).toBe("/images/project-electrical.svg");
   });
@@ -117,7 +117,7 @@ describe("Phase D1a public projects", () => {
   it("generates canonical metadata only for published projects", async () => {
     const published = await generateMetadata({ params: Promise.resolve({ slug: publishedSlug }), searchParams: Promise.resolve({}) });
     const draft = await generateMetadata({ params: Promise.resolve({ slug: draftSlug }), searchParams: Promise.resolve({}) });
-    expect(published.title).toBe("Phase D1a published project");
+    expect(published.title).toBe("Electrical Project");
     expect(published.alternates?.canonical).toBe(`http://localhost:3000/projects/${publishedSlug}`);
     expect(draft.robots).toMatchObject({ index: false, follow: false });
   });

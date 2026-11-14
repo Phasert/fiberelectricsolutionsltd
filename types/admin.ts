@@ -67,12 +67,14 @@ export interface MediaItem {
   status:"Pending"|"Processing"|"Ready"|"Failed"|"Deleting";
   projectId?:string;
   project?:string;
+  roles?:Array<"project-gallery"|"resource-cover"|"service-image"|"site-content"|"branding"|"general">;
   category:ProjectCategory;
   isCover?:boolean;
   createdAt:string;
   crop?:MediaCrop|null;
   slideshow?:SlideshowAssignment|null;
   galleryPublished?:boolean;
+  galleryExcluded?:boolean;
   galleryOrder?:number;
 }
 

@@ -8,11 +8,13 @@ import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_HOMEPAGE_FEATURED_TAG } from "@/lib/featured/public-cache";
 import { getPublicProjectByIdUncached } from "@/lib/projects/public-repository";
 import { getPublicResourceByIdUncached } from "@/lib/resources/public-repository";
-import type { PublicFeaturedContent, PublicTip } from "@/types/content";
+import { urlFromData } from "@/lib/media/public-repository";
+import type { PublicFeaturedContent, PublicProject, PublicTip } from "@/types/content";
 
 const idSchema = z.string().trim().min(1).max(128);
 const selectionSchema = z.object({
-  projectId: idSchema,
+  projectId: z.union([idSchema,z.literal("")]).default(""),
+  mediaId: idSchema.optional(),
   resourceId: z.union([idSchema, z.literal("")]).default(""),
   tipIds: z.array(idSchema).max(12).refine((ids) => new Set(ids).size === ids.length),
 });
@@ -38,14 +40,19 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
   if (!selectionDocument.exists) return empty;
   const selection = selectionSchema.safeParse(selectionDocument.data());
   if (!selection.success) return empty;
+  const selectedProjectSource=selection.data.projectId?await database.collection("projects").doc(selection.data.projectId).get():null;
 
-  const [selectedProject, selectedResource, ...tipDocuments] = await Promise.all([
-    getPublicProjectByIdUncached(selection.data.projectId),
+  const [selectedProject, selectedMedia, selectedResource, ...tipDocuments] = await Promise.all([
+    selection.data.projectId?getPublicProjectByIdUncached(selection.data.projectId):Promise.resolve(null),
+    selection.data.mediaId?database.collection("media").doc(selection.data.mediaId).get():Promise.resolve(null),
     selection.data.resourceId?getPublicResourceByIdUncached(selection.data.resourceId):Promise.resolve(null),
     ...selection.data.tipIds.map((id) => database.collection("tips").doc(id).get()),
   ]);
 
-  const project = selectedProject&&!isClearlyLabelledFixture(selectedProject.title,selectedProject.summary)?selectedProject:null;
+  const mediaData=selectedMedia?.exists?selectedMedia.data():null,mediaSrc=selection.data.mediaId&&mediaData?.status==="Ready"&&mediaData?.galleryPublished===true&&mediaData?.kind==="editorial-image"?urlFromData(selection.data.mediaId,mediaData,"lg"):null;
+  const mediaCategory=mediaData?.category==="Fiber"?"Fiber":mediaData?.category==="Electrical"?"Electrical":null;
+  const mediaProject:PublicProject|null=mediaSrc&&mediaCategory?{id:`featured-gallery-${selection.data.mediaId}`,slug:"projects",title:mediaCategory==="Fiber"?"Featured fiber optic work":"Featured electrical work",category:mediaCategory,summary:"Selected FES project photography.",featuredImage:mediaSrc,featuredImageAlt:String(mediaData?.alt??""),gallery:[{src:mediaSrc,alt:String(mediaData?.alt??"")}],featured:true}:null;
+  const sourceData=selectedProjectSource?.data(),project = mediaProject??(selectedProject&&!isClearlyLabelledFixture(String(sourceData?.title??""),String(sourceData?.summary??""))?selectedProject:null);
   const resource = selectedResource&&!isClearlyLabelledFixture(selectedResource.title,selectedResource.summary)?selectedResource:null;
   const tips: PublicTip[] = tipDocuments.flatMap((document) => {
     if (!document.exists) return [];
