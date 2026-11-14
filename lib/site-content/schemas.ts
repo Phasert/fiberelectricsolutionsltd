@@ -27,7 +27,28 @@ export const servicePageContentSchema = z.object({ heading: text(160), descripti
 export const aboutContentSchema = z.object({
   heroHeading: text(160), heroDescription: text(600),
   overviewHeading: text(160), overviewBody: text(2000),
+  establishedYear: z.number().int().min(1900).max(2100).default(2008),
+  labels: z.object({
+    introEyebrow:text(100), established:text(60), location:text(100), storyEyebrow:text(100),
+    companyImageCaption:text(160), imageFallbackText:text(240), approachEyebrow:text(100), expertiseEyebrow:text(100),
+    electricalLabel:text(80), electricalLinkLabel:text(100), fiberLabel:text(80), fiberLinkLabel:text(100), ctaEyebrow:text(100),
+  }).default({introEyebrow:"About FES · Trinidad & Tobago",established:"Established",location:"Trinidad & Tobago",storyEyebrow:"Our story",companyImageCaption:"Fiber & Electric Solutions Ltd.",imageFallbackText:"Electrical and fiber-optic capability under one company.",approachEyebrow:"Our working approach",expertiseEyebrow:"Our expertise",electricalLabel:"Electrical",electricalLinkLabel:"View electrical services",fiberLabel:"Fiber Optic",fiberLinkLabel:"View fiber optic services",ctaEyebrow:"Start a conversation"}),
+  approachHeading: text(160).default("How we approach our work"),
+  approachDescription: text(1000).default("Each requirement is considered in context, with attention to planning, communication and the finished installation."),
+  approachItems: z.array(z.object({ title:text(100), description:text(500) })).min(3).max(4).default([
+    {title:"Start with the requirement",description:"Understand the site, the intended outcome and the practical constraints before work begins."},
+    {title:"Plan for the conditions",description:"Consider how the electrical or fiber-optic work fits the property, programme and surrounding systems."},
+    {title:"Keep the work clear",description:"Prioritize tidy execution and straightforward communication from the initial conversation through handover."},
+  ]),
   capabilitiesHeading: text(160), capabilitiesDescription: text(1000),
+  electricalExpertiseTitle: text(100).default("Electrical infrastructure"),
+  electricalExpertiseBody: text(800).default("Electrical installation, upgrades and related infrastructure for residential, commercial and industrial requirements."),
+  fiberExpertiseTitle: text(100).default("Fiber-optic connectivity"),
+  fiberExpertiseBody: text(800).default("Fiber-optic installation, splicing, testing and consulting for dependable building and site connectivity."),
+  ctaHeading: text(160).default("Have a requirement to discuss?"),
+  ctaDescription: text(600).default("Tell FES about the electrical or fiber-optic work you are considering and the outcome you need."),
+  ctaLabel: text(80).default("Request a quote"),
+  ctaHref: z.string().trim().min(1).max(500).refine((value)=>value.startsWith("/")||/^https:\/\//i.test(value),"Use an internal path or HTTPS URL.").default("/request-a-quote"),
   imageId: optionalText(160),
 });
 export const ctaContentSchema = z.object({

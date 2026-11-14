@@ -6,6 +6,7 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { aboutContentSchema, ctaContentSchema, homepageContentSchema, servicePageContentSchema, sectionSchema, type SiteContentSection } from "@/lib/site-content/schemas";
 import { PUBLIC_SERVICES_TAG, PUBLIC_SITE_CONTENT_TAG } from "@/lib/site-content/public-cache";
+import {getPublicMediaDetails}from"@/lib/media/public-repository";
 import type { PublicAboutContent, PublicCta, PublicHomepageContent, PublicService, PublicServicePageContent, ServiceKind } from "@/types/content";
 
 const fixturePattern = /\bphase\s+[a-z]\d+\b|\bstaging[- ]only\b|\bemulator\b|\bbrowser\s+(?:test|verification|content|service)\b/i;
@@ -21,7 +22,7 @@ export async function getPublicSiteContentUncached(sectionValue: string): Promis
   if (!stored.success || stored.data.section !== section || containsFixtureLabel(stored.data.published)) return null;
   if (section === "homepage") { const parsed=homepageContentSchema.omit({heroImageId:true}).safeParse(stored.data.published); return parsed.success?parsed.data:null; }
   if (section === "electrical" || section === "fiber") { const parsed=servicePageContentSchema.safeParse(stored.data.published); return parsed.success?parsed.data:null; }
-  if (section === "about") { const parsed=aboutContentSchema.omit({imageId:true}).safeParse(stored.data.published); return parsed.success?parsed.data:null; }
+  if (section === "about") { const parsed=aboutContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{imageId,...content}=parsed.data,image=imageId?(await getPublicMediaDetails([imageId],"lg")).get(imageId):null;return{...content,...(image?.type==="image"?{imageSrc:image.src,imageAlt:image.alt}:{})}; }
   const parsed=ctaContentSchema.safeParse(stored.data.published);
   return parsed.success?parsed.data.items.filter(item=>item.enabled).map(({id,placement,label,supportingText,destination,essential=false})=>({id,placement,label,supportingText,destination,essential})):null;
 }

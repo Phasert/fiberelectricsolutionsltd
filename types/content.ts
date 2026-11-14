@@ -65,8 +65,27 @@ export interface PublicAboutContent {
   heroDescription: string;
   overviewHeading: string;
   overviewBody: string;
+  establishedYear: number;
+  labels: {
+    introEyebrow: string; established: string; location: string; storyEyebrow: string;
+    companyImageCaption: string; imageFallbackText: string; approachEyebrow: string; expertiseEyebrow: string;
+    electricalLabel: string; electricalLinkLabel: string; fiberLabel: string; fiberLinkLabel: string; ctaEyebrow: string;
+  };
+  approachHeading: string;
+  approachDescription: string;
+  approachItems: Array<{ title: string; description: string }>;
   capabilitiesHeading: string;
   capabilitiesDescription: string;
+  electricalExpertiseTitle: string;
+  electricalExpertiseBody: string;
+  fiberExpertiseTitle: string;
+  fiberExpertiseBody: string;
+  ctaHeading: string;
+  ctaDescription: string;
+  ctaLabel: string;
+  ctaHref: string;
+  imageSrc?: string;
+  imageAlt?: string;
 }
 export interface PublicCta { id: string; placement: string; label: string; supportingText: string; destination: string; essential: boolean; }
 

@@ -2,7 +2,7 @@ import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { defaultPages, defaultServices } from "@/lib/site-content/defaults";
-import { pageInputSchema, sectionSchema, servicesInputSchema, type SiteContentAdminState, type SiteContentSection } from "@/lib/site-content/schemas";
+import {aboutContentSchema,pageInputSchema, sectionSchema, servicesInputSchema, type SiteContentAdminState, type SiteContentSection } from "@/lib/site-content/schemas";
 import type { ManagedService } from "@/types/admin";
 import { collectMediaIds,prepareMediaReferenceSync,syncMediaReferences } from "@/lib/media/references";
 
@@ -15,7 +15,8 @@ export async function listAdminSiteContent() {
   const docs = await Promise.all(sections.map((section) => pageRef(section).get()));
   return Object.fromEntries(sections.map((section, index) => {
     const data = docs[index].data();
-    return [section, { status: data?.status === "Published" ? "Published" : "Draft", content: data?.draft ?? defaultPages[section] }];
+    const draft=data?.draft??defaultPages[section],content=section==="about"?(aboutContentSchema.safeParse(draft).data??defaultPages.about):draft;
+    return [section, { status: data?.status === "Published" ? "Published" : "Draft", content }];
   })) as SiteContentAdminState;
 }
 
