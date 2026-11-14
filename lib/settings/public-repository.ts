@@ -48,6 +48,8 @@ function whatsappLink(explicitUrl: string, number: string): PublicContactLink | 
 }
 
 export async function getPublicBusinessSettingsUncached(): Promise<PublicBusinessSettings | null> {
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) return null;
   const snapshot = await getAdminFirestore().collection("businessSettings").doc("public-v1").get();
   if (!snapshot.exists) return null;
   const parsed = storedSchema.safeParse(snapshot.data());
