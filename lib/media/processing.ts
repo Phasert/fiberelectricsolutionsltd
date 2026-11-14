@@ -2,13 +2,13 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import sharp, {type Metadata} from "sharp";
-import type { EditorialMimeType, MediaDerivative } from "@/lib/media/schemas";
+import type { MediaDerivative } from "@/lib/media/schemas";
 import type { MediaCrop } from "@/types/admin";
 
 const variants = [{ variant: "sm" as const, width: 640 }, { variant: "md" as const, width: 1280 }, { variant: "lg" as const, width: 1920 }];
 const checksum = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
-export async function decodeAndProcessImage(input: { bytes: Uint8Array; mimeType: EditorialMimeType; maxPixels: number; maxDimension: number; version: string; crop?:MediaCrop|null }) {
+export async function decodeAndProcessImage(input: { bytes: Uint8Array; mimeType: "image/jpeg"|"image/png"|"image/webp"; maxPixels: number; maxDimension: number; version: string; crop?:MediaCrop|null }) {
   let metadata: Metadata;
   try {
     metadata = await sharp(input.bytes, { failOn: "error", limitInputPixels: input.maxPixels, sequentialRead: true }).metadata();

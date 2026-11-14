@@ -27,6 +27,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["heic-convert"],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

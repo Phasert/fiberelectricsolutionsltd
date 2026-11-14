@@ -55,7 +55,7 @@ export interface MediaItem {
   name:string;
   src:string;
   kind:"image"|"video";
-  type:"JPG"|"PNG"|"WEBP"|"MP4"|"MOV";
+  type:"JPG"|"PNG"|"WEBP"|"HEIC"|"MP4"|"MOV";
   size:string;
   sizeBytes:number;
   width:number;

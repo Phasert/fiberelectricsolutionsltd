@@ -14,8 +14,8 @@
     "test:unit": "vitest run tests/unit",
     "test:emulators": "firebase emulators:exec --project fes-local --only auth,firestore,storage \"bun run test:security\"",
     "test": "bun run test:emulators",
-    "emulators:seed": "node scripts/seed-firebase-emulator.mjs"
-    ,"media:prepare": "node scripts/prepare-project-import.mjs",
+    "emulators:seed": "node scripts/seed-firebase-emulator.mjs",
+    "media:prepare": "node scripts/prepare-project-import.mjs",
     "cms:migrate:tommys": "node scripts/migrate-tommys-brentwood.mjs"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "@tiptap/starter-kit": "^3.31.4",
     "firebase": "13.1.0",
     "firebase-admin": "^14.5.0",
+    "heic-convert": "^2.1.0",
     "lucide-react": "0.468.0",
     "next": "16.4.3",
     "nodemailer": "10.2.0",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
+    "@types/heic-convert": "^2.1.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

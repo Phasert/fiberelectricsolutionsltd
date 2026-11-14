@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminStorage } from "@/lib/firebase/admin";
 import { getEditorialMediaConfig, requireEditorialStorageEnabled, requireEditorialStorageReadable } from "@/lib/media/config";
-import { validateEditorialImage } from "@/lib/media/image-validation";
+import { convertHeicToJpeg,validateEditorialImage } from "@/lib/media/image-validation";
 import { EDITORIAL_MEDIA_MAX_DIMENSION,EDITORIAL_MEDIA_MAX_PIXELS,editorialVideoMimeSchema,mediaMetadataInputSchema,mediaPatchSchema,mediaSlideshowSchema,type EditorialMediaRecord,type EditorialVideoRecord,type MediaDerivative } from "@/lib/media/schemas";
 import { decodeAndProcessImage } from "@/lib/media/processing";
 import type { MediaItem } from "@/types/admin";
@@ -14,7 +14,7 @@ export const isEditorialStorageEmulator = () => getEditorialMediaConfig().mode =
 export const getEditorialStorageMode = () => getEditorialMediaConfig().mode;
 const displaySize = (n:number) => n < 1048576 ? `${Math.round(n/1024)} KB` : `${(n/1048576).toFixed(1)} MB`;
 const displayDate = (value:unknown) => value instanceof Timestamp ? value.toDate().toISOString() : new Date(String(value ?? 0)).toISOString();
-const extensions: Record<string,string> = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "video/mp4":"mp4", "video/quicktime":"mov" };
+const extensions: Record<string,string> = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "image/heic":"heic", "image/heif":"heif", "video/mp4":"mp4", "video/quicktime":"mov" };
 const derivativePath = (id:string, version:string, variant:string) => `editorial/public/derivatives/${id}/${version}/${variant}.webp`;
 const originalPath = (id:string, version:string, mimeType:string) => `editorial/private/originals/${id}/${version}/source.${extensions[mimeType]}`;
 const pendingPath = (id:string, token:string) => `editorial/private/pending/${id}/${token}.upload`;
@@ -22,7 +22,7 @@ const pendingPath = (id:string, token:string) => `editorial/private/pending/${id
 function toItem(id:string,data:FirebaseFirestore.DocumentData,projects:Map<string,{title:string;category:string}>):MediaItem {
   const projectId=typeof data.projectId==="string"?data.projectId:undefined,project=projectId?projects.get(projectId):undefined;
   const kind=data.kind==="editorial-video"?"video":"image";
-  const type=data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":data.mimeType==="image/webp"?"WEBP":data.mimeType==="video/quicktime"?"MOV":"MP4";
+  const type=data.mimeType==="image/jpeg"?"JPG":data.mimeType==="image/png"?"PNG":data.mimeType==="image/webp"?"WEBP":["image/heic","image/heif"].includes(data.mimeType)?"HEIC":data.mimeType==="video/quicktime"?"MOV":"MP4";
   const slideshow=mediaSlideshowSchema.safeParse(data.slideshow);
   return {id,name:String(data.originalName??"media"),src:`/api/admin/media/${id}/file`,kind,type,size:displaySize(Number(data.sizeBytes??0)),sizeBytes:Number(data.sizeBytes??0),width:Number(data.width??0),height:Number(data.height??0),durationSeconds:data.durationSeconds??null,posterSrc:data.posterMediaId?`/api/admin/media/${data.posterMediaId}/file`:null,alt:String(data.alt??""),caption:String(data.caption??""),status:data.status??"Failed",projectId,project:project?.title,category:data.category??project?.category??"Combined",isCover:false,createdAt:displayDate(data.createdAt),crop:data.crop??null,slideshow:slideshow.success?slideshow.data:null,galleryPublished:data.galleryPublished===true,galleryOrder:Number.isInteger(data.galleryOrder)?data.galleryOrder:0};
 }
@@ -48,11 +48,11 @@ export async function uploadEditorialMedia(input:{bytes:Uint8Array;mimeType:stri
     await temporary.save(Buffer.from(input.bytes),{resumable:false,metadata:{contentType:"application/octet-stream",cacheControl:"private, max-age=0, no-store",metadata:{mediaId:ref.id,kind:"editorial-pending"}}});written.push(temporaryPath);
     await ref.update({status:"Processing",updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
     const image=await validateEditorialImage({...input,maxBytes:config.maxBytes,maxPixels:config.maxPixels,maxDimension:config.maxDimension,version});
-    const storagePath=originalPath(ref.id,version,image.mimeType),original=getAdminStorage().bucket().file(storagePath);
-    await original.save(image.normalized,{resumable:false,metadata:{contentType:image.mimeType,cacheControl:"private, max-age=0, no-store",metadata:{mediaId:ref.id,kind:"editorial-private-original",checksum:image.checksum}}});written.push(storagePath);
+    const storagePath=originalPath(ref.id,version,image.mimeType),original=getAdminStorage().bucket().file(storagePath),sourceChecksum=createHash("sha256").update(image.privateOriginal).digest("hex");
+    await original.save(Buffer.from(image.privateOriginal),{resumable:false,metadata:{contentType:image.mimeType,cacheControl:"private, max-age=0, no-store",metadata:{mediaId:ref.id,kind:"editorial-private-original",checksum:sourceChecksum}}});written.push(storagePath);
     const derivatives:MediaDerivative[]=[];
     for(const derivative of image.derivatives){const path=derivativePath(ref.id,version,derivative.descriptor.variant);await getAdminStorage().bucket().file(path).save(derivative.bytes,{resumable:false,metadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable",metadata:{mediaId:ref.id,kind:"editorial-public-derivative",checksum:derivative.descriptor.checksum,version}}});written.push(path);derivatives.push({...derivative.descriptor,storagePath:path})}
-    await ref.update({status:"Ready",originalName:image.originalName,storagePath,mimeType:image.mimeType,sizeBytes:image.sizeBytes,width:image.width,height:image.height,pixelCount:image.pixelCount,checksum:image.checksum,derivatives,temporaryPath:null,failureCode:null,readyAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
+    await ref.update({status:"Ready",originalName:image.originalName,storagePath,mimeType:image.mimeType,sizeBytes:image.sizeBytes,width:image.width,height:image.height,pixelCount:image.pixelCount,checksum:sourceChecksum,derivatives,temporaryPath:null,failureCode:null,readyAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
     await temporary.delete({ignoreNotFound:true});
     return ref.id;
   }catch(error){
@@ -81,8 +81,8 @@ export async function updateMediaMetadata(id:string,input:unknown,uid:string){
   if(value.crop!==undefined){
     requireEditorialStorageEnabled();const current=snapshot.data() as EditorialMediaRecord;
     if(current.kind!=="editorial-image"||current.status!=="Ready")throw new Error("MEDIA_NOT_READY");
-    const [original]=await getAdminStorage().bucket().file(current.storagePath).download(),version=`v${Date.now().toString(36)}`;
-    const processed=await decodeAndProcessImage({bytes:original,mimeType:current.mimeType,maxPixels:EDITORIAL_MEDIA_MAX_PIXELS,maxDimension:EDITORIAL_MEDIA_MAX_DIMENSION,version,crop:value.crop});
+    const [original]=await getAdminStorage().bucket().file(current.storagePath).download(),version=`v${Date.now().toString(36)}`,isHeic=current.mimeType==="image/heic"||current.mimeType==="image/heif",processBytes=isHeic?await convertHeicToJpeg(original):original,processMime:"image/jpeg"|"image/png"|"image/webp"=isHeic?"image/jpeg":current.mimeType as "image/jpeg"|"image/png"|"image/webp";
+    const processed=await decodeAndProcessImage({bytes:processBytes,mimeType:processMime,maxPixels:EDITORIAL_MEDIA_MAX_PIXELS,maxDimension:EDITORIAL_MEDIA_MAX_DIMENSION,version,crop:value.crop});
     const derivatives:MediaDerivative[]=[];
     for(const derivative of processed.derivatives){const path=derivativePath(id,version,derivative.descriptor.variant);await getAdminStorage().bucket().file(path).save(derivative.bytes,{resumable:false,metadata:{contentType:"image/webp",cacheControl:"public, max-age=31536000, immutable",metadata:{mediaId:id,kind:"editorial-public-derivative",checksum:derivative.descriptor.checksum,version}}});derivatives.push({...derivative.descriptor,storagePath:path})}
     await ref.update({...value,version,derivatives,updatedAt:FieldValue.serverTimestamp(),updatedBy:uid});
