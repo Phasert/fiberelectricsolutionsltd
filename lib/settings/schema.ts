@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const optionalUrl = z.union([z.literal(""), z.string().url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), "Use an HTTP or HTTPS URL.")]);
-const optionalAssetUrl = z.union([z.null(), z.string().url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), "Use an HTTP or HTTPS URL.")]);
 const optionalEmail = z.union([z.literal(""), z.string().email().max(254)]);
 const optionalPhone = z.string().trim().max(24).refine((value) => !value || (/^[+()\-\s\d]{7,24}$/.test(value) && value.replace(/\D/g, "").length >= 7), "Enter a valid telephone number with at least 7 digits.");
 const time = z.union([z.literal(""), z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)]);
@@ -24,9 +23,7 @@ export const publicBusinessSettingsSchema = z.object({
     if (new Set(names).size !== 7 || day.options.some((name) => !names.includes(name))) ctx.addIssue({ code: "custom", message: "Opening hours must contain each day exactly once." });
   }),
   socialLinks: z.object({ facebook: optionalUrl, instagram: optionalUrl, linkedin: optionalUrl, googleBusiness: optionalUrl, whatsapp: optionalUrl }).strict(),
-  branding: z.object({ logoUrl: optionalAssetUrl, faviconUrl: optionalAssetUrl, logoMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null), faviconMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null) }).strict(),
-  seo: z.object({ title: z.string().trim().min(1).max(60), description: z.string().trim().min(1).max(160), socialImageUrl: optionalAssetUrl, socialImageMediaId:z.union([z.string().trim().min(1).max(128),z.null()]).optional().default(null) }).strict(),
-}).strict();
+}).strip();
 
 export const businessSettingsInputSchema = z.object({
   approvalStatus: z.enum(["Draft", "Approved"]),

@@ -55,7 +55,7 @@ export async function getPublicBusinessSettingsUncached(): Promise<PublicBusines
   const parsed = storedSchema.safeParse(snapshot.data());
   if (!parsed.success) return null;
   const settings = parsed.data.public;
-  if (fixturePattern.test(`${settings.businessName} ${settings.publicLocation} ${settings.seo.title} ${settings.seo.description}`) || testEmailPattern.test(settings.publicEmail)) return null;
+  if (fixturePattern.test(`${settings.businessName} ${settings.publicLocation}`) || testEmailPattern.test(settings.publicEmail)) return null;
 
   const email = settings.publicEmail ? { label: settings.publicEmail, href: `mailto:${settings.publicEmail}` } : null;
   const phone = phoneLink(settings.publicPhone);
@@ -76,7 +76,6 @@ export async function getPublicBusinessSettingsUncached(): Promise<PublicBusines
     googleBusiness: externalLink("Google Business Profile", settings.socialLinks.googleBusiness),
     socialLinks,
     businessHours: settings.businessHours.map(({ day, open, opensAt, closesAt }) => ({ day, open, opensAt, closesAt })),
-    seo: { title: settings.seo.title, description: settings.seo.description },
   };
 }
 

@@ -75,6 +75,12 @@ describe("Phase D1c-2 public featured content and tips", () => {
     expect(JSON.stringify(result)).not.toContain("updatedBy");
   });
 
+  it("shows enabled tips in admin order when no homepage tips were explicitly selected", async () => {
+    await seed({ selection: { tipIds: [] } });
+    const result = await getPublicHomepageFeaturedUncached();
+    expect(result.tips.map((tip) => tip.id)).toEqual([tipA, tipB]);
+  });
+
   it("revalidates source eligibility and omits unpublished, disabled and deleted selections", async () => {
     await seed();
     const database = getAdminFirestore();

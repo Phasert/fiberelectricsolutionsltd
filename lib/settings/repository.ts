@@ -3,7 +3,6 @@ import { FieldValue } from "firebase-admin/firestore";
 import { businessSettings } from "@/data/admin-mock";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { businessSettingsInputSchema, publicBusinessSettingsSchema, type BusinessSettingsState } from "@/lib/settings/schema";
-import { collectMediaIds,syncMediaReferences } from "@/lib/media/references";
 
 const document = () => getAdminFirestore().collection("businessSettings").doc("public-v1");
 const defaultSettings = publicBusinessSettingsSchema.parse(businessSettings);
@@ -23,7 +22,6 @@ export async function saveBusinessSettings(input: unknown, uid: string) {
   await getAdminFirestore().runTransaction(async (transaction) => {
     const current = await transaction.get(ref);
     const existing = current.data();
-    await syncMediaReferences(transaction,{consumer:`businessSettings/${ref.id}:branding`,previousIds:collectMediaIds(existing?.public),nextIds:collectMediaIds(value.settings),role:"branding",uid});
     transaction.set(ref, {
       schemaVersion: 1,
       approvalStatus: value.approvalStatus,

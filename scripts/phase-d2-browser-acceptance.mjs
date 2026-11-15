@@ -77,10 +77,8 @@ try{
  if(await page.getByText("Choose an existing Media Library item.").count()===0)throw new Error("Site-content media selector missing");
  result.features.siteContent="page/service editor exposes Ready Media Library selection";
  await page.goto("/admin/settings");
- await page.getByRole("tab",{name:/Branding/}).click();
- await page.getByText("Approved logo media").waitFor();
- await page.getByLabel(first.name,{exact:true}).first().check();
- result.features.businessSettings="logo, browser-icon and social-image role selectors render Ready media";
+ await page.getByRole("tab",{name:/Business information/}).waitFor();
+ result.features.businessSettings="business and contact settings remain available while developer-owned branding and search metadata stay out of the CMS";
 
  await page.goto("/admin/media");
  const conflictConsoleStart=consoleErrors.length,conflictResponseStart=unexpectedResponses.length;

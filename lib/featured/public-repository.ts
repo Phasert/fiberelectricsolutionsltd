@@ -37,21 +37,25 @@ function isClearlyLabelledFixture(...values: string[]) {
 export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeaturedContent> {
   const database = getAdminFirestore();
   const selectionDocument = await database.collection("featuredContent").doc("homepage").get();
-  if (!selectionDocument.exists) return empty;
-  const selection = selectionSchema.safeParse(selectionDocument.data());
-  if (!selection.success) return empty;
-  const selectedProjectSource=selection.data.projectId?await database.collection("projects").doc(selection.data.projectId).get():null;
+  const selection = selectionDocument.exists ? selectionSchema.safeParse(selectionDocument.data()) : null;
+  if (selection && !selection.success) return empty;
+  const selected = selection?.success ? selection.data : { projectId: "", resourceId: "", tipIds: [] };
+  const tipDocuments = selected.tipIds.length
+    ? await Promise.all(selected.tipIds.map((id) => database.collection("tips").doc(id).get()))
+    : (await database.collection("tips").where("enabled", "==", true).get()).docs.sort(
+        (left, right) => Number(left.data().order) - Number(right.data().order),
+      );
+  const selectedProjectSource=selected.projectId?await database.collection("projects").doc(selected.projectId).get():null;
 
-  const [selectedProject, selectedMedia, selectedResource, ...tipDocuments] = await Promise.all([
-    selection.data.projectId?getPublicProjectByIdUncached(selection.data.projectId):Promise.resolve(null),
-    selection.data.mediaId?database.collection("media").doc(selection.data.mediaId).get():Promise.resolve(null),
-    selection.data.resourceId?getPublicResourceByIdUncached(selection.data.resourceId):Promise.resolve(null),
-    ...selection.data.tipIds.map((id) => database.collection("tips").doc(id).get()),
+  const [selectedProject, selectedMedia, selectedResource] = await Promise.all([
+    selected.projectId?getPublicProjectByIdUncached(selected.projectId):Promise.resolve(null),
+    selected.mediaId?database.collection("media").doc(selected.mediaId).get():Promise.resolve(null),
+    selected.resourceId?getPublicResourceByIdUncached(selected.resourceId):Promise.resolve(null),
   ]);
 
-  const mediaData=selectedMedia?.exists?selectedMedia.data():null,mediaSrc=selection.data.mediaId&&mediaData?.status==="Ready"&&mediaData?.galleryPublished===true&&mediaData?.kind==="editorial-image"?urlFromData(selection.data.mediaId,mediaData,"lg"):null;
+  const mediaData=selectedMedia?.exists?selectedMedia.data():null,mediaSrc=selected.mediaId&&mediaData?.status==="Ready"&&mediaData?.galleryPublished===true&&mediaData?.kind==="editorial-image"?urlFromData(selected.mediaId,mediaData,"lg"):null;
   const mediaCategory=mediaData?.category==="Fiber"?"Fiber":mediaData?.category==="Electrical"?"Electrical":null;
-  const mediaProject:PublicProject|null=mediaSrc&&mediaCategory?{id:`featured-gallery-${selection.data.mediaId}`,slug:"projects",title:mediaCategory==="Fiber"?"Featured fiber optic work":"Featured electrical work",category:mediaCategory,summary:"Selected FES project photography.",featuredImage:mediaSrc,featuredImageAlt:String(mediaData?.alt??""),gallery:[{src:mediaSrc,alt:String(mediaData?.alt??"")}],featured:true}:null;
+  const mediaProject:PublicProject|null=mediaSrc&&mediaCategory?{id:`featured-gallery-${selected.mediaId}`,slug:"projects",title:mediaCategory==="Fiber"?"Featured fiber optic work":"Featured electrical work",category:mediaCategory,summary:"Selected FES project photography.",featuredImage:mediaSrc,featuredImageAlt:String(mediaData?.alt??""),gallery:[{src:mediaSrc,alt:String(mediaData?.alt??"")}],featured:true}:null;
   const sourceData=selectedProjectSource?.data(),project = mediaProject??(selectedProject&&!isClearlyLabelledFixture(String(sourceData?.title??""),String(sourceData?.summary??""))?selectedProject:null);
   const resource = selectedResource&&!isClearlyLabelledFixture(selectedResource.title,selectedResource.summary)?selectedResource:null;
   const tips: PublicTip[] = tipDocuments.flatMap((document) => {

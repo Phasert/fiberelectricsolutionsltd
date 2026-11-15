@@ -10,7 +10,7 @@ vi.mock("next/cache", () => ({
 import { businessSettings } from "../../data/admin-mock";
 import { getAdminFirestore } from "../../lib/firebase/admin";
 import { invalidatePublicBusinessSettings, PUBLIC_BUSINESS_SETTINGS_TAG } from "../../lib/settings/public-cache";
-import { formatBusinessHours, getPublicSeoDefaults, DEFAULT_PUBLIC_SEO } from "../../lib/settings/presentation";
+import { formatBusinessHours, DEFAULT_PUBLIC_SEO } from "../../lib/settings/presentation";
 import { getPublicBusinessSettingsUncached } from "../../lib/settings/public-repository";
 import { saveBusinessSettings } from "../../lib/settings/repository";
 
@@ -26,7 +26,6 @@ const approved = () => ({
     publicLocation: "Central Trinidad",
     googleMapsUrl: "https://maps.google.com/?q=Central+Trinidad",
     socialLinks: { facebook: "https://facebook.com/fes-approved", instagram: "", linkedin: "", googleBusiness: "https://business.google.com/fes-approved", whatsapp: "https://wa.me/18685550199" },
-    seo: { title: "Approved FES services", description: "Approved electrical and fiber optic services in Trinidad and Tobago.", socialImageUrl: null },
   },
 });
 
@@ -75,10 +74,10 @@ describe("Phase D1c-3 public business settings", () => {
     expect(result?.socialLinks).toEqual([{ label: "Facebook", href: "https://facebook.com/fes-approved" }]);
   });
 
-  it("formats opening hours accessibly and supplies safe SEO fallbacks", () => {
+  it("formats opening hours accessibly and keeps developer-owned SEO defaults", () => {
     expect(formatBusinessHours({ day: "Monday", open: true, opensAt: "08:00", closesAt: "17:00" })).toBe("8:00 AM–5:00 PM");
     expect(formatBusinessHours({ day: "Sunday", open: false, opensAt: "", closesAt: "" })).toBe("Closed");
-    expect(getPublicSeoDefaults(null)).toEqual(DEFAULT_PUBLIC_SEO);
+    expect(DEFAULT_PUBLIC_SEO).toEqual({ title: "Fiber & Electric Solutions Ltd.", description: "Professional electrical and fiber optic solutions in Trinidad & Tobago." });
   });
 
   it("invalidates the shared layout and relevant public routes after an administrator save", () => {

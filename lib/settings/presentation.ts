@@ -1,13 +1,9 @@
-import type { PublicBusinessHour, PublicBusinessSettings } from "@/types/content";
+import type { PublicBusinessHour } from "@/types/content";
 
 export const DEFAULT_PUBLIC_SEO = {
   title: "Fiber & Electric Solutions Ltd.",
   description: "Professional electrical and fiber optic solutions in Trinidad & Tobago.",
 };
-
-export function getPublicSeoDefaults(settings: PublicBusinessSettings | null) {
-  return settings?.seo ?? DEFAULT_PUBLIC_SEO;
-}
 
 export function formatBusinessTime(value: string) {
   const [hour, minute] = value.split(":").map(Number);

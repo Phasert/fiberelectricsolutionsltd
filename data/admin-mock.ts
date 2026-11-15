@@ -17,12 +17,6 @@ export const businessSettings: BusinessSettings = {
     { day: "Sunday", open: false, opensAt: "08:00", closesAt: "12:00" },
   ],
   socialLinks: { facebook: "", instagram: "", linkedin: "", googleBusiness: "", whatsapp: "" },
-  branding: { logoUrl: null, faviconUrl: null },
-  seo: {
-    title: "Fiber & Electric Solutions Ltd.",
-    description: "Professional electrical and fiber optic solutions in Trinidad & Tobago.",
-    socialImageUrl: null,
-  },
 };
 
 export const adminProjects: AdminProject[] = [

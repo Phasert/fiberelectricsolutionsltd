@@ -103,18 +103,6 @@ export interface BusinessSettings {
     googleBusiness: string;
     whatsapp: string;
   };
-  branding: {
-    logoUrl: string | null;
-    faviconUrl: string | null;
-    logoMediaId?: string | null;
-    faviconMediaId?: string | null;
-  };
-  seo: {
-    title: string;
-    description: string;
-    socialImageUrl: string | null;
-    socialImageMediaId?: string | null;
-  };
 }
 
 export type SiteContentSection = "homepage" | "electrical" | "fiber" | "about" | "cta";
