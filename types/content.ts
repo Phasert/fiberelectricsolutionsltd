@@ -59,6 +59,7 @@ export interface PublicHomepageContent {
   aboutDescription: string;
   heroImageSrc?: string;
   heroImageAlt?: string;
+  heroSlides: Array<{ id: string; headline: string; description: string; imageId: string; fallbackSrc: string; fallbackAlt: string; focalPoint: { x: number; y: number }; imageSrc?: string; imageAlt?: string }>;
 }
 
 export interface PublicServicePageContent { heading: string; description: string; }

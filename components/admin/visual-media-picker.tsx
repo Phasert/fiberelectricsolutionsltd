@@ -20,8 +20,9 @@ export function VisualMediaPicker({
   kind = "all",
   disabled = false,
   compactTrigger = false,
-  forceOpen = title.startsWith("Add to "),
+  forceOpen = title.startsWith("Add to ") || title.startsWith("Choose image for slide"),
   onDismiss,
+  onClose,
 }: {
   items: MediaItem[];
   value: string[];
@@ -35,6 +36,7 @@ export function VisualMediaPicker({
   compactTrigger?: boolean;
   forceOpen?: boolean;
   onDismiss?: () => void;
+  onClose?: () => void;
 }) {
   const [open, setOpen] = useState(forceOpen);
   const [draft, setDraft] = useState(value);
@@ -56,7 +58,7 @@ export function VisualMediaPicker({
   );
   const selected = value.map((id) => items.find((item) => item.id === id)).filter(Boolean) as MediaItem[];
   const show = () => { setDraft(value); setOpen(true); };
-  const close = () => { setOpen(false); onDismiss?.(); };
+  const close = () => { setOpen(false); onDismiss?.(); onClose?.(); };
   const toggle = (id: string) => setDraft((current) => {
     if (current.includes(id)) return current.filter((value) => value !== id);
     if (!multiple) return [id];

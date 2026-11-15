@@ -253,8 +253,7 @@ export function MediaManager({
             </span>
           </div>
           <p className="mt-1 text-sm text-ink/50">
-            Manage approved editorial images, project media and homepage
-            slideshows.
+            Manage approved editorial images and project media used across the website.
           </p>
         </div>
         <button
@@ -491,7 +490,7 @@ export function MediaManager({
           <option value="all">Photos &amp; videos</option><option value="image">Photos only</option><option value="video">Videos only</option>
         </select>
         <select aria-label="Usage filter" value={usage} onChange={(event)=>setUsage(event.target.value as typeof usage)} className={field}>
-          <option value="all">All usage</option><option value="gallery">Project gallery</option><option value="slideshow">Slideshows</option><option value="unused">Unassigned</option>
+           <option value="all">All usage</option><option value="gallery">Project gallery</option><option value="unused">Unassigned</option>
         </select>
       </section>
       {visible.length ? (

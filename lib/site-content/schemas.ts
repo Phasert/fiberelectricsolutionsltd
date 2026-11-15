@@ -3,6 +3,20 @@ import { z } from "zod";
 const text = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) => z.string().trim().max(max).default("");
 
+export const defaultHomepageHeroSlides = [
+  { id: "infrastructure", headline: "Powering what matters. Connecting what comes next.", description: "Practical electrical and fiber optic solutions for homes, businesses and projects across Trinidad & Tobago.", imageId: "", fallbackSrc: "/images/home/slideshow/hero-electrical-infrastructure-1672.webp", fallbackAlt: "Illustrative electrical distribution equipment and conduit in a cinematic industrial setting", focalPoint: { x: 68, y: 50 } },
+  { id: "electrical", headline: "Electrical solutions built for reliability.", description: "Professional electrical installation and infrastructure services tailored to your project requirements.", imageId: "", fallbackSrc: "/images/home/slideshow/hero-electrical-installation-1672.webp", fallbackAlt: "Illustrative industrial electrical installation with distribution panels and organized cabling", focalPoint: { x: 66, y: 50 } },
+  { id: "fiber", headline: "Better connections start here.", description: "Fiber optic infrastructure solutions designed to support dependable connectivity.", imageId: "", fallbackSrc: "/images/home/slideshow/hero-fiber-optic-technician-1672.webp", fallbackAlt: "Illustrative technician working with fiber optic connections and networking equipment", focalPoint: { x: 68, y: 50 } },
+] as const;
+
+const homepageHeroSlideSchema = z.object({
+  id: z.enum(["infrastructure", "electrical", "fiber"]),
+  headline: text(160), description: text(600), imageId: optionalText(160),
+  fallbackSrc: z.string().regex(/^\/images\/home\/slideshow\/[a-z0-9-]+\.webp$/),
+  fallbackAlt: text(220),
+  focalPoint: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }),
+});
+
 export const sectionSchema = z.enum(["homepage", "electrical", "fiber", "about", "cta"]);
 export type SiteContentSection = z.infer<typeof sectionSchema>;
 
@@ -22,6 +36,7 @@ export const homepageContentSchema = z.object({
   serviceHeading: text(160), serviceDescription: text(600),
   aboutHeading: text(160), aboutDescription: text(600),
   heroImageId: optionalText(160),
+  heroSlides: z.array(homepageHeroSlideSchema).length(3).default(defaultHomepageHeroSlides.map(slide=>({...slide,focalPoint:{...slide.focalPoint}}))),
 });
 export const servicePageContentSchema = z.object({ heading: text(160), description: text(800) });
 export const aboutContentSchema = z.object({

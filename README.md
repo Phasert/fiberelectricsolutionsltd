@@ -28,11 +28,11 @@ Public routes provide the homepage, company profile, electrical and fiber-optic 
 
 The protected CMS contains:
 
-- Dashboard — live gallery, slideshow, article/tip and enquiry summaries.
-- Media & Projects — Gallery, Slideshows and Media Library tabs sharing one media pipeline and visual picker.
+- Dashboard — live gallery, media, article/tip and enquiry summaries.
+- Media & Projects — Gallery and Media Library tabs sharing one media pipeline and visual picker.
 - Articles & Tips — articles, external resources, company updates and practical tips.
 - Quote Requests — private enquiry review, notes, status and protected attachments.
-- Site Content — public copy, services and approved visual selections.
+- Site Content — public copy, services, and the editable three-slide homepage hero.
 - Settings — public business and contact presentation settings.
 
 Legacy administrator URLs are retained as redirects where bookmarks or old links may still exist. Existing project documents and slugs remain supported for public compatibility; the client-facing workflow is category-gallery based and does not expose a named-project creation action.
@@ -43,7 +43,7 @@ See [CMS structure](docs/CMS_STRUCTURE.md), [project media operations](docs/PROJ
 
 Editorial uploads use server-authorized routes. Images are decoded and validated, originals remain private, and responsive WebP derivatives are served publicly only when eligible. Videos use browser-compatible source files and poster metadata; expensive transcoding is not performed in a Vercel request.
 
-The reusable visual media picker is used by slideshows, resources and site-content image fields. Referenced media cannot be silently deleted. Publication repositories return sanitized public records and exclude drafts.
+The reusable visual media picker is used by homepage hero slides, resources and site-content image fields. Referenced media cannot be silently deleted. Publication repositories return sanitized public records and exclude drafts.
 
 The Tommy's Brentwood source archive, migration marker, originals and derivatives are historical production records and must be preserved. The idempotent migration script defaults to dry-run; do not apply it to production without explicit authorization.
 
