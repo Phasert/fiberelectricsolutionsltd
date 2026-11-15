@@ -8,8 +8,7 @@ import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { PUBLIC_HOMEPAGE_FEATURED_TAG } from "@/lib/featured/public-cache";
 import { getPublicProjectByIdUncached } from "@/lib/projects/public-repository";
 import { getPublicResourceByIdUncached } from "@/lib/resources/public-repository";
-import { urlFromData } from "@/lib/media/public-repository";
-import type { PublicFeaturedContent, PublicProject, PublicTip } from "@/types/content";
+import type { PublicFeaturedContent, PublicTip } from "@/types/content";
 
 const idSchema = z.string().trim().min(1).max(128);
 const selectionSchema = z.object({
@@ -47,16 +46,12 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
       );
   const selectedProjectSource=selected.projectId?await database.collection("projects").doc(selected.projectId).get():null;
 
-  const [selectedProject, selectedMedia, selectedResource] = await Promise.all([
+  const [selectedProject, selectedResource] = await Promise.all([
     selected.projectId?getPublicProjectByIdUncached(selected.projectId):Promise.resolve(null),
-    selected.mediaId?database.collection("media").doc(selected.mediaId).get():Promise.resolve(null),
     selected.resourceId?getPublicResourceByIdUncached(selected.resourceId):Promise.resolve(null),
   ]);
 
-  const mediaData=selectedMedia?.exists?selectedMedia.data():null,mediaSrc=selected.mediaId&&mediaData?.status==="Ready"&&mediaData?.galleryPublished===true&&mediaData?.kind==="editorial-image"?urlFromData(selected.mediaId,mediaData,"lg"):null;
-  const mediaCategory=mediaData?.category==="Fiber"?"Fiber":mediaData?.category==="Electrical"?"Electrical":null;
-  const mediaProject:PublicProject|null=mediaSrc&&mediaCategory?{id:`featured-gallery-${selected.mediaId}`,slug:"projects",title:mediaCategory==="Fiber"?"Featured fiber optic work":"Featured electrical work",category:mediaCategory,summary:"Selected FES project photography.",featuredImage:mediaSrc,featuredImageAlt:String(mediaData?.alt??""),gallery:[{src:mediaSrc,alt:String(mediaData?.alt??"")}],featured:true}:null;
-  const sourceData=selectedProjectSource?.data(),project = mediaProject??(selectedProject&&!isClearlyLabelledFixture(String(sourceData?.title??""),String(sourceData?.summary??""))?selectedProject:null);
+  const sourceData=selectedProjectSource?.data(),project = selectedProject&&!isClearlyLabelledFixture(String(sourceData?.title??""),String(sourceData?.summary??""))?selectedProject:null;
   const resource = selectedResource&&!isClearlyLabelledFixture(selectedResource.title,selectedResource.summary)?selectedResource:null;
   const tips: PublicTip[] = tipDocuments.flatMap((document) => {
     if (!document.exists) return [];

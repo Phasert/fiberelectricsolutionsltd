@@ -1,2 +1,3 @@
-import { redirect } from "next/navigation";
-export default function AdminProjects(){redirect("/admin/media?tab=gallery")}
+import { ProjectList } from "@/components/admin/project-list";
+import { listAdminProjects } from "@/lib/projects/repository";
+export default async function AdminProjects(){return <ProjectList projects={await listAdminProjects()}/>}

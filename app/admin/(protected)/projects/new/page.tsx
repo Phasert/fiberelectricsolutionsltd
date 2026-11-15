@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function NewProject(){redirect("/admin/media")}
+import { QuickProjectCreator } from "@/components/admin/quick-project-creator";
+export default function NewProject(){return <QuickProjectCreator/>}

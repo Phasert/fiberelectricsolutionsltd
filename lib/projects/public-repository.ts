@@ -53,7 +53,7 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
-  const publicTitle = project.category === "Fiber" ? "Fiber Optic Project" : project.category === "Combined" ? "Electrical & Fiber Optic Project" : "Electrical Project";
+  const publicTitle = project.title;
   const mediaDetails=await getPublicMediaDetails(project.gallery.map(item=>item.mediaId),"lg");
   const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
@@ -65,7 +65,7 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
     slug: project.slug,
     title: publicTitle,
     category: project.category,
-    summary: "",
+    summary: project.summary,
     featuredImage: (mediaDetails.get(cover?.mediaId??"")?.type==="image"?await getPublicMediaUrl(cover?.mediaId,"md"):mediaDetails.get(cover?.mediaId??"")?.poster) ?? placeholder,
     featuredImageAlt: cover?.alt || `${publicTitle} image`,
     gallery,
