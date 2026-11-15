@@ -6,8 +6,8 @@ import { useMemo, useState } from "react";
 import type { Enquiry, EnquiryStatus } from "@/types/admin";
 import { EmptyState, StatusBadge } from "./admin-ui";
 
-const statuses: ("All" | EnquiryStatus)[] = ["All", "New", "Reviewing", "Contacted", "Closed"];
-const tone = (status: EnquiryStatus) => status === "New" ? "info" : status === "Reviewing" ? "warn" : status === "Contacted" ? "good" : "neutral";
+const statuses: ("All" | EnquiryStatus)[] = ["All", "New", "In Review", "Contacted", "Quoted", "Closed"];
+const tone = (status: EnquiryStatus) => status === "New" ? "info" : status === "In Review" ? "warn" : status === "Contacted" || status === "Quoted" ? "good" : "neutral";
 const time = (value?: string) => value ? new Date(value).getTime() : 0;
 
 export function EnquiryList({ items,nextCursor }: { items: Enquiry[];nextCursor?:string|null }) {
@@ -22,7 +22,7 @@ export function EnquiryList({ items,nextCursor }: { items: Enquiry[];nextCursor?
   }, [items, query, sort, status]);
 
   return <div className="space-y-6">
-    <section aria-label="Enquiry summary" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <section aria-label="Enquiry summary" className="grid grid-cols-2 gap-3 lg:grid-cols-6">
       <Summary label="Total enquiries" value={items.length} featured />
       {statuses.slice(1).map(value => <Summary key={value} label={value} value={counts[value] ?? 0} />)}
     </section>

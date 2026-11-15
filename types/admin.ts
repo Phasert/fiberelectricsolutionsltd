@@ -1,7 +1,7 @@
 import type { ProjectCategory } from "./content";
 
 export type PublishStatus = "Draft" | "Published";
-export type EnquiryStatus = "New" | "Reviewing" | "Contacted" | "Closed";
+export type EnquiryStatus = "New" | "In Review" | "Contacted" | "Quoted" | "Closed";
 export type QuoteServiceCategory = "Electrical" | "Fiber Optic" | "Both Services" | "Not Sure Yet";
 export type PreferredContactMethod = "Phone" | "Email" | "WhatsApp";
 
@@ -17,6 +17,7 @@ export interface QuoteRequestCustomerInput {
   propertyType: "Residential" | "Commercial" | "Industrial" | "Other" | "";
   description: string;
   preferredTimeframe?: string;
+  additionalNotes?: string;
   attachments: string[];
 }
 

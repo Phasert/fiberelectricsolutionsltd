@@ -6,7 +6,7 @@ import { ArrowLeft, Check, ChevronLeft, ChevronRight, Clipboard, Mail, Phone, Sa
 import { useEffect, useRef, useState } from "react";
 import type { Enquiry, EnquiryNote, EnquiryStatus } from "@/types/admin";
 
-const statuses: EnquiryStatus[] = ["New", "Reviewing", "Contacted", "Closed"];
+const statuses: EnquiryStatus[] = ["New", "In Review", "Contacted", "Quoted", "Closed"];
 const emailIsValid = (value?: string) => Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
 const phoneIsValid = (value?: string) => Boolean(value && value.replace(/\D/g, "").length >= 7);
 
@@ -55,7 +55,8 @@ export function EnquiryDetail({ item }: { item: Enquiry }) {
         </Section>
         <Section title="Job information">
           <div className="grid sm:grid-cols-2"><Row label="Requested service" value={item.service}/><Row label="Property type" value={item.propertyType}/><Row label="General location" value={item.location}/><Row label="Submitted" value={item.submittedAt}/><Row label="Enquiry reference" value={item.id}/></div>
-          <div className="mt-5 rounded-md bg-paper p-4 sm:p-5"><p className="text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40">Work description</p><p className="mt-2 text-sm leading-6 text-ink/75">{item.description}</p></div>
+          <div className="mt-5 rounded-md bg-paper p-4 sm:p-5"><p className="text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40">Work description</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/75">{item.description}</p></div>
+          {item.additionalNotes&&<div className="mt-3 rounded-md border border-black/[.07] p-4 sm:p-5"><p className="text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40">Customer notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/75">{item.additionalNotes}</p></div>}
         </Section>
         <Section title="Attached photographs" description={`${item.attachments.length} ${item.attachments.length === 1 ? "image" : "images"}`}>
           {item.attachments.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{(item.attachmentDetails??item.attachments.map((url,index)=>({id:String(index),url,mimeType:"",sizeBytes:0,width:0,height:0,status:""}))).map((attachment, index) => <article key={attachment.id}><button type="button" onClick={() => setActiveImage(index)} className="group relative aspect-[4/3] w-full overflow-hidden rounded-md border border-black/10 bg-ink focus-visible:outline-wine" aria-label={`Open photograph ${index + 1} of ${item.attachments.length}`}><img src={attachment.url} alt={`Customer photograph ${index + 1}`} className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"/><span className="absolute inset-x-0 bottom-0 bg-black/65 px-3 py-2 text-left text-xs font-bold text-white">Photo {index + 1}</span></button><p className="mt-2 text-[.68rem] leading-5 text-ink/45">{attachment.mimeType || "Image"} · {attachment.width}×{attachment.height} · {Math.max(1,Math.round(attachment.sizeBytes/1024))} KB · {attachment.status || "Stored"}</p></article>)}</div> : <div className="rounded-md border border-dashed border-black/15 bg-paper/60 px-5 py-8 text-center"><p className="font-bold">No photographs attached</p><p className="mt-2 text-sm text-ink/50">This customer did not include images with the request.</p></div>}

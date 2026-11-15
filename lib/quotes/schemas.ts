@@ -11,7 +11,7 @@ export const quoteRequestSchema = z.object({
   service: z.enum(["Electrical", "Fiber Optic", "Both Services", "Not Sure Yet"]),
   selectedServiceIds: z.array(z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80)).max(12).refine(values => new Set(values).size === values.length, "Service selections must be unique."),
   location: trimmed(2, 160), propertyType: z.enum(["Residential", "Commercial", "Industrial", "Other"]),
-  description: trimmed(20, 2_000), preferredTimeframe: optionalTrimmed(160), consentAcknowledged: z.literal(true),
+  description: trimmed(20, 2_000), preferredTimeframe: optionalTrimmed(160), additionalNotes: z.string().trim().max(1_000).optional(), consentAcknowledged: z.literal(true),
   attachments: z.array(z.never()).max(0).optional().default([]),
 }).superRefine((value, context) => {
   if (!value.email && !value.phone) { context.addIssue({ code: "custom", path: ["email"], message: "Provide an email address or phone number." }); context.addIssue({ code: "custom", path: ["phone"], message: "Provide an email address or phone number." }); }
