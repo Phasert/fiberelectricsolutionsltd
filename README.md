@@ -1,64 +1,72 @@
-# Fiber & Electric Solutions Ltd. website
+# Fiber & Electric Solutions Ltd.
 
-Phase 1 public-facing frontend for the FES website. The project establishes the visual system, public routes, project portfolio, resources area and quote-request interface described in the approved website proposal.
+Production-oriented website and content-management application for Fiber & Electric Solutions Ltd. (FES), established in 2008.
 
 ## Stack
 
-- Next.js 16 with App Router
-- React 19
-- TypeScript (strict)
-- Tailwind CSS 4
+- Next.js 16 App Router and React 19
+- TypeScript (strict) and Tailwind CSS 4
+- Firebase Authentication, Firestore and Storage
 - Bun
 
-## Setup
+## Local development
 
-Install [Bun](https://bun.sh/) and run:
+Install the locked dependencies and start the Webpack development server:
 
-```bash
-bun install
-bun dev
+```powershell
+bun install --frozen-lockfile
+bun run dev
 ```
 
-Open `http://localhost:3000`. For production validation:
+Copy `.env.example` to an ignored local environment file and provide only the values needed for the target environment. Never commit Firebase Admin credentials, SMTP credentials, session cookies or customer data.
 
-```bash
+The default Firebase tooling project is the local emulator project. Live quote submission and editorial-media writes fail closed unless their explicit environment gates and exact approved project/bucket allowlists match. See [Firebase setup](docs/FIREBASE_SETUP.md) and the [operations runbook](docs/FES_OPERATIONS_RUNBOOK.md).
+
+## Current application
+
+Public routes provide the homepage, company profile, electrical and fiber-optic services, category-based project gallery, articles/resources, quote request, contact and privacy experiences.
+
+The protected CMS contains:
+
+- Dashboard — live gallery, slideshow, article/tip and enquiry summaries.
+- Media & Projects — Gallery, Slideshows and Media Library tabs sharing one media pipeline and visual picker.
+- Articles & Tips — articles, external resources, company updates and practical tips.
+- Quote Requests — private enquiry review, notes, status and protected attachments.
+- Site Content — public copy, services and approved visual selections.
+- Settings — public business and contact presentation settings.
+
+Legacy administrator URLs are retained as redirects where bookmarks or old links may still exist. Existing project documents and slugs remain supported for public compatibility; the client-facing workflow is category-gallery based and does not expose a named-project creation action.
+
+See [CMS structure](docs/CMS_STRUCTURE.md), [project media operations](docs/PROJECT_MEDIA.md), and [homepage slideshow management](docs/HOMEPAGE_SLIDESHOWS.md).
+
+## Media architecture
+
+Editorial uploads use server-authorized routes. Images are decoded and validated, originals remain private, and responsive WebP derivatives are served publicly only when eligible. Videos use browser-compatible source files and poster metadata; expensive transcoding is not performed in a Vercel request.
+
+The reusable visual media picker is used by slideshows, resources and site-content image fields. Referenced media cannot be silently deleted. Publication repositories return sanitized public records and exclude drafts.
+
+The Tommy's Brentwood source archive, migration marker, originals and derivatives are historical production records and must be preserved. The idempotent migration script defaults to dry-run; do not apply it to production without explicit authorization.
+
+## Verification
+
+```powershell
 bun run lint
 bun run typecheck
+bun run test:unit
+bun run test:email
+bun run test       # Firebase Auth, Firestore and Storage emulators
 bun run build
 ```
 
-Development and production builds intentionally use Next.js's supported Webpack fallback. On the current Windows toolchain, Next.js 16.3.8's default Turbopack processes repeatedly stall before the development server is ready or during production compilation, even after clearing generated `.next` state; the same source starts and builds normally with Webpack. This workaround can be re-evaluated after a Next.js/Turbopack upgrade is tested.
+Browser acceptance scripts under `scripts/` cover responsive public/admin workflows. Live-staging acceptance is target-locked and must only be run with explicit authorization.
 
-## Environment
+On the affected Windows D: drive, dependency junction/corruption can prevent Vite or Next.js from writing generated files. Treat an `EPERM` under `node_modules/.vite-temp` or `.next` as an environment failure until reproduced from a healthy locked install; do not repeatedly reinstall into a known-corrupt directory.
 
-Copy `.env.example` to a local environment file when deployment values are available. `SITE_URL` must be set to the client-approved canonical origin before production indexing is enabled. Demo projects and sample resources are visible automatically in development, hidden by default in production, and can be enabled only for an explicitly non-public preview with `NEXT_PUBLIC_ENABLE_DEMO_CONTENT=true`.
+## Deployment boundaries
 
-See [Homepage slideshow management](docs/HOMEPAGE_SLIDESHOWS.md) for the Media Library publishing workflow.
+- Set `SITE_URL` to the approved canonical HTTPS origin before indexing.
+- Keep browser Firestore and Storage access deny-by-default.
+- Do not change Rules, IAM, billing, retention policy or production data as part of an application deploy without separate approval.
+- Verify security headers, robots/sitemap output, authenticated CMS workflows and rollback readiness on the deployed target.
 
-## Structure
-
-- `app/` — routes, metadata, sitemap and robots configuration
-- `components/` — shared layout, UI, services, projects, forms and homepage components
-- `data/` — temporary approved/placeholder frontend content
-- `types/` — Firebase-ready content contracts
-- `public/images/` — locally owned placeholder artwork, ready to be replaced by FES photography
-
-## Phase 1 scope
-
-Includes seven public sections, responsive navigation, reusable design tokens, accessible project filtering, project and article detail routes, client-side quote validation, file-selection display, reduced-motion support, basic SEO and placeholder content states.
-
-## Deliberately deferred to Phase 2
-
-Firebase configuration, authentication, admin/CMS tools, Firestore collections, media storage, live quote submissions, spam controls and production analytics are not implemented. The current form never claims to send an enquiry.
-
-## Phase 2A admin preview
-
-The `/admin` route contains the uncommitted Phase 2A administration frontend. It uses typed mock data through `lib/admin/repository.ts`, which is the integration boundary for Phase 2B. `/admin/login` demonstrates future authentication states but does not authenticate. A clearly labelled development link opens protected-screen previews without claiming a real session.
-
-No admin action persists: create, edit, delete, upload, status and settings controls only update temporary browser state. Firebase Authentication, Firestore and Storage remain deliberately absent.
-
-Types in `types/content.ts` and isolated content in `data/content.ts` form the boundary for a future Firebase repository/data layer. Components should consume those contracts rather than Firebase directly.
-
-## Content still required
-
-FES must confirm final service wording, public contact details, company background, credentials, project names/locations/descriptions, publishing permissions, real photography, logo files and the production domain before launch.
+The detailed security/performance status and remaining owner actions are recorded in [the security and performance audit](docs/FES_SECURITY_PERFORMANCE_AUDIT.md).
