@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpenText, ChevronsUpDown, CircleUserRound,
-  FileText, FolderKanban, Images, LayoutDashboard, Menu,
-  MessageSquareText, PanelLeftClose, Settings, Home,
+  FileText, Images, LayoutDashboard, Menu,
+  MessageSquareText, PanelLeftClose, Settings,
   SquareArrowOutUpRight, X,
 } from "lucide-react";
 import { LogoutButton } from "@/components/admin/logout-button";
@@ -14,10 +14,8 @@ import type { Administrator } from "@/types/firebase";
 
 const navigation = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { href: "/admin/media", label: "Media Library", icon: Images },
+  { href: "/admin/media", label: "Media & Projects", icon: Images },
   { href: "/admin/articles-tips", label: "Articles & Tips", icon: BookOpenText },
-  { href: "/admin/homepage", label: "Homepage", icon: Home },
   { href: "/admin/enquiries", label: "Quote Requests", icon: MessageSquareText },
   { href: "/admin/content", label: "Site Content", icon: FileText },
   { href: "/admin/settings", label: "Settings", icon: Settings },

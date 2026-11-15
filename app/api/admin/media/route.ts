@@ -65,6 +65,9 @@ export async function POST(request: Request) {
           roles: String(form.get("roles") ?? "general")
             .split(",")
             .filter(Boolean),
+          galleryPublished: form.get("galleryPublished") === "true",
+          galleryExcluded: false,
+          galleryOrder: Number(form.get("galleryOrder") ?? 0),
         },
       },
       admin.uid,

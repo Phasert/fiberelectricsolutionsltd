@@ -20,7 +20,7 @@ export async function getPublicSiteContentUncached(sectionValue: string): Promis
   const document = await getAdminFirestore().collection("siteContent").doc(`${section}-v1`).get();
   const stored = storedPageSchema.safeParse(document.data());
   if (!stored.success || stored.data.section !== section || containsFixtureLabel(stored.data.published)) return null;
-  if (section === "homepage") { const parsed=homepageContentSchema.omit({heroImageId:true}).safeParse(stored.data.published); return parsed.success?parsed.data:null; }
+  if (section === "homepage") { const parsed=homepageContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{heroImageId,...content}=parsed.data,image=heroImageId?(await getPublicMediaDetails([heroImageId],"lg")).get(heroImageId):null;return{...content,...(image?.type==="image"?{heroImageSrc:image.src,heroImageAlt:image.alt}:{})}; }
   if (section === "electrical" || section === "fiber") { const parsed=servicePageContentSchema.safeParse(stored.data.published); return parsed.success?parsed.data:null; }
   if (section === "about") { const parsed=aboutContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{imageId,...content}=parsed.data,image=imageId?(await getPublicMediaDetails([imageId],"lg")).get(imageId):null;return{...content,...(image?.type==="image"?{imageSrc:image.src,imageAlt:image.alt}:{})}; }
   const parsed=ctaContentSchema.safeParse(stored.data.published);

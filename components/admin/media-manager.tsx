@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import type { AdminProject, MediaCrop, MediaItem } from "@/types/admin";
 import { ImageCropEditor } from "@/components/admin/image-crop-editor";
-import { SlideshowManager } from "@/components/admin/slideshow-manager";
 import type { ProjectCategory } from "@/types/content";
 const field =
   "min-h-11 rounded-md border border-black/10 bg-white px-3 text-sm shadow-sm";
@@ -57,10 +56,13 @@ export function MediaManager({
     [query, setQuery] = useState(""),
     [project, setProject] = useState(initialProject ?? "all"),
     [category, setCategory] = useState<"all" | ProjectCategory>("all"),
+    [mediaType, setMediaType] = useState<"all" | "image" | "video">("all"),
+    [usage, setUsage] = useState<"all" | "gallery" | "slideshow" | "unused">("all"),
     [upload, setUpload] = useState(false),
     [local, setLocal] = useState<Local[]>([]),
     [destination, setDestination] = useState(initialProject ?? ""),
     [busy, setBusy] = useState(false),
+    [pendingRemoval, setPendingRemoval] = useState<MediaItem | null>(null),
     [message, setMessage] = useState("");
   const visible = useMemo(
     () =>
@@ -70,9 +72,14 @@ export function MediaManager({
           (project === "all" ||
             item.projectId === project ||
             (project === "unassigned" && !item.projectId)) &&
-          (category === "all" || item.category === category),
+          (category === "all" || item.category === category) &&
+          (mediaType === "all" || item.kind === mediaType) &&
+          (usage === "all" ||
+            (usage === "gallery" && (item.galleryPublished || item.roles?.includes("project-gallery"))) ||
+            (usage === "slideshow" && Boolean(item.slideshow)) ||
+            (usage === "unused" && !item.galleryPublished && !item.slideshow && !(item.roles??[]).some(role=>role!=="general"))),
       ),
-    [items, query, project, category],
+    [items, query, project, category, mediaType, usage],
   );
   const refresh = async () => {
     const response = await fetch("/api/admin/media", { cache: "no-store" }),
@@ -210,8 +217,6 @@ export function MediaManager({
     } else setMessage("Unable to save media details.");
   };
   const remove = async (item: MediaItem) => {
-    if (!confirm(`Remove ${item.name}? Referenced media cannot be deleted.`))
-      return;
     setBusy(true);
     const response = await fetch(`/api/admin/media/${item.id}`, {
         method: "DELETE",
@@ -223,6 +228,7 @@ export function MediaManager({
         ? "Image removed."
         : (result.error ?? "Unable to remove image."),
     );
+    setPendingRemoval(null);
     if (response.ok) await refresh();
   };
   return (
@@ -253,7 +259,6 @@ export function MediaManager({
           {upload ? "Close upload" : "Upload images"}
         </button>
       </header>
-      <SlideshowManager items={items} refresh={refresh} />
       {!storageEnabled && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
           <p className="flex items-center gap-2 font-bold">
@@ -439,7 +444,7 @@ export function MediaManager({
           )}
         </section>
       )}
-      <section className="grid gap-3 rounded-lg border border-black/[.075] bg-white p-4 shadow-sm sm:grid-cols-3">
+      <section className="grid gap-3 rounded-lg border border-black/[.075] bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5">
         <label className="relative">
           <span className="sr-only">Search filenames</span>
           <Search size={17} className="absolute left-3 top-3.5 text-ink/35" />
@@ -476,6 +481,12 @@ export function MediaManager({
           <option>Electrical</option>
           <option>Fiber</option>
           <option>Combined</option>
+        </select>
+        <select aria-label="Media type filter" value={mediaType} onChange={(event)=>setMediaType(event.target.value as typeof mediaType)} className={field}>
+          <option value="all">Photos &amp; videos</option><option value="image">Photos only</option><option value="video">Videos only</option>
+        </select>
+        <select aria-label="Usage filter" value={usage} onChange={(event)=>setUsage(event.target.value as typeof usage)} className={field}>
+          <option value="all">All usage</option><option value="gallery">Project gallery</option><option value="slideshow">Slideshows</option><option value="unused">Unassigned</option>
         </select>
       </section>
       {visible.length ? (
@@ -584,7 +595,7 @@ export function MediaManager({
                   <button
                     aria-label={`Remove ${item.name}`}
                     disabled={busy}
-                    onClick={() => remove(item)}
+                    onClick={() => setPendingRemoval(item)}
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-red-200 text-xs font-bold text-red-700"
                   >
                     <Trash2 size={15} />
@@ -633,6 +644,63 @@ export function MediaManager({
             setEditingLocal(null);
           }}
         />
+      )}
+      {pendingRemoval && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-charcoal/55 p-4 backdrop-blur-[2px]"
+          role="presentation"
+          onClick={() => !busy && setPendingRemoval(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-media-title"
+            aria-describedby="remove-media-description"
+            className="w-full max-w-md overflow-hidden rounded-xl border border-black/10 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 p-5 sm:p-6">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-red-50 text-red-700">
+                <Trash2 size={19} />
+              </span>
+              <div className="min-w-0">
+                <h2 id="remove-media-title" className="text-lg font-bold">
+                  Remove media?
+                </h2>
+                <p
+                  id="remove-media-description"
+                  className="mt-2 text-sm leading-6 text-ink/60"
+                >
+                  <span className="font-semibold text-ink">
+                    {pendingRemoval.name}
+                  </span>{" "}
+                  will be permanently removed. Media currently used elsewhere
+                  on the website cannot be deleted.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col-reverse gap-2 border-t border-black/[.07] bg-paper/60 p-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setPendingRemoval(null)}
+                className="min-h-11 rounded-md border border-black/10 bg-white px-4 text-sm font-bold text-ink disabled:opacity-50"
+                autoFocus
+              >
+                Keep media
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => remove(pendingRemoval)}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-red-700 px-4 text-sm font-bold text-white disabled:opacity-50"
+              >
+                <Trash2 size={16} />
+                {busy ? "Removing…" : "Remove permanently"}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );

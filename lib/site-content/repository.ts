@@ -15,8 +15,8 @@ export async function listAdminSiteContent() {
   const docs = await Promise.all(sections.map((section) => pageRef(section).get()));
   return Object.fromEntries(sections.map((section, index) => {
     const data = docs[index].data();
-    const draft=data?.draft??defaultPages[section],content=section==="about"?(aboutContentSchema.safeParse(draft).data??defaultPages.about):draft;
-    return [section, { status: data?.status === "Published" ? "Published" : "Draft", content }];
+    const current=data?.published??data?.draft??defaultPages[section],content=section==="about"?(aboutContentSchema.safeParse(current).data??defaultPages.about):current;
+    return [section, { status: data?.published ? "Published" : "Draft", content }];
   })) as SiteContentAdminState;
 }
 
@@ -52,8 +52,8 @@ const serviceSnapshot = (data: FirebaseFirestore.DocumentData) => ({
   displayOrder: Number(data.displayOrder ?? 0), enabled: data.enabled === true,
 });
 const mapService = (id: string, data: FirebaseFirestore.DocumentData): ManagedService => ({
-  id, category: data.category, slug: String(data.slug ?? ""), ...serviceSnapshot(data.draft ?? data),
-  status: data.status === "Published" ? "Published" : "Draft",
+  id, category: data.category, slug: String(data.slug ?? ""), ...serviceSnapshot(data.published ?? data.draft ?? data),
+  status: data.published ? "Published" : "Draft",
 });
 
 export async function listAdminServices() {

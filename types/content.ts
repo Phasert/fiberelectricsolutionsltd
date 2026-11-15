@@ -57,6 +57,8 @@ export interface PublicHomepageContent {
   serviceDescription: string;
   aboutHeading: string;
   aboutDescription: string;
+  heroImageSrc?: string;
+  heroImageAlt?: string;
 }
 
 export interface PublicServicePageContent { heading: string; description: string; }
@@ -188,7 +190,6 @@ export interface PublicBusinessSettings {
   googleBusiness: PublicContactLink | null;
   socialLinks: PublicContactLink[];
   businessHours: PublicBusinessHour[];
-  seo: { title: string; description: string };
 }
 
 export interface ExternalResource {

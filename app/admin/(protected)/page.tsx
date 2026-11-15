@@ -9,7 +9,7 @@ const quickActions = [
   { label: "Add article", description: "Write an insight or update", href: "/admin/resources/new", icon: FilePlus2 },
   { label: "Add tip", description: "Add practical homepage guidance", href: "/admin/articles-tips#tips-heading", icon: Lightbulb },
   { label: "View enquiries", description: "Review quote requests", href: "/admin/enquiries", icon: MessageSquareText },
-  { label: "Manage homepage", description: "Choose homepage highlights", href: "/admin/homepage", icon: Sparkles },
+  { label: "Manage site content", description: "Update homepage and page content", href: "/admin/content", icon: Sparkles },
 ];
 
 export default async function AdminDashboard() {
