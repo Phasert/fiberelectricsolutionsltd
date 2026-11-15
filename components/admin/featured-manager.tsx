@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowDown, ArrowRight, ArrowUp, Check, CircleAlert, Eye, ImageOff, RotateCcw, Save } from "lucide-react";
 import type { AdminProject, AdminResource, AdminTip, MediaItem } from "@/types/admin";
 import type { FeaturedSelection } from "@/lib/featured/schemas";
@@ -16,6 +16,7 @@ export function FeaturedManager({ projects, resources, tips, media, initialSelec
   const [busy, setBusy] = useState(false);
   const [galleryFilter, setGalleryFilter] = useState<"All" | "Electrical" | "Fiber">("All");
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const saveGuard = useRef(false);
 
   const publishedGallery = media.filter((item) => item.kind === "image" && item.status === "Ready" && item.galleryPublished && (item.category === "Electrical" || item.category === "Fiber"));
   const filteredGallery = publishedGallery.filter((item) => galleryFilter === "All" || item.category === galleryFilter);
@@ -41,14 +42,18 @@ export function FeaturedManager({ projects, resources, tips, media, initialSelec
   function update(next: Selection) { setSelection(next); setNotice(null); }
   function moveTip(id: string, direction: -1 | 1) { const index=selection.tipIds.indexOf(id),destination=index+direction;if(index<0||destination<0||destination>=selection.tipIds.length)return;const ids=[...selection.tipIds];[ids[index],ids[destination]]=[ids[destination],ids[index]];update({...selection,tipIds:ids}); }
   async function save() {
+    if (saveGuard.current) return;
     if (errors.length) { setNotice("Resolve the highlighted validation issues before saving."); return; }
+    saveGuard.current = true;
     setBusy(true);
-    const response = await fetch("/api/admin/featured", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(selection) });
-    const result = await response.json().catch(() => ({}));
-    setBusy(false);
-    if (!response.ok) { setNotice(result.error ?? "Unable to save featured content."); return; }
-    setSavedSelection(selection);
-    setNotice("Featured selections saved. Approved selections now update the public homepage.");
+    try {
+      const response = await fetch("/api/admin/featured", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(selection) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) { setNotice(result.error ?? "Unable to save featured content."); return; }
+      setSavedSelection(selection);
+      setNotice("Featured selections saved. Approved selections now update the public homepage.");
+    } catch { setNotice("Unable to save featured content. Check your connection and try again."); }
+    finally { saveGuard.current = false; setBusy(false); }
   }
   function revert() { setSelection(savedSelection); setNotice("Unsaved changes reverted."); }
   function openPreview() { document.getElementById("homepage-preview")?.scrollIntoView({ behavior: "smooth", block: "start" }); }

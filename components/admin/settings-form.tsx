@@ -30,6 +30,7 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const saveGuard = useRef(false);
   const dirty = useMemo(() => JSON.stringify(settings) !== JSON.stringify(baseline) || approvalStatus !== baselineApprovalStatus, [settings, baseline, approvalStatus, baselineApprovalStatus]);
 
   useEffect(() => { const warn = (event: BeforeUnloadEvent) => { if (dirty) event.preventDefault(); }; window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [dirty]);
@@ -61,6 +62,7 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (saveGuard.current) return;
     setSaveError("");
     const nextErrors = validate();
     if (Object.keys(nextErrors).length) {
@@ -69,13 +71,13 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
       requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-error-key="${firstKey}"]`)?.focus());
       return;
     }
-    setSaving(true); setSaveError("");
+    saveGuard.current = true; setSaving(true); setSaveError("");
     try {
       const response = await fetch("/api/admin/settings", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ approvalStatus, settings }) });
       if (!response.ok) throw new Error((await response.json()).error ?? "Unable to save business settings.");
       setBaseline(structuredClone(settings)); setBaselineApprovalStatus(approvalStatus); setNotice("saved");
     } catch (cause) { setSaveError(cause instanceof Error ? cause.message : "Unable to save business settings."); }
-    finally { setSaving(false); }
+    finally { saveGuard.current = false; setSaving(false); }
   }
 
   function revertAll() {

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   CircleAlert,
   Crop,
@@ -44,6 +44,7 @@ export function MediaManager({
     | "approved-production";
 }) {
   const storageEnabled = storageMode !== "live-disabled";
+  const mutationRef=useRef(new Set<string>());
   const modeLabel =
     storageMode === "emulator"
       ? "Emulator only"
@@ -64,6 +65,7 @@ export function MediaManager({
     [local, setLocal] = useState<Local[]>([]),
     [destination, setDestination] = useState(initialProject ?? ""),
     [busy, setBusy] = useState(false),
+    [uploadSummary, setUploadSummary] = useState({completed:0,total:0}),
     [pendingRemoval, setPendingRemoval] = useState<MediaItem | null>(null),
     [message, setMessage] = useState("");
   const visible = useMemo(
@@ -155,6 +157,7 @@ export function MediaManager({
       };
       request.onload = () => {
         if (request.status >= 200 && request.status < 300) {
+          setUploadSummary((current)=>({...current,completed:current.completed+1}));
           discard(item.id);
           resolve();
           return;
@@ -187,51 +190,53 @@ export function MediaManager({
       request.send(body);
     });
   const uploadAll = async () => {
+    if(mutationRef.current.has("upload"))return;
     const valid = local.filter((item) => !item.error && item.alt.trim());
     if (!valid.length) {
       setMessage("Add alternative text for every valid image.");
       return;
     }
-    setBusy(true);
+    mutationRef.current.add("upload");setBusy(true);
+    setUploadSummary({completed:0,total:valid.length});
     setMessage("");
-    await Promise.all(valid.map(uploadOne));
+    try{await Promise.all(valid.map(uploadOne));
     await refresh();
-    setBusy(false);
     setMessage(
       storageMode === "approved-staging"
         ? "Valid images were saved to the approved staging Firebase Storage bucket."
         : storageMode === "approved-production"
           ? "Valid images were saved to the approved production Firebase Storage bucket."
           : "Valid images were saved to the local Firebase emulators.",
-    );
+    );}catch{setMessage("The upload could not be completed. Check your connection and retry failed files.")}finally{setBusy(false);mutationRef.current.delete("upload")}
   };
   const patch = async (id: string, value: object) => {
+    if(mutationRef.current.has(id))return;
+    mutationRef.current.add(id);
     setBusy(true);
-    const response = await fetch(`/api/admin/media/${id}`, {
+    try{const response = await fetch(`/api/admin/media/${id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(value),
     });
-    setBusy(false);
     if (response.ok) {
       await refresh();
       setMessage("Media details saved.");
-    } else setMessage("Unable to save media details.");
+    } else setMessage("Unable to save media details.");}catch{setMessage("Unable to save media details. Check your connection and try again.")}finally{mutationRef.current.delete(id);setBusy(false)}
   };
   const remove = async (item: MediaItem) => {
-    setBusy(true);
-    const response = await fetch(`/api/admin/media/${item.id}`, {
+    if(mutationRef.current.has(item.id))return;
+    mutationRef.current.add(item.id);setBusy(true);
+    try{const response = await fetch(`/api/admin/media/${item.id}`, {
         method: "DELETE",
       }),
       result = await response.json().catch(() => ({}));
-    setBusy(false);
     setMessage(
       response.ok
         ? "Image removed."
         : (result.error ?? "Unable to remove image."),
     );
     setPendingRemoval(null);
-    if (response.ok) await refresh();
+    if (response.ok) await refresh();}catch{setMessage("Unable to remove image. Check your connection and try again.")}finally{mutationRef.current.delete(item.id);setBusy(false)}
   };
   return (
     <div className="space-y-5">
@@ -253,7 +258,7 @@ export function MediaManager({
           </p>
         </div>
         <button
-          disabled={!storageEnabled}
+          disabled={!storageEnabled || busy}
           onClick={() => setUpload((value) => !value)}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-wine px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
         >
@@ -292,7 +297,7 @@ export function MediaManager({
                 storage mode.
               </p>
             </div>
-            <button onClick={() => setUpload(false)} aria-label="Close upload">
+            <button disabled={busy} onClick={() => setUpload(false)} aria-label="Close upload" className="disabled:opacity-35">
               <X size={18} />
             </button>
           </div>
@@ -406,11 +411,7 @@ export function MediaManager({
                         {item.progress}%
                       </progress>
                     )}
-                    {item.error && (
-                      <p className="text-xs font-bold text-red-700">
-                        {item.error}
-                      </p>
-                    )}
+                    {item.error && <div><p className="text-xs font-bold text-red-700">{item.error}</p>{item.state==="failed"&&<button type="button" disabled={busy} onClick={()=>setLocal(current=>current.map(value=>value.id===item.id?{...value,state:"queued",error:undefined,progress:0}:value))} className="mt-2 text-xs font-bold text-wine">Retry this file</button>}</div>}
                   </div>
                   <div className="grid gap-2">
                     {!item.file.type.startsWith("video/") &&
@@ -426,6 +427,7 @@ export function MediaManager({
                       </button>
                     )}
                     <button
+                      disabled={busy}
                       onClick={() => discard(item.id)}
                       className="grid size-9 place-items-center rounded border border-black/10"
                       aria-label={`Remove ${item.file.name}`}
@@ -435,12 +437,13 @@ export function MediaManager({
                   </div>
                 </div>
               ))}
+              {busy&&uploadSummary.total>0&&<div role="status" aria-live="polite" className="rounded-md bg-wine/[.06] p-3 text-sm font-bold text-wine">Uploading media — {uploadSummary.completed} of {uploadSummary.total} files completed. Files still shown as uploading may be processing on the server.</div>}
               <button
                 disabled={busy || !local.some((item) => !item.error)}
                 onClick={uploadAll}
                 className="min-h-11 rounded bg-wine px-4 text-sm font-bold text-white disabled:opacity-40"
               >
-                {busy ? "Uploading…" : "Upload valid media"}
+                {busy ? `Uploading — ${uploadSummary.completed} of ${uploadSummary.total}` : "Upload valid media"}
               </button>
             </div>
           )}

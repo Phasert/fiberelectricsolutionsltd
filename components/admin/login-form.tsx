@@ -2,7 +2,7 @@
 
 import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { getFirebaseClient } from "@/lib/firebase/client";
 
 export function LoginForm() {
@@ -10,6 +10,7 @@ export function LoginForm() {
   const [show, setShow] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const operation = useRef(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,6 +24,8 @@ export function LoginForm() {
   }
 
   async function submit(formData: FormData) {
+    if (operation.current) return;
+    operation.current = true;
     setLoading(true); setMessage("");
     try {
       const { auth } = getFirebaseClient();
@@ -34,18 +37,19 @@ export function LoginForm() {
       router.replace("/admin"); router.refresh();
     } catch (error) {
       setMessage(error instanceof Error && error.message.includes("approved") ? error.message : "Email or password was not accepted.");
-    } finally { setLoading(false); }
+    } finally { operation.current = false; setLoading(false); }
   }
 
   async function resetPassword(formData: FormData) {
+    if (operation.current) return;
     const email = String(formData.get("email") || "").trim();
     if (!email) { setMessage("Enter your email address first."); return; }
-    setLoading(true); setMessage("");
+    operation.current = true; setLoading(true); setMessage("");
     try {
       await sendPasswordResetEmail(getFirebaseClient().auth, email);
       setMessage("If this address has an account, Firebase has sent reset instructions.");
     } catch { setMessage("Password reset is unavailable. Check the address or try again later."); }
-    finally { setLoading(false); }
+    finally { operation.current = false; setLoading(false); }
   }
 
   return <form id="admin-login-form" onSubmit={handleSubmit} className="mt-8 grid min-w-0 gap-5">
