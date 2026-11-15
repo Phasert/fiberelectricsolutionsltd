@@ -30,11 +30,13 @@ export function MediaManager({
   initialItems,
   projects,
   initialProject,
+  initialUpload = false,
   storageMode,
 }: {
   initialItems: MediaItem[];
   projects: AdminProject[];
   initialProject?: string;
+  initialUpload?: boolean;
   storageMode:
     | "emulator"
     | "live-disabled"
@@ -58,7 +60,7 @@ export function MediaManager({
     [category, setCategory] = useState<"all" | ProjectCategory>("all"),
     [mediaType, setMediaType] = useState<"all" | "image" | "video">("all"),
     [usage, setUsage] = useState<"all" | "gallery" | "slideshow" | "unused">("all"),
-    [upload, setUpload] = useState(false),
+    [upload, setUpload] = useState(initialUpload),
     [local, setLocal] = useState<Local[]>([]),
     [destination, setDestination] = useState(initialProject ?? ""),
     [busy, setBusy] = useState(false),
