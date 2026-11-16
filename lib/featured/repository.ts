@@ -32,10 +32,10 @@ export async function saveFeaturedSelection(input: unknown, actorUid: string) {
       resourceRef ? transaction.get(resourceRef) : Promise.resolve(null),
       ...tipRefs.map((tipRef) => transaction.get(tipRef)),
     ]);
-    if (!project?.exists || project.data()?.status !== "Published") throw new Error("INELIGIBLE_PROJECT");
+    if (projectRef && (!project?.exists || project.data()?.status !== "Published")) throw new Error("INELIGIBLE_PROJECT");
     if (resourceRef && (!resource?.exists || resource.data()?.status !== "Published")) throw new Error("INELIGIBLE_RESOURCE");
     if (tips.some((tip) => !tip.exists || tip.data()?.enabled !== true)) throw new Error("INELIGIBLE_TIP");
-    transaction.set(ref(), { ...value, updatedAt: FieldValue.serverTimestamp(), updatedBy: actorUid }, { merge: true });
+    transaction.set(ref(), { ...value, mediaId: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp(), updatedBy: actorUid }, { merge: true });
   });
 }
 

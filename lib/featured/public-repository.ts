@@ -63,7 +63,7 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
   return { project, resource, tips };
 }
 
-const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v1",FIREBASE_CACHE_NAMESPACE], {
+const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v2",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_HOMEPAGE_FEATURED_TAG],
   revalidate: 3600,
 });
