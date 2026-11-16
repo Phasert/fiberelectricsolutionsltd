@@ -29,18 +29,20 @@ export const aboutContent: AboutContent = {
 };
 
 export const electricalServices: Service[] = [
-  { slug: "commercial-industrial", title: "Commercial & industrial installation", description: "Electrical installation capability for commercial and industrial environments.", kind: "electrical", icon: "bolt" },
-  { slug: "data-wiring", title: "Data wiring", description: "Structured data wiring for dependable building connectivity.", kind: "electrical", icon: "network" },
-  { slug: "fire-wiring", title: "Fire wiring & devices", description: "Wiring and device installation for approved fire-system requirements.", kind: "electrical", icon: "shield" },
-  { slug: "transformers", title: "Transformer installation", description: "Professional transformer installation for approved project scopes.", kind: "electrical", icon: "transformer" },
-  { slug: "generators", title: "Generator installation", description: "Generator installation integrated with project electrical requirements.", kind: "electrical", icon: "generator" },
+  { slug: "bolt-electrical-installation", title: "All Major Types of Electrical Installation", description: "Electrical installation services for residential, commercial and industrial requirements.", kind: "electrical", icon: "bolt" },
+  { slug: "shield-electrical-maintenance", title: "Electrical Maintenance", description: "Planned and responsive maintenance to help keep electrical systems safe and dependable.", kind: "electrical", icon: "shield" },
+  { slug: "generator-installation", title: "Generator Installation", description: "Generator installation coordinated with the electrical requirements of your property or project.", kind: "electrical", icon: "generator" },
+  { slug: "generator-ups-installation", title: "UPS Installation", description: "Uninterruptible power supply installation for equipment that requires reliable backup power.", kind: "electrical", icon: "generator" },
+  { slug: "transformer-installation", title: "Transformer Installation", description: "Professional transformer installation for approved electrical project scopes.", kind: "electrical", icon: "transformer" },
+  { slug: "consult-electrical-design", title: "Electrical Design & Consultation", description: "Practical electrical design and consultation shaped around your site and project requirements.", kind: "electrical", icon: "consult" },
 ];
 
 export const fiberServices: Service[] = [
-  { slug: "fiber-installation", title: "Fiber cable installation", description: "Planned fiber cable installation for reliable infrastructure.", kind: "fiber", icon: "cable" },
-  { slug: "fiber-splicing", title: "Fiber splicing", description: "Careful joining and termination of fiber-optic connections.", kind: "fiber", icon: "splice" },
-  { slug: "fiber-testing", title: "Fiber testing", description: "Testing to assess connection performance and installation quality.", kind: "fiber", icon: "test" },
-  { slug: "fiber-consulting", title: "Fiber consulting", description: "Technical guidance for planning and delivering fiber projects.", kind: "fiber", icon: "consult" },
+  { slug: "cable-fiber-optic-installation", title: "All Types of Fiber Optic Installation", description: "Fiber optic installation services for building, campus and outside plant requirements.", kind: "fiber", icon: "cable" },
+  { slug: "consult-fiber-optic-design", title: "Fiber Optic Design", description: "Fiber optic network design planned around capacity, routing and site requirements.", kind: "fiber", icon: "consult" },
+  { slug: "splice-fiber-optic-termination", title: "Fiber Optic Termination", description: "Careful preparation and termination of fiber optic connections for dependable performance.", kind: "fiber", icon: "splice" },
+  { slug: "test-fiber-optic-testing", title: "Fiber Optic Testing", description: "Testing to verify connection performance and the quality of the completed installation.", kind: "fiber", icon: "test" },
+  { slug: "network-outside-plant-fiber-installation", title: "Outside Plant Fiber Installation", description: "Outside plant fiber installation for reliable connectivity across external routes and sites.", kind: "fiber", icon: "network" },
 ];
 
 export const projects: Project[] = [

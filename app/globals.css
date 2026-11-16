@@ -23,6 +23,41 @@ a { text-underline-offset: .2em; }
 button, a, input, textarea, select { outline-offset: 3px; }
 :focus-visible { outline: 2px solid #a91b3c; }
 
+/* Keep every single-choice dropdown visually consistent across the public site
+   and admin. The native select semantics remain intact for keyboard, touch and
+   assistive-technology users; only the browser's mismatched chrome is replaced. */
+select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 2.75rem !important;
+  color: #141315;
+  background-color: white;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #7d1028 50%),
+    linear-gradient(135deg, #7d1028 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) calc(50% - .1rem),
+    calc(100% - .85rem) calc(50% - .1rem);
+  background-size: .32rem .32rem, .32rem .32rem;
+  background-repeat: no-repeat;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+select:not([multiple]):hover { border-color: rgb(125 16 40 / .5); }
+select:not([multiple]):focus-visible {
+  border-color: #7d1028;
+  box-shadow: 0 0 0 3px rgb(125 16 40 / .12);
+}
+select:not([multiple]):disabled {
+  cursor: not-allowed;
+  color: rgb(20 19 21 / .45);
+  background-color: #eeeae6;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgb(20 19 21 / .35) 50%),
+    linear-gradient(135deg, rgb(20 19 21 / .35) 50%, transparent 50%);
+}
+select:not([multiple]) option { background: white; color: #141315; }
+
 .shell { width: min(100% - 2rem, 76rem); margin-inline: auto; }
 .eyebrow { display: flex; align-items: center; gap: .65rem; color: #8f1833; font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .eyebrow::before { content: ""; width: 1.9rem; height: 2px; background: currentColor; }

@@ -6,6 +6,7 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
 import { aboutContentSchema, ctaContentSchema, homepageContentSchema, servicePageContentSchema, sectionSchema, type SiteContentSection } from "@/lib/site-content/schemas";
 import { PUBLIC_SERVICES_TAG, PUBLIC_SITE_CONTENT_TAG } from "@/lib/site-content/public-cache";
+import { defaultServices } from "@/lib/site-content/defaults";
 import {getPublicMediaDetails}from"@/lib/media/public-repository";
 import type { PublicAboutContent, PublicCta, PublicHomepageContent, PublicService, PublicServicePageContent, ServiceKind } from "@/types/content";
 
@@ -36,6 +37,13 @@ const storedServiceSchema = z.object({
 export async function listPublicServicesUncached(categoryValue: string): Promise<PublicService[]> {
   const category = z.enum(["electrical", "fiber"]).parse(categoryValue);
   const snapshot = await getAdminFirestore().collection("services").where("category", "==", category).get();
+  if (snapshot.empty) {
+    return defaultServices
+      .filter(service => service.category === category && service.status === "Published" && service.enabled)
+      .map(({ id, category, slug, title, shortDescription, detailedDescription, displayOrder }) => ({
+        id, category, slug, title, shortDescription, detailedDescription, displayOrder,
+      }));
+  }
   return snapshot.docs.flatMap(document => {
     const parsed = storedServiceSchema.safeParse(document.data());
     if (!parsed.success || containsFixtureLabel(parsed.data.published)) return [];
