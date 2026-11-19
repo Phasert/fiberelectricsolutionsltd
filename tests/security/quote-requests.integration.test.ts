@@ -5,7 +5,7 @@ import {POST} from "../../app/api/quote-requests/route";
 
 const origin="http://localhost:3000";
 const source=(suffix:string=randomUUID())=>({"content-type":"application/json",origin,"user-agent":`phase-d3-test/${suffix}`,"x-forwarded-for":`192.0.2.${Math.floor(Math.random()*200)+1}`});
-const quote=(overrides:Record<string,unknown>={})=>({schemaVersion:1,submissionKey:randomUUID(),name:"Phase D3 Test Customer",email:"customer@example.test",phone:"",preferredContact:"Email",service:"Electrical",selectedServiceIds:["data-wiring"],location:"Emulator Test Site",propertyType:"Commercial",description:"A clearly labelled emulator-only quote request used for automated verification.",preferredTimeframe:"Next month",consentAcknowledged:true,attachments:[],...overrides});
+const quote=(overrides:Record<string,unknown>={})=>({schemaVersion:1,submissionKey:randomUUID(),name:"Phase D3 Test Customer",email:"customer@example.test",phone:"",preferredContact:"Email",service:"Electrical",selectedServiceIds:["bolt-electrical-installation"],location:"Emulator Test Site",propertyType:"Commercial",description:"A clearly labelled emulator-only quote request used for automated verification.",preferredTimeframe:"Next month",consentAcknowledged:true,attachments:[],...overrides});
 const request=(body:unknown,headers:Record<string,string>=source())=>POST(new Request(`${origin}/api/quote-requests`,{method:"POST",headers,body:JSON.stringify(body)}));
 const transport=(value=quote(),extra:Record<string,unknown>={})=>({startedAt:Date.now()-3_000,companyWebsite:"",quote:value,...extra});
 
@@ -47,7 +47,7 @@ describe("Phase D3 quote submissions",()=>{
 
   it("rejects invalid fields, mismatched services and customer attachments",async()=>{
     expect((await request(transport(quote({name:"x"})))).status).toBe(400);
-    expect((await request(transport(quote({service:"Electrical",selectedServiceIds:["fiber-testing"]})))).status).toBe(400);
+    expect((await request(transport(quote({service:"Electrical",selectedServiceIds:["test-fiber-optic-testing"]})))).status).toBe(400);
     expect((await request(transport(quote({attachments:["not-allowed"]})))).status).toBe(400);
   });
 

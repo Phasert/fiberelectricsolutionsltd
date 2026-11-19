@@ -133,14 +133,25 @@ The following live gates remain false until separately approved:
 
 The approved quote policy values are privacy approval true, consent version privacy-notice-2026-10-20-v1 and retention 365 days. The server-only abuse-hash secret must be generated securely, contain at least 32 unpredictable characters, and be stored only in the deployment secret manager. Firebase private keys, service-account files, passwords and tokens must never enter Git, browser variables, public settings, screenshots or support logs.
 
+Production quote submission was approved for project `fesproject-45db0` and bucket `fesproject-45db0.firebasestorage.app`. Configure these values together in the production deployment before enabling the gate:
+
+```text
+QUOTE_LIVE_ENVIRONMENT=production
+QUOTE_ALLOWED_PROJECT_ID=fesproject-45db0
+QUOTE_ALLOWED_BUCKET=fesproject-45db0.firebasestorage.app
+QUOTE_SUBMISSIONS_LIVE_ENABLED=true
+```
+
+The runtime also requires `FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` and `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` to identify that same production target, plus the approved privacy, consent, retention and abuse-hash settings. Photo submissions additionally require both photo gates. A missing or mismatched environment, project or bucket keeps submissions disabled. Configure the complete environment atomically and redeploy; changing a developer's local `.env.local` does not change the hosted site.
+
 ## Production configuration readiness matrix
 
 | Area | Verified/configured | Missing or approval-gated before production |
 |---|---|---|
-| Firebase target | Production is confirmed as project `fesproject-45db0` with bucket `fesproject-45db0.firebasestorage.app`: the deployed browser bundle targets that project and the credentialed read-only preflight returned that bucket's metadata. Staging `fesr-c3ae1` remains separately registered. Client and Admin SDK target guards fail closed. | Production writes remain approval-gated. Keep `EDITORIAL_MEDIA_LIVE_ENABLED=false` until a separately approved upload window; never use the staging environment selector with production identifiers. |
+| Firebase target | Production is confirmed and quote submissions are owner-approved for project `fesproject-45db0` with bucket `fesproject-45db0.firebasestorage.app`. Staging `fesr-c3ae1` remains separately registered. Client and Admin SDK target guards fail closed. | Deploy the approved release with all production quote target and policy values set atomically. Keep `EDITORIAL_MEDIA_LIVE_ENABLED=false` until a separately approved upload window; never use the staging environment selector with production identifiers. |
 | Authentication | Approved-admin checks, recent-login requirement, 12-hour revocation-aware sessions and logout revocation are implemented. | Rotate the disclosed credential, review sessions, approve the administrator roster and onboarding/offboarding owner. |
 | Firestore/Storage Rules | Repository rules deny all browser Firestore reads/writes and all browser Storage access; server routes use Admin SDK authorization. Emulator tests pass. | Compare deployed Rules versions with reviewed repository rules; deployment requires explicit authorization. Review IAM/ACL inheritance separately. |
-| Environment/secrets | `.env.example` separates public Firebase identifiers from server-only credentials. Live gates fail closed and staging target guards are implemented. | Configure production secrets in the host secret manager, create a production abuse-hash secret, approve gate values and complete a redacted four-eyes environment review. |
+| Environment/secrets | `.env.example` separates public Firebase identifiers from server-only credentials. Quote guards register exact staging and production targets and fail closed on any mismatch. | Configure production secrets in the host secret manager, create a production abuse-hash secret and complete a redacted four-eyes environment review before deployment. |
 | Uploads/private delivery | File count/size/pixel/type validation, metadata stripping, private quote namespace and authenticated no-store delivery exist. | Approve live quotas, monitoring, recovery, retention/deletion ownership and the exact public editorial-delivery model. |
 | Retention | Every enquiry receives a 365-day deadline. The helper removes scoped private photographs and notes; legal holds are excluded. | Approve dry-run/deletion authority, durable audit evidence, backup/restore target and RPO/RTO. Automatic cleanup remains disabled. |
 | Monitoring/incidents | Failure modes and incident checklist are documented. | Name primary/backup recipients, thresholds, channels, response times and authority to disable gates or roll back. Configure/test alerts only with explicit authorization. |
