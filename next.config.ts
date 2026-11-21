@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
   experimental: {
     agentUpgrade: "security",
   },
+  outputFileTracingIncludes: {
+    "/api/contact": ["./public/images/fes-logo-email.png"],
+    "/api/quote-requests": ["./public/images/fes-logo-email.png"],
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
