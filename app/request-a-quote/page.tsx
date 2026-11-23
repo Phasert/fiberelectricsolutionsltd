@@ -3,7 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { QuoteForm } from "@/components/forms/quote-form";
 import { electricalServices, fiberServices } from "@/data/content";
 import { getPublicBusinessSettings } from "@/lib/settings/public-repository";
-import { getQuoteSubmissionConfig } from "@/lib/quotes/config";
+import { quoteSubmissionsAreEnabled } from "@/lib/quotes/config";
 import { siteUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default async function QuotePage({searchParams}:{searchParams:Promise<{se
   const initialService=service==="Electrical"||service==="Fiber Optic"?service:undefined;
   const services=[...electricalServices,...fiberServices].map(({slug,title,kind})=>({id:slug,title,category:kind}));
   const settings=await getPublicBusinessSettings();
-  const submissionsEnabled=getQuoteSubmissionConfig().mode!=="live-disabled";
+  const submissionsEnabled=quoteSubmissionsAreEnabled();
 
   return <>
     <section className="grain relative overflow-hidden bg-ink text-white">

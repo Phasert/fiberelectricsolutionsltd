@@ -38,3 +38,15 @@ export function requireQuoteSubmissionsEnabled() {
   if (config.mode === "live-disabled") throw new Error("LIVE_QUOTE_SUBMISSIONS_NOT_APPROVED");
   return config;
 }
+
+export function quoteSubmissionsAreEnabled() {
+  try {
+    return getQuoteSubmissionConfig().mode !== "live-disabled";
+  } catch {
+    // The submission API remains fail-closed through getQuoteSubmissionConfig.
+    // Public pages should still render when deployment approval settings are
+    // incomplete so visitors can review the form and retry after configuration
+    // is corrected.
+    return false;
+  }
+}
