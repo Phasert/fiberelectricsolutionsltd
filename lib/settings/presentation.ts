@@ -2,7 +2,7 @@ import type { PublicBusinessHour } from "@/types/content";
 
 export const DEFAULT_PUBLIC_SEO = {
   title: "Fiber & Electric Solutions Ltd.",
-  description: "Professional electrical and fiber optic solutions in Trinidad & Tobago.",
+  description: "Professional electrical and fibre optic solutions in Trinidad & Tobago.",
 };
 
 export function formatBusinessTime(value: string) {

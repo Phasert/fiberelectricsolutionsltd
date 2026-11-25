@@ -1,5 +1,6 @@
 import "server-only";
 
+import { formatFibreText } from "@/lib/site-content/spelling";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
@@ -57,13 +58,13 @@ export async function getPublicHomepageFeaturedUncached(): Promise<PublicFeature
     if (!document.exists) return [];
     const parsed = tipSchema.safeParse(document.data());
     if (!parsed.success || isClearlyLabelledFixture(parsed.data.title, parsed.data.body)) return [];
-    return [{ id: document.id, type: parsed.data.type === "Do" ? "do" as const : "dont" as const, title: parsed.data.title, body: parsed.data.body, category: parsed.data.category, ...(parsed.data.imageMediaId ? { image: `/media/${parsed.data.imageMediaId}/md` } : {}) }];
+    return [{ id: document.id, type: parsed.data.type === "Do" ? "do" as const : "dont" as const, title: formatFibreText(parsed.data.title), body: formatFibreText(parsed.data.body), category: parsed.data.category, ...(parsed.data.imageMediaId ? { image: `/media/${parsed.data.imageMediaId}/md` } : {}) }];
   });
 
   return { project, resource, tips };
 }
 
-const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v2",FIREBASE_CACHE_NAMESPACE], {
+const getCached = unstable_cache(getPublicHomepageFeaturedUncached, ["public-homepage-featured-v3",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_HOMEPAGE_FEATURED_TAG],
   revalidate: 3600,
 });

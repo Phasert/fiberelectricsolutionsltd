@@ -1,4 +1,5 @@
 "use client";
+import { formatFibreText } from "@/lib/site-content/spelling";
 /* eslint-disable @next/next/no-img-element -- authenticated private images cannot use the server-side Next optimizer */
 
 import Link from "next/link";
@@ -55,7 +56,7 @@ export function EnquiryDetail({ item }: { item: Enquiry }) {
           </div>}
         </Section>
         <Section title="Job information">
-          <div className="grid sm:grid-cols-2"><Row label="Requested service" value={item.service}/><Row label="Specific services" value={formatQuoteServices(item.selectedServiceIds)}/><Row label="Property type" value={item.propertyType}/><Row label="General location" value={item.location}/><Row label="Submitted" value={item.submittedAt}/><Row label="Enquiry reference" value={item.id}/></div>
+          <div className="grid sm:grid-cols-2"><Row label="Requested service" value={formatFibreText(item.service)}/><Row label="Specific services" value={formatQuoteServices(item.selectedServiceIds)}/><Row label="Property type" value={item.propertyType}/><Row label="General location" value={item.location}/><Row label="Submitted" value={item.submittedAt}/><Row label="Enquiry reference" value={item.id}/></div>
           <div className="mt-5 rounded-md bg-paper p-4 sm:p-5"><p className="text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40">Work description</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/75">{item.description}</p></div>
           {item.additionalNotes&&<div className="mt-3 rounded-md border border-black/[.07] p-4 sm:p-5"><p className="text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40">Customer notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/75">{item.additionalNotes}</p></div>}
         </Section>

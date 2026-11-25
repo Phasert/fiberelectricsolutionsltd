@@ -483,7 +483,7 @@ export function MediaManager({
         >
           <option value="all">All categories</option>
           <option>Electrical</option>
-          <option>Fiber</option>
+          <option value="Fiber">Fibre Optic</option>
           <option>Combined</option>
         </select>
         <select aria-label="Media type filter" value={mediaType} onChange={(event)=>setMediaType(event.target.value as typeof mediaType)} className={field}>

@@ -1,4 +1,5 @@
 import "server-only";
+import { formatFibreText } from "@/lib/site-content/spelling";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { Timestamp } from "firebase-admin/firestore";
@@ -53,11 +54,11 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   if (!parsed.success) return null;
   const project = parsed.data;
   const placeholder = projectPlaceholder(project.category);
-  const publicTitle = project.title;
+  const publicTitle = formatFibreText(project.title);
   const mediaDetails=await getPublicMediaDetails(project.gallery.map(item=>item.mediaId),"lg");
   const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: item.alt }));
+    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: formatFibreText(item.alt) }));
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
 
   return {
@@ -65,9 +66,9 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
     slug: project.slug,
     title: publicTitle,
     category: project.category,
-    summary: project.summary,
+    summary: formatFibreText(project.summary),
     featuredImage: (mediaDetails.get(cover?.mediaId??"")?.type==="image"?await getPublicMediaUrl(cover?.mediaId,"md"):mediaDetails.get(cover?.mediaId??"")?.poster) ?? placeholder,
-    featuredImageAlt: cover?.alt || `${publicTitle} image`,
+    featuredImageAlt: (cover && formatFibreText(cover.alt)) || `${publicTitle} image`,
     gallery,
     featured: project.featured,
     ...(toIsoDate(project.publishedAt) ? { publishedAt: toIsoDate(project.publishedAt) } : {}),
@@ -109,12 +110,11 @@ export async function getPublicProjectBySlugUncached(slug: string): Promise<Publ
   return project?.slug === slug ? project : null;
 }
 
-// v2 cold-starts the managed project read path after the Tommy's Brentwood cutover.
-const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v2",FIREBASE_CACHE_NAMESPACE], {
+const listCached = unstable_cache(listPublicProjectsUncached, ["public-projects-list-v3",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });
-const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v2",FIREBASE_CACHE_NAMESPACE], {
+const getBySlugCached = unstable_cache(getPublicProjectBySlugUncached, ["public-project-by-slug-v3",FIREBASE_CACHE_NAMESPACE], {
   tags: [PUBLIC_PROJECTS_TAG],
   revalidate: 3600,
 });

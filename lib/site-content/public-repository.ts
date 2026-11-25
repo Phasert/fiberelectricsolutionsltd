@@ -1,4 +1,5 @@
 import "server-only";
+import { formatFibreText } from "@/lib/site-content/spelling";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
@@ -21,12 +22,12 @@ export async function getPublicSiteContentUncached(sectionValue: string): Promis
   const document = await getAdminFirestore().collection("siteContent").doc(`${section}-v1`).get();
   const stored = storedPageSchema.safeParse(document.data());
   if (!stored.success || stored.data.section !== section || containsFixtureLabel(stored.data.published)) return null;
-  if (section === "homepage") { const parsed=homepageContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{heroImageId,...content}=parsed.data,image=heroImageId?(await getPublicMediaDetails([heroImageId],"lg")).get(heroImageId):null,slideMedia=await getPublicMediaDetails(content.heroSlides.map(slide=>slide.imageId).filter(Boolean),"lg");return{...content,heroSlides:content.heroSlides.map(slide=>{const selected=slideMedia.get(slide.imageId);return{...slide,...(selected?.type==="image"?{imageSrc:selected.src,imageAlt:selected.alt}:{})}}),...(image?.type==="image"?{heroImageSrc:image.src,heroImageAlt:image.alt}:{})}; }
+  if (section === "homepage") { const parsed=homepageContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{heroImageId,...content}=parsed.data,image=heroImageId?(await getPublicMediaDetails([heroImageId],"lg")).get(heroImageId):null,slideMedia=await getPublicMediaDetails(content.heroSlides.map(slide=>slide.imageId).filter(Boolean),"lg");return{...content,heroSlides:content.heroSlides.map(slide=>{const selected=slideMedia.get(slide.imageId);return{...slide,...(selected?.type==="image"?{imageSrc:selected.src,imageAlt:formatFibreText(selected.alt)}:{})}}),...(image?.type==="image"?{heroImageSrc:image.src,heroImageAlt:formatFibreText(image.alt)}:{})}; }
   if (section === "electrical" || section === "fiber") { const parsed=servicePageContentSchema.safeParse(stored.data.published); if (!parsed.success) return null;
     const { heroImageId, ...content } = parsed.data;
     const image = heroImageId ? (await getPublicMediaDetails([heroImageId], "lg")).get(heroImageId) : undefined;
-    return image?.type === "image" ? { ...content, heroImageSrc: image.src, heroImageAlt: image.alt } : content; }
-  if (section === "about") { const parsed=aboutContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{imageId,...content}=parsed.data,image=imageId?(await getPublicMediaDetails([imageId],"lg")).get(imageId):null;return{...content,...(image?.type==="image"?{imageSrc:image.src,imageAlt:image.alt}:{})}; }
+    return image?.type === "image" ? { ...content, heroImageSrc: image.src, heroImageAlt: formatFibreText(image.alt) } : content; }
+  if (section === "about") { const parsed=aboutContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{imageId,...content}=parsed.data,image=imageId?(await getPublicMediaDetails([imageId],"lg")).get(imageId):null;return{...content,...(image?.type==="image"?{imageSrc:image.src,imageAlt:formatFibreText(image.alt)}:{})}; }
   return null;
 }
 
@@ -50,11 +51,11 @@ export async function listPublicServicesUncached(categoryValue: string): Promise
     const parsed = storedServiceSchema.safeParse(document.data());
     if (!parsed.success || containsFixtureLabel(parsed.data.published)) return [];
     const { title, shortDescription, detailedDescription, displayOrder } = parsed.data.published;
-    return [{ id: document.id, category: parsed.data.category as ServiceKind, slug: parsed.data.slug, title, shortDescription, detailedDescription, displayOrder }];
+    return [{ id: document.id, category: parsed.data.category as ServiceKind, slug: parsed.data.slug, title: formatFibreText(title), shortDescription: formatFibreText(shortDescription), detailedDescription: formatFibreText(detailedDescription), displayOrder }];
   }).toSorted((left, right) => left.displayOrder - right.displayOrder || left.title.localeCompare(right.title));
 }
 
-const getPageCached = unstable_cache(getPublicSiteContentUncached, ["public-site-content-v1",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SITE_CONTENT_TAG], revalidate: 3600 });
-const listServicesCached = unstable_cache(listPublicServicesUncached, ["public-services-v1",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SERVICES_TAG], revalidate: 3600 });
+const getPageCached = unstable_cache(getPublicSiteContentUncached, ["public-site-content-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SITE_CONTENT_TAG], revalidate: 3600 });
+const listServicesCached = unstable_cache(listPublicServicesUncached, ["public-services-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_SERVICES_TAG], revalidate: 3600 });
 export const getPublicSiteContent = cache((section: SiteContentSection) => getPageCached(section));
 export const listPublicServices = cache((category: ServiceKind) => listServicesCached(category));

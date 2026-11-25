@@ -1,5 +1,6 @@
 "use client";
 
+import { formatFibreText } from "@/lib/site-content/spelling";
 import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -39,7 +40,7 @@ export function EnquiryList({ items,nextCursor }: { items: Enquiry[];nextCursor?
         <div className="hidden grid-cols-[minmax(12rem,1.3fr)_.7fr_.8fr_.65fr_auto] gap-4 border-b border-black/[.07] bg-paper/65 px-5 py-3 text-[.65rem] font-black uppercase tracking-[.12em] text-ink/40 md:grid"><span>Customer</span><span>Service</span><span>Submitted</span><span>Status</span><span>Action</span></div>
         {visible.map(item => <article key={item.id} className="grid gap-4 border-b border-black/[.07] p-4 last:border-0 md:grid-cols-[minmax(12rem,1.3fr)_.7fr_.8fr_.65fr_auto] md:items-center md:px-5">
           <div className="min-w-0"><p className="truncate font-bold text-ink">{item.name}</p><p className="mt-1 truncate text-xs text-ink/45">{item.email ?? item.contact ?? "No contact information"}</p><p className="mt-1 text-[.65rem] font-bold uppercase tracking-wider text-ink/35">{item.id}</p></div>
-          <Field label="Service">{item.service}</Field><Field label="Submitted">{item.submittedAt}</Field><div><span className="mb-1.5 block text-[.62rem] font-black uppercase tracking-wider text-ink/35 md:hidden">Status</span><StatusBadge tone={tone(item.status)}>{item.status}</StatusBadge></div>
+          <Field label="Service">{formatFibreText(item.service)}</Field><Field label="Submitted">{item.submittedAt}</Field><div><span className="mb-1.5 block text-[.62rem] font-black uppercase tracking-wider text-ink/35 md:hidden">Status</span><StatusBadge tone={tone(item.status)}>{item.status}</StatusBadge></div>
           <Link href={`/admin/enquiries/${item.id}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-wine/20 px-3 text-xs font-bold text-wine transition-colors hover:bg-wine hover:text-white">View details <ArrowRight size={14}/></Link>
         </article>)}
         {nextCursor&&<nav aria-label="Enquiry pages" className="flex justify-end border-t border-black/[.07] p-4"><Link href={`/admin/enquiries?after=${encodeURIComponent(nextCursor)}`} className="inline-flex min-h-10 items-center rounded-md border border-black/10 px-4 text-sm font-bold">Next 25 enquiries</Link></nav>}

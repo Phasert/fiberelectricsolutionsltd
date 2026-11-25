@@ -1,4 +1,5 @@
 import "server-only";
+import { formatFibreText } from "@/lib/site-content/spelling";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { Timestamp } from "firebase-admin/firestore";
@@ -54,12 +55,20 @@ function safeExternalUrl(value: string) {
   }
 }
 
+function formatArticleContent(node: PublicRichTextNode): PublicRichTextNode {
+  return {
+    ...node,
+    ...(node.text === undefined ? {} : { text: formatFibreText(node.text) }),
+    ...(node.content ? { content: node.content.map(formatArticleContent) } : {}),
+  };
+}
+
 function wordCount(node: PublicRichTextNode): number {
   return (node.text?.trim().split(/\s+/).filter(Boolean).length ?? 0) + (node.content?.reduce((total, child) => total + wordCount(child), 0) ?? 0);
 }
 
 function isClearlyLabelledStagingFixture(resource: z.infer<typeof storedResourceSchema>) {
-  const label = `${resource.title} ${resource.summary} ${resource.source}`;
+  const label = `${formatFibreText(resource.title)} ${resource.summary} ${resource.source}`;
   return /\bphase\s+[a-z]\d+\b|\bstaging[- ]only\b|\bemulator\b|\bbrowser\s+(?:test|verification|resource)\b/i.test(label);
 }
 
@@ -74,13 +83,13 @@ async function normalize(id: string, raw: unknown): Promise<PublicArticle | Publ
     if (!url || !resource.source) return null;
     return {
       id,
-      title: resource.title,
+      title: formatFibreText(resource.title),
       source: resource.source,
       url,
-      summary: resource.summary,
+      summary: formatFibreText(resource.summary),
       category: resource.category,
       ...(publishedAt ? { publishedAt } : {}),
-      ...(mediaCover ? { featuredImage: mediaCover, featuredImageAlt: `${resource.title} resource cover` } : {}),
+      ...(mediaCover ? { featuredImage: mediaCover, featuredImageAlt: `${formatFibreText(resource.title)} resource cover` } : {}),
     };
   }
   const content = sanitizeRichText(resource.content) as PublicRichTextNode | undefined;
@@ -89,16 +98,16 @@ async function normalize(id: string, raw: unknown): Promise<PublicArticle | Publ
   return {
     id,
     slug: resource.slug,
-    title: resource.title,
+    title: formatFibreText(resource.title),
     kind: resource.kind,
     category: resource.category,
-    summary: resource.summary,
+    summary: formatFibreText(resource.summary),
     ...(publishedAt ? { publishedAt } : {}),
     featured: resource.featured,
     featuredImage,
-    featuredImageAlt: `${resource.title} article illustration`,
+    featuredImageAlt: `${formatFibreText(resource.title)} article illustration`,
     readingTime: `${Math.max(1, Math.ceil(wordCount(content) / 220))} min read`,
-    content,
+    content: formatArticleContent(content),
   };
 }
 
@@ -129,8 +138,8 @@ export async function getPublicArticleBySlugUncached(slug: string): Promise<Publ
   return resource && "slug" in resource && resource.slug === slug ? resource : null;
 }
 
-const listCached = unstable_cache(listPublicResourcesUncached, ["public-resources-list-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
-const getArticleCached = unstable_cache(getPublicArticleBySlugUncached, ["public-article-by-slug-v2",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
+const listCached = unstable_cache(listPublicResourcesUncached, ["public-resources-list-v3",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
+const getArticleCached = unstable_cache(getPublicArticleBySlugUncached, ["public-article-by-slug-v3",FIREBASE_CACHE_NAMESPACE], { tags: [PUBLIC_RESOURCES_TAG], revalidate: 3600 });
 
 export const listPublicResources = cache(listCached);
 export const getPublicArticleBySlug = cache(getArticleCached);

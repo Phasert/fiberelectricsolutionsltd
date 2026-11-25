@@ -76,14 +76,6 @@ select:not([multiple]) option { background: white; color: #141315; }
 .link-arrow { display: inline-flex; align-items: center; gap: .5rem; color: #7d1028; font-size: .875rem; font-weight: 800; }
 .resource-card { overflow: hidden; border: 1px solid rgb(20 19 21 / .09); background: #f4f1ed; transition: transform .35s ease, box-shadow .35s ease; }
 .resource-card:hover { transform: translateY(-5px); box-shadow: 0 24px 60px rgb(20 19 21 / .12); }
-.resource-art { position: relative; display: grid; aspect-ratio: 16 / 9; place-items: center; overflow: hidden; background-color: #191719; }
-.resource-art::before, .resource-art::after { content: ""; position: absolute; border: 1px solid rgb(255 255 255 / .18); }
-.resource-art::before { inset: 18%; transform: rotate(12deg); }
-.resource-art::after { inset: 30%; border-color: rgb(219 130 152 / .65); transform: rotate(-18deg); }
-.resource-art span { position: relative; z-index: 1; color: rgb(255 255 255 / .35); font-family: "Palatino Linotype", Georgia, serif; font-size: 3rem; }
-.resource-art-1 { background-image: radial-gradient(circle at 25% 30%, #7d1028, transparent 34%); }
-.resource-art-2 { background-image: linear-gradient(125deg, #151415 55%, #7d1028 55% 58%, #291820 58%); }
-.resource-art-3 { background-image: radial-gradient(circle at 70% 40%, #7d1028 0 3%, transparent 3% 10%, #7d1028 10% 11%, transparent 11%); }
 .resource-prose { color: rgb(20 19 21 / .72); font-size: 1.075rem; line-height: 1.85; }
 .resource-prose section + section { margin-top: 3rem; }
 .resource-prose h2 { margin-bottom: 1.25rem; color: #141315; font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif; font-size: clamp(2rem, 4vw, 2.7rem); letter-spacing: -.035em; line-height: 1.05; }

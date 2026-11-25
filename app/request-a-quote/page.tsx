@@ -7,8 +7,8 @@ import { quoteSubmissionsAreEnabled } from "@/lib/quotes/config";
 import { siteUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Request an Electrical or Fiber Optic Quote",
-  description: "Request a quote from FES for electrical or fiber optic work in Trinidad & Tobago.",
+  title: "Request an Electrical or Fibre Optic Quote",
+  description: "Request a quote from FES for electrical or fibre optic work in Trinidad & Tobago.",
   alternates: { canonical: `${siteUrl}/request-a-quote` },
 };
 

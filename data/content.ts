@@ -4,16 +4,16 @@ export const aboutContent: AboutContent = {
   hero: {
     eyebrow: "About FES · Trinidad & Tobago",
     title: "Powering the work. Connecting what matters.",
-    description: "Fiber & Electric Solutions Ltd. provides electrical and fiber-optic services for commercial and industrial requirements across Trinidad and Tobago.",
+    description: "Fiber & Electric Solutions Ltd. provides electrical and fibre-optic services for commercial and industrial requirements across Trinidad and Tobago.",
     image: "/images/hero-infrastructure.svg",
-    imageAlt: "Technical illustration of electrical distribution and fiber-optic infrastructure",
+    imageAlt: "Technical illustration of electrical distribution and fibre-optic infrastructure",
   },
   introduction: {
     eyebrow: "Who we are",
     title: "Two essential disciplines. One focused team.",
     paragraphs: [
       "Fiber & Electric Solutions Ltd. supports the infrastructure that keeps businesses powered and connected.",
-      "Our capabilities span commercial and industrial electrical work alongside fiber-optic installation, splicing, testing and consulting. Every conversation starts with the requirement, so customers can find the right service and share the details needed to move forward.",
+      "Our capabilities span commercial and industrial electrical work alongside fibre-optic installation, splicing, testing and consulting. Every conversation starts with the requirement, so customers can find the right service and share the details needed to move forward.",
     ],
   },
   capabilities: {
@@ -24,7 +24,7 @@ export const aboutContent: AboutContent = {
   closing: {
     eyebrow: "Start a conversation",
     title: "Let’s discuss what your site needs.",
-    description: "Share your electrical or fiber-optic requirements with FES through the existing quote request form.",
+    description: "Share your electrical or fibre-optic requirements with FES through the existing quote request form.",
   },
 };
 
@@ -38,11 +38,11 @@ export const electricalServices: Service[] = [
 ];
 
 export const fiberServices: Service[] = [
-  { slug: "cable-fiber-optic-installation", title: "All Types of Fiber Optic Installation", description: "Fiber optic installation services for building, campus and outside plant requirements.", kind: "fiber", icon: "cable" },
-  { slug: "consult-fiber-optic-design", title: "Fiber Optic Design", description: "Fiber optic network design planned around capacity, routing and site requirements.", kind: "fiber", icon: "consult" },
-  { slug: "splice-fiber-optic-termination", title: "Fiber Optic Termination", description: "Careful preparation and termination of fiber optic connections for dependable performance.", kind: "fiber", icon: "splice" },
-  { slug: "test-fiber-optic-testing", title: "Fiber Optic Testing", description: "Testing to verify connection performance and the quality of the completed installation.", kind: "fiber", icon: "test" },
-  { slug: "network-outside-plant-fiber-installation", title: "Outside Plant Fiber Installation", description: "Outside plant fiber installation for reliable connectivity across external routes and sites.", kind: "fiber", icon: "network" },
+  { slug: "cable-fiber-optic-installation", title: "All Types of Fibre Optic Installation", description: "Fibre optic installation services for building, campus and outside plant requirements.", kind: "fiber", icon: "cable" },
+  { slug: "consult-fiber-optic-design", title: "Fibre Optic Design", description: "Fibre optic network design planned around capacity, routing and site requirements.", kind: "fiber", icon: "consult" },
+  { slug: "splice-fiber-optic-termination", title: "Fibre Optic Termination", description: "Careful preparation and termination of fibre optic connections for dependable performance.", kind: "fiber", icon: "splice" },
+  { slug: "test-fiber-optic-testing", title: "Fibre Optic Testing", description: "Testing to verify connection performance and the quality of the completed installation.", kind: "fiber", icon: "test" },
+  { slug: "network-outside-plant-fiber-installation", title: "Outside Plant Fibre Installation", description: "Outside plant fibre installation for reliable connectivity across external routes and sites.", kind: "fiber", icon: "network" },
 ];
 
 export const projects: Project[] = [
@@ -59,27 +59,27 @@ export const projects: Project[] = [
     ], featured: true, status: "approved", publicationStatus: "Published", demo: true,
   },
   {
-    id: "demo-fiber-01", slug: "demo-fiber-backbone-installation", title: "Fiber Backbone Installation", category: "Fiber",
-    summary: "Sample portfolio entry demonstrating a fiber optic installation story with gallery and scope details.",
-    description: "This demonstration project shows how a fiber optic case study can introduce the requirement, supporting context and approved work activities.\nThe content and illustrations are examples only and do not represent completed FES work.",
-    scope: ["Fiber cable installation", "Fiber splicing", "Connection testing", "Installation documentation"],
-    location: "Trinidad & Tobago", period: "Demo period", featuredImage: "/images/project-fiber.svg", featuredImageAlt: "Demo illustration representing fiber optic infrastructure",
+    id: "demo-fiber-01", slug: "demo-fiber-backbone-installation", title: "Fibre Backbone Installation", category: "Fiber",
+    summary: "Sample portfolio entry demonstrating a fibre optic installation story with gallery and scope details.",
+    description: "This demonstration project shows how a fibre optic case study can introduce the requirement, supporting context and approved work activities.\nThe content and illustrations are examples only and do not represent completed FES work.",
+    scope: ["Fibre cable installation", "Fibre splicing", "Connection testing", "Installation documentation"],
+    location: "Trinidad & Tobago", period: "Demo period", featuredImage: "/images/project-fiber.svg", featuredImageAlt: "Demo illustration representing fibre optic infrastructure",
     gallery: [
-      { src: "/images/project-fiber.svg", alt: "Demo illustration of fiber optic infrastructure", caption: "Sample cover image for layout demonstration." },
-      { src: "/images/fiber-services.svg", alt: "Demo fiber optic services illustration", caption: "Sample supporting gallery image." },
+      { src: "/images/project-fiber.svg", alt: "Demo illustration of fibre optic infrastructure", caption: "Sample cover image for layout demonstration." },
+      { src: "/images/fiber-services.svg", alt: "Demo fibre optic services illustration", caption: "Sample supporting gallery image." },
       { src: "/images/project-combined.svg", alt: "Demo combined infrastructure illustration", caption: "Sample project context image." },
     ], featured: true, status: "approved", publicationStatus: "Published", demo: true,
   },
   {
     id: "demo-combined-01", slug: "demo-integrated-power-connectivity", title: "Integrated Power & Connectivity", category: "Combined",
-    summary: "Sample combined-services case study illustrating how electrical and fiber optic capabilities can appear together.",
+    summary: "Sample combined-services case study illustrating how electrical and fibre optic capabilities can appear together.",
     description: "This sample project demonstrates the case-study format for work involving both FES service areas. It provides room for approved project context, scope and photography when real content is ready.",
-    scope: ["Electrical service coordination", "Structured data wiring", "Fiber cable installation", "System testing"],
-    featuredImage: "/images/project-combined.svg", featuredImageAlt: "Demo illustration representing integrated electrical and fiber infrastructure",
+    scope: ["Electrical service coordination", "Structured data wiring", "Fibre cable installation", "System testing"],
+    featuredImage: "/images/project-combined.svg", featuredImageAlt: "Demo illustration representing integrated electrical and fibre infrastructure",
     gallery: [
       { src: "/images/project-combined.svg", alt: "Demo integrated infrastructure illustration", caption: "Sample combined-services cover image." },
       { src: "/images/project-electrical.svg", alt: "Demo electrical infrastructure illustration", caption: "Sample electrical gallery view." },
-      { src: "/images/project-fiber.svg", alt: "Demo fiber infrastructure illustration", caption: "Sample fiber gallery view." },
+      { src: "/images/project-fiber.svg", alt: "Demo fibre infrastructure illustration", caption: "Sample fibre gallery view." },
     ], featured: true, status: "approved", publicationStatus: "Published", demo: true,
   },
   {
@@ -92,38 +92,38 @@ export const projects: Project[] = [
     status: "approved", publicationStatus: "Published", demo: true,
   },
   {
-    id: "demo-fiber-02", slug: "demo-fiber-splicing-testing", title: "Fiber Splicing & Testing", category: "Fiber",
-    summary: "Sample entry showing a focused fiber optic service project with a concise scope and responsive gallery.",
-    description: "This sample demonstrates how a focused fiber service project can be documented with a short overview and recorded scope of work.",
-    scope: ["Fiber preparation", "Fiber splicing", "Connection testing"],
-    featuredImage: "/images/fiber-services.svg", featuredImageAlt: "Demo technical illustration for fiber optic services",
-    gallery: [{ src: "/images/fiber-services.svg", alt: "Demo fiber service illustration" }, { src: "/images/project-fiber.svg", alt: "Demo fiber project illustration" }],
+    id: "demo-fiber-02", slug: "demo-fiber-splicing-testing", title: "Fibre Splicing & Testing", category: "Fiber",
+    summary: "Sample entry showing a focused fibre optic service project with a concise scope and responsive gallery.",
+    description: "This sample demonstrates how a focused fibre service project can be documented with a short overview and recorded scope of work.",
+    scope: ["Fibre preparation", "Fibre splicing", "Connection testing"],
+    featuredImage: "/images/fiber-services.svg", featuredImageAlt: "Demo technical illustration for fibre optic services",
+    gallery: [{ src: "/images/fiber-services.svg", alt: "Demo fibre service illustration" }, { src: "/images/project-fiber.svg", alt: "Demo fibre project illustration" }],
     status: "approved", publicationStatus: "Published", demo: true,
   },
   {
     id: "demo-combined-02", slug: "demo-structured-infrastructure-fitout", title: "Structured Infrastructure Fit-Out", category: "Combined",
     summary: "Sample combined project that exercises missing optional fields while retaining a complete, polished layout.",
     description: "This example intentionally omits location and completion information to verify that optional project details hide gracefully.",
-    scope: ["Electrical infrastructure", "Data wiring", "Fiber connectivity"],
+    scope: ["Electrical infrastructure", "Data wiring", "Fibre connectivity"],
     featuredImage: "/images/hero-infrastructure.svg", featuredImageAlt: "Demo technical illustration of structured infrastructure",
     gallery: [{ src: "/images/hero-infrastructure.svg", alt: "Demo structured infrastructure illustration" }, { src: "/images/project-combined.svg", alt: "Demo combined project illustration" }],
     status: "approved", publicationStatus: "Published", demo: true,
   },
   { slug: "featured-project-placeholder", title: "Featured project", category: "Combined", summary: "Reserved for a client-approved FES project story, scope and photography.", location: "Location to be confirmed", featuredImage: "/images/project-combined.svg", gallery: ["/images/project-combined.svg", "/images/project-electrical.svg", "/images/project-fiber.svg"], featured: true, status: "placeholder" },
   { slug: "electrical-project-placeholder", title: "Electrical project", category: "Electrical", summary: "A structured project entry ready for approved work details and photographs.", location: "Location to be confirmed", featuredImage: "/images/project-electrical.svg", gallery: ["/images/project-electrical.svg", "/images/project-combined.svg"], status: "placeholder" },
-  { slug: "fiber-project-placeholder", title: "Fiber infrastructure project", category: "Fiber", summary: "A portfolio template for installation, splicing, testing and project context.", location: "Location to be confirmed", featuredImage: "/images/project-fiber.svg", gallery: ["/images/project-fiber.svg", "/images/project-combined.svg"], status: "placeholder" },
+  { slug: "fiber-project-placeholder", title: "Fibre infrastructure project", category: "Fiber", summary: "A portfolio template for installation, splicing, testing and project context.", location: "Location to be confirmed", featuredImage: "/images/project-fiber.svg", gallery: ["/images/project-fiber.svg", "/images/project-combined.svg"], status: "placeholder" },
 ];
 
 export const tips: Tip[] = [
   { id: "plan", type: "do", title: "Plan before work begins", body: "Share the site conditions, required outcome and clear photographs when requesting a quotation." },
   { id: "access", type: "do", title: "Keep equipment accessible", body: "Maintain safe access to electrical panels and communication equipment." },
-  { id: "guess", type: "dont", title: "Do not guess at faults", body: "Electrical and fiber issues should be assessed by an appropriate professional." },
+  { id: "guess", type: "dont", title: "Do not guess at faults", body: "Electrical and fibre issues should be assessed by an appropriate professional." },
 ];
 
 export const articles: Article[] = [
-  { slug: "planning-a-service-request", title: "Preparing a clear service request", summary: "What to gather before discussing an electrical or fiber-optic project with FES.", contentType: "FES Article", category: "Company Updates", publishedAt: "2026-10-01", readingTime: "2 min read", featuredImage: "/images/project-combined.svg", featuredImageAlt: "Technical illustration of integrated electrical and fiber infrastructure", featured: true, demo: true, content: [{ heading: "Start with the requirement", paragraphs: ["A useful service request explains the site conditions, the required outcome and the type of support being requested."], list: ["The service location and property type", "A clear description of the requirement", "Relevant photographs where they can be taken safely", "Any access or scheduling considerations"] }, { heading: "Share what is known", paragraphs: ["You do not need to diagnose a fault before making contact. Share the information you have and avoid working on electrical or fiber equipment yourself."], quote: "Clear context helps the right questions get asked at the start of the conversation." }], publicationStatus: "Published", approvalStatus: "approved" },
+  { slug: "planning-a-service-request", title: "Preparing a clear service request", summary: "What to gather before discussing an electrical or fibre-optic project with FES.", contentType: "FES Article", category: "Company Updates", publishedAt: "2026-10-01", readingTime: "2 min read", featuredImage: "/images/project-combined.svg", featuredImageAlt: "Technical illustration of integrated electrical and fibre infrastructure", featured: true, demo: true, content: [{ heading: "Start with the requirement", paragraphs: ["A useful service request explains the site conditions, the required outcome and the type of support being requested."], list: ["The service location and property type", "A clear description of the requirement", "Relevant photographs where they can be taken safely", "Any access or scheduling considerations"] }, { heading: "Share what is known", paragraphs: ["You do not need to diagnose a fault before making contact. Share the information you have and avoid working on electrical or fibre equipment yourself."], quote: "Clear context helps the right questions get asked at the start of the conversation." }], publicationStatus: "Published", approvalStatus: "approved" },
   { slug: "electrical-insight-placeholder", title: "Electrical insight", summary: "Reserved for original, client-approved electrical information.", contentType: "FES Article", category: "Electrical", content: [{ paragraphs: ["Original FES content will appear here once supplied and approved."] }], publicationStatus: "Draft", approvalStatus: "placeholder" },
-  { slug: "fiber-insight-placeholder", title: "Fiber insight", summary: "Reserved for original, client-approved fiber information.", contentType: "FES Article", category: "Fiber Optic", content: [{ paragraphs: ["Original FES content will appear here once supplied and approved."] }], publicationStatus: "Draft", approvalStatus: "placeholder" },
+  { slug: "fiber-insight-placeholder", title: "Fibre insight", summary: "Reserved for original, client-approved fibre information.", contentType: "FES Article", category: "Fiber Optic", content: [{ paragraphs: ["Original FES content will appear here once supplied and approved."] }], publicationStatus: "Draft", approvalStatus: "placeholder" },
 ];
 
 export const externalResources: ExternalResource[] = [

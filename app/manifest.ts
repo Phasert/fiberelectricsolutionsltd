@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Fiber & Electric Solutions Ltd.",
     short_name: "FES",
-    description: "Electrical and fiber optic services in Trinidad & Tobago.",
+    description: "Electrical and fibre optic services in Trinidad & Tobago.",
     start_url: "/",
     display: "standalone",
     background_color: "#f3f0eb",

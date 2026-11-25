@@ -18,7 +18,7 @@ const serviceIcons = {
 export function ServiceGrid({ services, dark = false }: { services: PublicService[]; dark?: boolean }) {
   return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-6">{services.map((service, index) => {
     const Icon = serviceIcons[service.slug.split("-")[0] as keyof typeof serviceIcons] ?? Zap;
-    const category = service.category === "fiber" ? "Fiber Optic" : "Electrical";
+    const category = service.category === "fiber" ? "Fibre Optic" : "Electrical";
     return <article key={service.slug} className={`service-card group flex min-h-72 flex-col overflow-hidden border p-7 sm:p-8 ${services.length % 3 === 2 && index >= services.length - 2 ? "lg:col-span-3" : "lg:col-span-2"} ${dark ? "border-white/10 bg-charcoal text-white" : "border-black/10 bg-white"}`}>
       <div className="flex items-start justify-between gap-5">
         <span className={`grid size-12 place-items-center rounded-full ${dark ? "bg-white/8 text-[#ec9bb0]" : "bg-wine/8 text-wine"}`}><Icon size={22} strokeWidth={1.7} aria-hidden="true" /></span>

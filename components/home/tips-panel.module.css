@@ -1,0 +1,22 @@
+.progress {
+  height: 100%;
+  background: currentColor;
+  transform-origin: left;
+  animation: fill 3s linear both;
+}
+
+.progress[data-paused="true"] {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    animation: none;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}

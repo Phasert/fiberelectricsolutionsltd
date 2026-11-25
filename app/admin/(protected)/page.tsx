@@ -19,7 +19,7 @@ export default async function AdminDashboard(){
   <section aria-labelledby="overview-heading"><div className="mb-3 flex items-center justify-between"><h2 id="overview-heading" className="text-sm font-bold">Content overview</h2><p className="text-xs text-ink/35">Current Firebase-backed content</p></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
    <Metric label="Published Gallery Media" value={publishedGallery.length} detail={`${draftGallery.length} draft${draftGallery.length===1?"":"s"}`} icon={Images}/>
    <Metric label="Electrical Gallery" value={electrical.filter(item=>item.galleryPublished).length} detail={`${electrical.filter(item=>!item.galleryPublished).length} drafts`} icon={Zap}/>
-   <Metric label="Fiber Optic Gallery" value={fiber.filter(item=>item.galleryPublished).length} detail={`${fiber.filter(item=>!item.galleryPublished).length} drafts`} icon={CircleGauge}/>
+   <Metric label="Fibre Optic Gallery" value={fiber.filter(item=>item.galleryPublished).length} detail={`${fiber.filter(item=>!item.galleryPublished).length} drafts`} icon={CircleGauge}/>
    <Metric label="Saved Media" value={media.length} detail={`${media.filter(item=>item.status==="Ready").length} ready assets`} icon={Images}/>
    <Metric label="Articles & Tips" value={publishedResources.length+publishedTips.length} detail={`${draftResources.length} resource drafts`} icon={BookOpenText}/>
    <Metric label="Quote Requests" value={enquiries.length} detail={`${newEnquiries.length} new`} icon={MessageSquareText}/>
