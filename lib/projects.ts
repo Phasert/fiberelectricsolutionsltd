@@ -22,5 +22,5 @@ export function getProjectImages(project: Project): ProjectImage[] {
 }
 
 export function categoryLabel(category: Project["category"]) {
-  return category === "Fiber" ? "Fiber Optic" : category;
+  return category === "Fiber" ? "Fibre Optic" : category;
 }

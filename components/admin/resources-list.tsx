@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowUpDown, FileText, Pencil, Search, X } from "lucide-react";
+import { FileText, Pencil, X } from "lucide-react";
 import type { AdminResource } from "@/types/admin";
 import { StatusBadge } from "./admin-ui";
 
@@ -13,10 +13,10 @@ export function ResourcesList({ items }: { items: AdminResource[] }) {
   const clear=()=>{setQuery("");setKind("all");setStatus("all");setSort("updated-desc")};
   return <div className="space-y-4">
     <section className="rounded-xl border border-black/[.075] bg-white p-4 shadow-sm" aria-label="Resource filters"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.5fr)_repeat(3,minmax(10rem,1fr))_auto]">
-      <label className="relative"><span className="sr-only">Search content</span><Search size={17} className="absolute left-3 top-3.5 text-ink/35"/><input value={query} onChange={e=>setQuery(e.target.value)} className="input rounded-md pl-9" placeholder="Search titles, summaries or categories…"/></label>
+      <label><span className="sr-only">Search content</span><input type="search" value={query} onChange={e=>setQuery(e.target.value)} className="input rounded-md" placeholder="Search titles, summaries or categories…"/></label>
       <Filter label="Content type" value={kind} set={setKind}><option value="all">All content types</option><option>FES article</option><option>Company update</option><option>External resource</option></Filter>
       <Filter label="Publication status" value={status} set={setStatus}><option value="all">All statuses</option><option>Draft</option><option>Published</option></Filter>
-      <label className="relative"><span className="sr-only">Sort resources</span><ArrowUpDown size={16} className="absolute left-3 top-3.5 text-ink/35"/><select aria-label="Sort resources" value={sort} onChange={e=>setSort(e.target.value)} className="input appearance-none rounded-md pl-9"><option value="updated-desc">Recently updated</option><option value="updated-asc">Oldest updated</option><option value="title">Title A–Z</option></select></label>
+      <label><span className="sr-only">Sort resources</span><select aria-label="Sort resources" value={sort} onChange={e=>setSort(e.target.value)} className="input rounded-md"><option value="updated-desc">Recently updated</option><option value="updated-asc">Oldest updated</option><option value="title">Title A–Z</option></select></label>
       <button type="button" onClick={clear} className="inline-flex min-h-11 items-center justify-center gap-2 px-2 text-xs font-bold text-wine"><X size={15}/> Reset</button>
     </div></section>
     <div className="flex items-center justify-between"><p className="text-sm text-ink/50"><strong className="text-ink">{visible.length}</strong> of {items.length} items</p><p className="hidden text-xs text-ink/40 sm:block">Select Edit to manage an item</p></div>

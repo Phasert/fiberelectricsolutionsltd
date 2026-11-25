@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpenText, ChevronsUpDown, CircleUserRound,
-  FileText, FolderKanban, Images, LayoutDashboard, Menu,
+  FileText, FolderKanban, LayoutDashboard, Menu,
   MessageSquareText, PanelLeftClose, Settings,
   SquareArrowOutUpRight, X,
 } from "lucide-react";
@@ -15,7 +15,6 @@ import type { Administrator } from "@/types/firebase";
 const navigation = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { href: "/admin/media", label: "Media Library", icon: Images },
   { href: "/admin/articles-tips", label: "Articles & Tips", icon: BookOpenText },
   { href: "/admin/enquiries", label: "Quote Requests", icon: MessageSquareText },
   { href: "/admin/content", label: "Site Content", icon: FileText },

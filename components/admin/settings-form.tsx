@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Check, ExternalLink, RotateCcw, Share2 } from "lucide-react";
 import type { BusinessSettings } from "@/types/admin";
 import type { BusinessSettingsState } from "@/lib/settings/schema";
+import { LINKTREE_SOCIAL_LINKS } from "@/lib/settings/linktree";
 
 type SectionId = "business" | "social";
 type Errors = Record<string, string>;
@@ -41,6 +42,13 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
     setSaveError("");
   };
   const updateSocial = (key: keyof BusinessSettings["socialLinks"], value: string) => update("socialLinks", { ...settings.socialLinks, [key]: value });
+
+  function applyLinktreeLinks() {
+    update("socialLinks", { ...settings.socialLinks, ...LINKTREE_SOCIAL_LINKS });
+    setErrors(current => Object.fromEntries(
+      Object.entries(current).filter(([key]) => !Object.keys(LINKTREE_SOCIAL_LINKS).some(platform => key === `social-${platform}`)),
+    ));
+  }
 
   function validate() {
     const next: Errors = {};
@@ -116,11 +124,13 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
         </fieldset>
       </SectionPanel>
 
-      <SectionPanel id="social" active={activeSection} title="Social media & links" intro="Only complete public profile URLs should be added. Empty links will be omitted when this interface is connected to the website.">
+      <SectionPanel id="social" active={activeSection} title="Social media & links" intro="Use complete public profile URLs. Empty links are hidden on the website.">
+        <button type="button" onClick={applyLinktreeLinks} disabled={saving} className="mb-5 min-h-11 rounded-md border border-black/10 px-4 text-sm font-bold text-wine disabled:opacity-40">Use Linktree profile links</button>
         <div className="grid gap-5 md:grid-cols-2">
           <UrlField id="facebook" label="Facebook" value={settings.socialLinks.facebook} onChange={value => updateSocial("facebook", value)} error={errors["social-facebook"]} placeholder="https://facebook.com/…"/>
           <UrlField id="instagram" label="Instagram" value={settings.socialLinks.instagram} onChange={value => updateSocial("instagram", value)} error={errors["social-instagram"]} placeholder="https://instagram.com/…"/>
           <UrlField id="linkedin" label="LinkedIn" value={settings.socialLinks.linkedin} onChange={value => updateSocial("linkedin", value)} error={errors["social-linkedin"]} placeholder="https://linkedin.com/company/…"/>
+          <UrlField id="tiktok" label="TikTok" value={settings.socialLinks.tiktok} onChange={value => updateSocial("tiktok", value)} error={errors["social-tiktok"]} placeholder="https://tiktok.com/@…"/>
           <UrlField id="googleBusiness" label="Google Business Profile" value={settings.socialLinks.googleBusiness} onChange={value => updateSocial("googleBusiness", value)} error={errors["social-googleBusiness"]} placeholder="https://g.page/…"/>
           <UrlField id="whatsapp" label="WhatsApp contact link" value={settings.socialLinks.whatsapp} onChange={value => updateSocial("whatsapp", value)} error={errors["social-whatsapp"]} placeholder="https://wa.me/…"/>
         </div>

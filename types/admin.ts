@@ -101,12 +101,13 @@ export interface BusinessSettings {
     facebook: string;
     instagram: string;
     linkedin: string;
+    tiktok: string;
     googleBusiness: string;
     whatsapp: string;
   };
 }
 
-export type SiteContentSection = "homepage" | "electrical" | "fiber" | "about" | "cta";
+export type SiteContentSection = "homepage" | "electrical" | "fiber" | "about";
 export type ContentStatus = "Draft" | "Published";
 
 export interface ManagedService {

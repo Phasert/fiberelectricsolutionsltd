@@ -60,7 +60,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
     <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(8,7,8,.48),transparent_38%)]" />
     <div className="shell relative flex min-h-[clamp(31rem,43vw,38.5rem)] items-center py-12 sm:py-14 lg:py-16">
       <div className="w-full max-w-[42rem]" aria-live="polite" aria-atomic="true">
-        <p className="eyebrow !text-[#ef91a6]">Electrical + fiber infrastructure</p>
+        <p className="eyebrow !text-[#ef91a6]">Electrical + fibre infrastructure</p>
         <div key={slides[active].id} className="hero-copy-enter">
           <h1 className="display mt-5 max-w-[13ch] text-[clamp(2.25rem,4.2vw,3.625rem)] leading-[.98]">{slides[active].headline}</h1>
           <p className="mt-5 max-w-[39rem] text-[clamp(.95rem,1.35vw,1.0625rem)] leading-7 text-white/76">{slides[active].description}</p>
@@ -82,7 +82,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
         </div>
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[.68rem] font-black uppercase tracking-[.13em] text-white/45">
           <span className="flex items-center gap-2"><Zap size={13} className="text-[#ef91a6]" /> Electrical</span>
-          <span className="flex items-center gap-2"><Cable size={13} className="text-[#ef91a6]" /> Fiber optic</span>
+          <span className="flex items-center gap-2"><Cable size={13} className="text-[#ef91a6]" /> Fibre optic</span>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ export const publicBusinessSettingsSchema = z.object({
     const names = hours.map((entry) => entry.day);
     if (new Set(names).size !== 7 || day.options.some((name) => !names.includes(name))) ctx.addIssue({ code: "custom", message: "Opening hours must contain each day exactly once." });
   }),
-  socialLinks: z.object({ facebook: optionalUrl, instagram: optionalUrl, linkedin: optionalUrl, googleBusiness: optionalUrl, whatsapp: optionalUrl }).strict(),
+  socialLinks: z.object({ facebook: optionalUrl, instagram: optionalUrl, linkedin: optionalUrl, tiktok: optionalUrl.default(""), googleBusiness: optionalUrl, whatsapp: optionalUrl }).strict(),
 }).strip();
 
 export const businessSettingsInputSchema = z.object({

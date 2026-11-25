@@ -68,14 +68,24 @@ async function normalize(id: string, raw: unknown): Promise<PublicArticle | Publ
   if (!parsed.success || parsed.data.stagingOnly || parsed.data.audience === "Staging" || isClearlyLabelledStagingFixture(parsed.data)) return null;
   const resource = parsed.data;
   const publishedAt = toDate(resource.publishedAt);
+  const mediaCover = await getPublicMediaUrl(resource.coverMediaId, "md");
   if (resource.kind === "External resource") {
     const url = safeExternalUrl(resource.externalUrl);
     if (!url || !resource.source) return null;
-    return { id, title: resource.title, source: resource.source, url, summary: resource.summary, category: resource.category, ...(publishedAt ? { publishedAt } : {}) };
+    return {
+      id,
+      title: resource.title,
+      source: resource.source,
+      url,
+      summary: resource.summary,
+      category: resource.category,
+      ...(publishedAt ? { publishedAt } : {}),
+      ...(mediaCover ? { featuredImage: mediaCover, featuredImageAlt: `${resource.title} resource cover` } : {}),
+    };
   }
   const content = sanitizeRichText(resource.content) as PublicRichTextNode | undefined;
   if (!content || content.type !== "doc") return null;
-  const featuredImage = await getPublicMediaUrl(resource.coverMediaId,"md") ?? safeCoverImage(resource.coverImage, resource.category);
+  const featuredImage = mediaCover ?? safeCoverImage(resource.coverImage, resource.category);
   return {
     id,
     slug: resource.slug,

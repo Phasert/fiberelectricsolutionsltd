@@ -4,17 +4,17 @@ import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FIREBASE_CACHE_NAMESPACE } from "@/lib/firebase/cache-namespace";
-import { aboutContentSchema, ctaContentSchema, homepageContentSchema, servicePageContentSchema, sectionSchema, type SiteContentSection } from "@/lib/site-content/schemas";
+import { aboutContentSchema, homepageContentSchema, servicePageContentSchema, sectionSchema, type SiteContentSection } from "@/lib/site-content/schemas";
 import { PUBLIC_SERVICES_TAG, PUBLIC_SITE_CONTENT_TAG } from "@/lib/site-content/public-cache";
 import { defaultServices } from "@/lib/site-content/defaults";
 import {getPublicMediaDetails}from"@/lib/media/public-repository";
-import type { PublicAboutContent, PublicCta, PublicHomepageContent, PublicService, PublicServicePageContent, ServiceKind } from "@/types/content";
+import type { PublicAboutContent, PublicHomepageContent, PublicService, PublicServicePageContent, ServiceKind } from "@/types/content";
 
 const fixturePattern = /\bphase\s+[a-z]\d+\b|\bstaging[- ]only\b|\bemulator\b|\bbrowser\s+(?:test|verification|content|service)\b/i;
 const containsFixtureLabel = (value: unknown) => fixturePattern.test(JSON.stringify(value));
 
 const storedPageSchema = z.object({ schemaVersion: z.literal(1), section: sectionSchema, published: z.unknown() });
-export type PublicSiteContent = PublicHomepageContent | PublicServicePageContent | PublicAboutContent | PublicCta[];
+export type PublicSiteContent = PublicHomepageContent | PublicServicePageContent | PublicAboutContent;
 
 export async function getPublicSiteContentUncached(sectionValue: string): Promise<PublicSiteContent | null> {
   const section = sectionSchema.parse(sectionValue);
@@ -22,10 +22,12 @@ export async function getPublicSiteContentUncached(sectionValue: string): Promis
   const stored = storedPageSchema.safeParse(document.data());
   if (!stored.success || stored.data.section !== section || containsFixtureLabel(stored.data.published)) return null;
   if (section === "homepage") { const parsed=homepageContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{heroImageId,...content}=parsed.data,image=heroImageId?(await getPublicMediaDetails([heroImageId],"lg")).get(heroImageId):null,slideMedia=await getPublicMediaDetails(content.heroSlides.map(slide=>slide.imageId).filter(Boolean),"lg");return{...content,heroSlides:content.heroSlides.map(slide=>{const selected=slideMedia.get(slide.imageId);return{...slide,...(selected?.type==="image"?{imageSrc:selected.src,imageAlt:selected.alt}:{})}}),...(image?.type==="image"?{heroImageSrc:image.src,heroImageAlt:image.alt}:{})}; }
-  if (section === "electrical" || section === "fiber") { const parsed=servicePageContentSchema.safeParse(stored.data.published); return parsed.success?parsed.data:null; }
+  if (section === "electrical" || section === "fiber") { const parsed=servicePageContentSchema.safeParse(stored.data.published); if (!parsed.success) return null;
+    const { heroImageId, ...content } = parsed.data;
+    const image = heroImageId ? (await getPublicMediaDetails([heroImageId], "lg")).get(heroImageId) : undefined;
+    return image?.type === "image" ? { ...content, heroImageSrc: image.src, heroImageAlt: image.alt } : content; }
   if (section === "about") { const parsed=aboutContentSchema.safeParse(stored.data.published);if(!parsed.success)return null;const{imageId,...content}=parsed.data,image=imageId?(await getPublicMediaDetails([imageId],"lg")).get(imageId):null;return{...content,...(image?.type==="image"?{imageSrc:image.src,imageAlt:image.alt}:{})}; }
-  const parsed=ctaContentSchema.safeParse(stored.data.published);
-  return parsed.success?parsed.data.items.filter(item=>item.enabled).map(({id,placement,label,supportingText,destination,essential=false})=>({id,placement,label,supportingText,destination,essential})):null;
+  return null;
 }
 
 const storedServiceSchema = z.object({

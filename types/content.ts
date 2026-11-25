@@ -51,8 +51,6 @@ export interface PublicService {
 export interface PublicHomepageContent {
   heroHeading: string;
   heroDescription: string;
-  primaryCtaLabel: string;
-  secondaryCtaLabel: string;
   serviceHeading: string;
   serviceDescription: string;
   aboutHeading: string;
@@ -62,7 +60,7 @@ export interface PublicHomepageContent {
   heroSlides: Array<{ id: string; headline: string; description: string; imageId: string; fallbackSrc: string; fallbackAlt: string; focalPoint: { x: number; y: number }; imageSrc?: string; imageAlt?: string }>;
 }
 
-export interface PublicServicePageContent { heading: string; description: string; }
+export interface PublicServicePageContent { heading: string; description: string; heroImageSrc?: string; heroImageAlt?: string; }
 export interface PublicAboutContent {
   heroHeading: string;
   heroDescription: string;
@@ -72,7 +70,7 @@ export interface PublicAboutContent {
   labels: {
     introEyebrow: string; established: string; location: string; storyEyebrow: string;
     companyImageCaption: string; imageFallbackText: string; approachEyebrow: string; expertiseEyebrow: string;
-    electricalLabel: string; electricalLinkLabel: string; fiberLabel: string; fiberLinkLabel: string; ctaEyebrow: string;
+    electricalLabel: string; fiberLabel: string;
   };
   approachHeading: string;
   approachDescription: string;
@@ -83,14 +81,9 @@ export interface PublicAboutContent {
   electricalExpertiseBody: string;
   fiberExpertiseTitle: string;
   fiberExpertiseBody: string;
-  ctaHeading: string;
-  ctaDescription: string;
-  ctaLabel: string;
-  ctaHref: string;
   imageSrc?: string;
   imageAlt?: string;
 }
-export interface PublicCta { id: string; placement: string; label: string; supportingText: string; destination: string; essential: boolean; }
 
 export interface Project {
   id?: string;
@@ -137,6 +130,8 @@ export interface PublicExternalResource {
   summary: string;
   category: ResourceCategory;
   publishedAt?: string;
+  featuredImage?: string;
+  featuredImageAlt?: string;
 }
 export interface ArticleSection { heading?: string; paragraphs?: string[]; list?: string[]; quote?: string; }
 export interface Article {

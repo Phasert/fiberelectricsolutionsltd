@@ -27,9 +27,9 @@ export function ServiceHero({ kind, eyebrow, title, body, points, image, imageAl
       </div>
       <div className="hero-visual relative mx-auto w-full max-w-xl">
         <div className="relative aspect-[4/5] overflow-hidden border border-white/12 bg-charcoal shadow-2xl sm:aspect-[5/4] lg:aspect-[4/5]">
-          <Image src={image} alt={imageAlt} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 46vw" />
+          <Image src={image} alt={imageAlt} fill priority unoptimized={image.startsWith("/media/")} className="object-cover" sizes="(max-width: 1024px) 100vw, 46vw" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-          <p className="absolute bottom-5 left-5 right-5 text-xs leading-5 text-white/65">Industry illustration · service capability visual</p>
+          {!image.startsWith("/media/") && <p className="absolute bottom-5 left-5 right-5 text-xs leading-5 text-white/65">Industry illustration · service capability visual</p>}
         </div>
         <div aria-hidden="true" className="absolute -bottom-4 -left-4 h-24 w-24 border-b-2 border-l-2 border-[#d33a5d]" />
       </div>

@@ -9,7 +9,7 @@ import type { PublicBusinessSettings } from "@/types/content";
 
 const mainLinks = [{ href: "/", label: "Home" }, { href: "/projects", label: "Projects" }, { href: "/about", label: "About" }, { href: "/resources", label: "Resources" }, { href: "/contact", label: "Contact" }];
 const desktopMainLinks = mainLinks.filter(link => link.href !== "/contact");
-const serviceLinks = [{ href: "/electrical", label: "Electrical", note: "Power, wiring and installation" }, { href: "/fiber-optic", label: "Fiber Optic", note: "Installation, splicing and testing" }];
+const serviceLinks = [{ href: "/electrical", label: "Electrical", note: "Power, wiring and installation" }, { href: "/fiber-optic", label: "Fibre Optic", note: "Installation, splicing and testing" }];
 
 export function Header({ settings }: { settings: PublicBusinessSettings | null }) {
   const [open, setOpen] = useState(false);

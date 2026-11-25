@@ -52,6 +52,12 @@ export async function POST(request: Request) {
                 : lower.endsWith(".mp4")
                   ? "video/mp4"
                   : "");
+    const kind = form.get("kind");
+    if ((kind === "image" || kind === "video") && !mimeType.startsWith(`${kind}/`))
+      return NextResponse.json(
+        { error: kind === "image" ? "Choose a supported image." : "Choose a supported video." },
+        { status: 400 },
+      );
     const id = await uploadEditorialMedia(
       {
         bytes: new Uint8Array(await file.arrayBuffer()),

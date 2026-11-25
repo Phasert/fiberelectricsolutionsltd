@@ -15,18 +15,20 @@ describe("About content schema", () => {
   it("upgrades legacy CMS content with the redesigned section defaults", () => {
     const content = aboutContentSchema.parse(legacyAboutContent);
 
-    expect(content.establishedYear).toBe(2008);
+    expect(content.establishedYear).toBe(2004);
     expect(content.labels.introEyebrow).toBe("About FES · Trinidad & Tobago");
     expect(content.approachItems).toHaveLength(3);
     expect(content.electricalExpertiseTitle).toBe("Electrical infrastructure");
     expect(content.fiberExpertiseTitle).toBe("Fiber-optic connectivity");
-    expect(content.ctaHref).toBe("/request-a-quote");
   });
 
-  it("rejects an unsafe contact destination", () => {
-    expect(aboutContentSchema.safeParse({
+  it("strips legacy CTA settings from editable content", () => {
+    const content = aboutContentSchema.parse({
       ...legacyAboutContent,
-      ctaHref: "javascript:alert(1)",
-    }).success).toBe(false);
+      ctaHref: "/contact",
+      ctaLabel: "Contact us",
+    });
+    expect(content).not.toHaveProperty("ctaHref");
+    expect(content).not.toHaveProperty("ctaLabel");
   });
 });

@@ -64,6 +64,7 @@ export async function getPublicBusinessSettingsUncached(): Promise<PublicBusines
     externalLink("Facebook", settings.socialLinks.facebook),
     externalLink("Instagram", settings.socialLinks.instagram),
     externalLink("LinkedIn", settings.socialLinks.linkedin),
+    externalLink("TikTok", settings.socialLinks.tiktok),
   ].filter((link): link is PublicContactLink => link !== null);
 
   return {

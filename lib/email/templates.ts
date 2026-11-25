@@ -1,4 +1,5 @@
 import type { QuoteRequestInput } from "@/lib/quotes/schemas";
+import { formatQuoteServices } from "@/lib/quotes/service-names";
 
 export type ContactEmailInput = { name: string; email: string; phone?: string; subject: string; message: string };
 
@@ -26,8 +27,9 @@ export function contactCustomerTemplate(input: ContactEmailInput) {
 }
 
 export function quoteBusinessTemplate(input: QuoteRequestInput, reference: string) {
-  const html = shell(`New quotation request ${reference}`, "New quotation request", `<p>A quotation request was stored successfully. Private photographs are intentionally excluded from this email.</p><table>${row("Reference", reference)}${row("Name", input.name)}${row("Email", text(input.email))}${row("Phone", text(input.phone))}${row("Preferred contact", input.preferredContact)}${row("Service", input.service)}${row("Location", input.location)}${row("Property type", input.propertyType)}${row("Timeframe", text(input.preferredTimeframe))}${row("Description", input.description)}${row("Additional notes", text(input.additionalNotes))}</table><p>Use the secure administration area to review the complete record.</p>`);
-  const plain = [`New quotation request`, `Reference: ${reference}`, `Name: ${input.name}`, `Email: ${text(input.email)}`, `Phone: ${text(input.phone)}`, `Preferred contact: ${input.preferredContact}`, `Service: ${input.service}`, `Location: ${input.location}`, `Property type: ${input.propertyType}`, `Timeframe: ${text(input.preferredTimeframe)}`, "", input.description, "", "Private photographs are intentionally excluded. Review the secure administration area for the complete record."].join("\n");
+  const specificServices = formatQuoteServices(input.selectedServiceIds);
+  const html = shell(`New quotation request ${reference}`, "New quotation request", `<p>A quotation request was stored successfully. Private photographs are intentionally excluded from this email.</p><table>${row("Reference", reference)}${row("Name", input.name)}${row("Email", text(input.email))}${row("Phone", text(input.phone))}${row("Preferred contact", input.preferredContact)}${row("Service", input.service)}${row("Specific services", specificServices)}${row("Location", input.location)}${row("Property type", input.propertyType)}${row("Timeframe", text(input.preferredTimeframe))}${row("Description", input.description)}${row("Additional notes", text(input.additionalNotes))}</table><p>Use the secure administration area to review the complete record.</p>`);
+  const plain = [`New quotation request`, `Reference: ${reference}`, `Name: ${input.name}`, `Email: ${text(input.email)}`, `Phone: ${text(input.phone)}`, `Preferred contact: ${input.preferredContact}`, `Service: ${input.service}`, `Specific services: ${specificServices}`, `Location: ${input.location}`, `Property type: ${input.propertyType}`, `Timeframe: ${text(input.preferredTimeframe)}`, "", input.description, "", "Private photographs are intentionally excluded. Review the secure administration area for the complete record."].join("\n");
   return { html, text: plain };
 }
 

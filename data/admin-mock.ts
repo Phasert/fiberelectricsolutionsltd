@@ -1,4 +1,5 @@
 import type { AdminProject, AdminResource, AdminTip, BusinessSettings, Enquiry } from "@/types/admin";
+import { LINKTREE_SOCIAL_LINKS } from "@/lib/settings/linktree";
 
 export const businessSettings: BusinessSettings = {
   businessName: "Fiber & Electric Solutions Ltd.",
@@ -16,7 +17,7 @@ export const businessSettings: BusinessSettings = {
     { day: "Saturday", open: false, opensAt: "08:00", closesAt: "12:00" },
     { day: "Sunday", open: false, opensAt: "08:00", closesAt: "12:00" },
   ],
-  socialLinks: { facebook: "", instagram: "", linkedin: "", googleBusiness: "", whatsapp: "" },
+  socialLinks: { ...LINKTREE_SOCIAL_LINKS, googleBusiness: "", whatsapp: "" },
 };
 
 export const adminProjects: AdminProject[] = [
