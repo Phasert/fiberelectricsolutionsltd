@@ -77,7 +77,7 @@ describe("Phase D1c-3 public business settings", () => {
   it("formats opening hours accessibly and keeps developer-owned SEO defaults", () => {
     expect(formatBusinessHours({ day: "Monday", open: true, opensAt: "08:00", closesAt: "17:00" })).toBe("8:00 AM–5:00 PM");
     expect(formatBusinessHours({ day: "Sunday", open: false, opensAt: "", closesAt: "" })).toBe("Closed");
-    expect(DEFAULT_PUBLIC_SEO).toEqual({ title: "Fiber & Electric Solutions Ltd.", description: "Professional electrical and fiber optic solutions in Trinidad & Tobago." });
+    expect(DEFAULT_PUBLIC_SEO).toEqual({ title: "Fiber & Electric Solutions Ltd.", description: "Professional electrical and fibre optic solutions in Trinidad & Tobago." });
   });
 
   it("invalidates the shared layout and relevant public routes after an administrator save", () => {

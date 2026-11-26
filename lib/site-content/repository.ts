@@ -9,14 +9,18 @@ import { collectMediaIds,prepareMediaReferenceSync,syncMediaReferences } from "@
 const pages = () => getAdminFirestore().collection("siteContent");
 const services = () => getAdminFirestore().collection("services");
 const pageRef = (section: SiteContentSection) => pages().doc(`${section}-v1`);
+// Stored status reflects the latest save (a draft saved over a published version stays Draft);
+// records written before status was stored fall back to whether a published snapshot exists.
+const adminStatus = (data?: FirebaseFirestore.DocumentData): "Draft" | "Published" => data?.status === "Published" || data?.status === "Draft" ? data.status : data?.published ? "Published" : "Draft";
 
 export async function listAdminSiteContent() {
   const sections = sectionSchema.options;
   const docs = await Promise.all(sections.map((section) => pageRef(section).get()));
   return Object.fromEntries(sections.map((section, index) => {
     const data = docs[index].data();
-    const current=data?.published??data?.draft??defaultPages[section],content=section==="about"?(aboutContentSchema.safeParse(current).data??defaultPages.about):current;
-    return [section, { status: data?.published ? "Published" : "Draft", content }];
+    // Admins edit the latest saved draft; public readers only ever see `published`.
+    const current=data?.draft??data?.published??defaultPages[section],content=section==="about"?(aboutContentSchema.safeParse(current).data??defaultPages.about):current;
+    return [section, { status: adminStatus(data), content }];
   })) as SiteContentAdminState;
 }
 
@@ -52,8 +56,8 @@ const serviceSnapshot = (data: FirebaseFirestore.DocumentData) => ({
   displayOrder: Number(data.displayOrder ?? 0), enabled: data.enabled === true,
 });
 const mapService = (id: string, data: FirebaseFirestore.DocumentData): ManagedService => ({
-  id, category: data.category, slug: String(data.slug ?? ""), ...serviceSnapshot(data.published ?? data.draft ?? data),
-  status: data.published ? "Published" : "Draft",
+  id, category: data.category, slug: String(data.slug ?? ""), ...serviceSnapshot(data.draft ?? data.published ?? data),
+  status: adminStatus(data),
 });
 
 export async function listAdminServices() {

@@ -44,9 +44,21 @@ describe("Phase C4 site content and services", () => {
   it("publishes an immutable snapshot and isolates later draft edits", async () => {
     await saveSiteContent("homepage", { status: "Published", content: homepage }, actor);
     await saveSiteContent("homepage", { status: "Draft", content: { ...homepage, heroHeading: "New isolated draft" } }, actor);
-    expect((await listAdminSiteContent()).homepage.content.heroHeading).toBe("New isolated draft");
+    const adminState = (await listAdminSiteContent()).homepage;
+    expect(adminState.content.heroHeading).toBe("New isolated draft");
+    expect(adminState.status).toBe("Draft");
     expect((await getPublishedSiteContent("homepage"))?.heroHeading).toBe(homepage.heroHeading);
     expect((await getAdminFirestore().collection("siteContent").doc("homepage-v1").get()).data()?.published.heroHeading).toBe(homepage.heroHeading);
+  });
+
+  it("reports Published for the latest saved published content", async () => {
+    await saveSiteContent("homepage", { status: "Published", content: homepage }, actor);
+    expect((await listAdminSiteContent()).homepage).toMatchObject({ status: "Published", content: { heroHeading: homepage.heroHeading } });
+  });
+
+  it("loads older page records that predate stored draft and status fields", async () => {
+    await getAdminFirestore().collection("siteContent").doc("homepage-v1").set({ schemaVersion: 1, section: "homepage", published: { ...homepage, heroHeading: "Legacy published" } });
+    expect((await listAdminSiteContent()).homepage).toMatchObject({ status: "Published", content: { heroHeading: "Legacy published" } });
   });
 
   it("rejects invalid page content", async () => {
@@ -63,6 +75,7 @@ describe("Phase C4 site content and services", () => {
   it("preserves a published service snapshot when a new draft is saved", async () => {
     await saveServices({ category: "electrical", services: [service(serviceA, 0)] }, actor);
     await saveServices({ category: "electrical", services: [{ ...service(serviceA, 0, "Draft"), title: "Unpublished edit" }] }, actor);
+    expect((await listAdminServices()).find((item) => item.id === serviceA)).toMatchObject({ title: "Unpublished edit", status: "Draft" });
     expect((await listPublishedServices("electrical")).find((item) => item.id === serviceA)?.title).toBe("Test service 0");
     expect((await getAdminFirestore().collection("services").doc(serviceA).get()).data()?.published.title).toBe("Test service 0");
   });

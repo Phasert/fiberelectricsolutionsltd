@@ -46,6 +46,19 @@ describe("Phase C5 business settings", () => {
     await expect(saveBusinessSettings({ approvalStatus: "Approved", settings: { ...base.settings, publicEmail: "", publicPhone: "", publicLocation: "" } }, actor)).rejects.toThrow();
   });
 
+  it("loads older stored settings with unknown fields and never exposes them", async () => {
+    const base = valid();
+    await getAdminFirestore().collection("businessSettings").doc("public-v1").set({ schemaVersion: 1, approvalStatus: "Approved", public: { ...base.settings, retiredField: "legacy", smtpPassword: "must-not-leak" } });
+    const admin = await getAdminBusinessSettings();
+    expect(admin.approvalStatus).toBe("Approved");
+    expect(admin.settings.businessName).toBe("PHASE C5 EMULATOR TEST");
+    expect(admin.settings).not.toHaveProperty("smtpPassword");
+    const approved = await getApprovedBusinessSettings();
+    expect(approved?.businessName).toBe("PHASE C5 EMULATOR TEST");
+    expect(approved).not.toHaveProperty("retiredField");
+    expect(approved).not.toHaveProperty("smtpPassword");
+  });
+
   it("returns only valid approved public settings", async () => {
     const payload = { ...valid(), approvalStatus: "Approved" as const };
     await saveBusinessSettings(payload, actor);

@@ -67,7 +67,7 @@ describe("Phase D1c-2 public featured content and tips", () => {
   it("returns the selected published project, optional published resource and explicit tip order", async () => {
     await seed();
     const result = await getPublicHomepageFeaturedUncached();
-    expect(result.project).toMatchObject({ id: projectId, title: "Electrical & Fiber Optic Project", featuredImage: "/images/project-combined.svg" });
+    expect(result.project).toMatchObject({ id: projectId, title: "Approved public featured project", featuredImage: "/images/project-combined.svg" });
     expect(result.resource).toMatchObject({ id: resourceId, title: "Approved public featured resource", url: "https://example.com/approved-resource" });
     expect(result.tips.map((tip) => tip.id)).toEqual([tipB, tipA]);
     expect(result.tips[0]).toEqual({ id: tipB, type: "dont", title: "Second approved tip", body: "Second approved tip body.", category: "General" });

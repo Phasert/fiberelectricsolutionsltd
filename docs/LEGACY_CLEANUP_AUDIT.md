@@ -16,7 +16,7 @@ The public application retains `/`, `/about`, `/electrical`, `/fiber-optic`, `/p
 
 | Classification | Item | Evidence and decision | Risk / verification |
 |---|---|---|---|
-| Active | `components/admin/media-projects-workspace.tsx` and its Gallery, Slideshows and Media Library children | Imported by `/admin/media`; it is the current three-tab workspace. | High if removed. Covered by typecheck/build and admin acceptance. |
+| Removed | `components/admin/media-projects-workspace.tsx`, `media-manager.tsx` and `gallery-organizer.tsx` | `/admin/media` redirects to `/admin/projects`, leaving this UI unreachable. | Media routes and repositories remain active. |
 | Active | `components/admin/visual-media-picker.tsx` | Used by slideshow, resource and site-content selection flows; provides visual selection rather than filename-only controls. | High if removed. Preserve. |
 | Active | Project repositories, schemas and `/projects/[slug]` | Existing published records, public slugs, reverse media references and the migrated Tommy's record depend on them. | High. Preserve backward-compatible data model. |
 | Legacy but required | Old admin workspace routes listed above | Each route is an explicit redirect to the consolidated destination, preserving bookmarks and old links. | Low to retain; removing would create avoidable 404s. |

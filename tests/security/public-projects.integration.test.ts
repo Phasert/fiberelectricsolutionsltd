@@ -117,7 +117,7 @@ describe("Phase D1a public projects", () => {
   it("generates canonical metadata only for published projects", async () => {
     const published = await generateMetadata({ params: Promise.resolve({ slug: publishedSlug }), searchParams: Promise.resolve({}) });
     const draft = await generateMetadata({ params: Promise.resolve({ slug: draftSlug }), searchParams: Promise.resolve({}) });
-    expect(published.title).toBe("Electrical Project");
+    expect(published.title).toBe("Phase D1a published project");
     expect(published.alternates?.canonical).toBe(`http://localhost:3000/projects/${publishedSlug}`);
     expect(draft.robots).toMatchObject({ index: false, follow: false });
   });

@@ -25,9 +25,11 @@ export const publicBusinessSettingsSchema = z.object({
   socialLinks: z.object({ facebook: optionalUrl, instagram: optionalUrl, linkedin: optionalUrl, tiktok: optionalUrl.default(""), googleBusiness: optionalUrl, whatsapp: optionalUrl }).strict(),
 }).strip();
 
+// Stored settings are read with `.strip()` so older documents with retired fields still load;
+// writes are strict so unknown (e.g. secret) fields are rejected rather than silently dropped.
 export const businessSettingsInputSchema = z.object({
   approvalStatus: z.enum(["Draft", "Approved"]),
-  settings: publicBusinessSettingsSchema,
+  settings: publicBusinessSettingsSchema.strict(),
 }).strict().superRefine((value, ctx) => {
   if (value.approvalStatus !== "Approved") return;
   if (!value.settings.publicEmail && !value.settings.publicPhone) ctx.addIssue({ code: "custom", path: ["settings", "publicEmail"], message: "Approved settings require a public email or telephone number." });
