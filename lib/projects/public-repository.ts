@@ -25,7 +25,7 @@ const storedProjectSchema = z.object({
   coverMediaId: z.string().trim().max(128).nullable().optional().default(null),
   gallery: z.array(z.object({
     mediaId: z.string().trim().min(1).max(128),
-    alt: z.string().trim().min(1).max(180),
+    alt: z.string().trim().max(180).optional().default(""),
     caption: z.string().trim().max(300).optional().default(""),
     order: z.number().int().min(0).max(100),
   })).max(200).optional().default([]),
@@ -58,8 +58,13 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
   const mediaDetails=await getPublicMediaDetails(project.gallery.map(item=>item.mediaId),"lg");
   const gallery: ProjectImage[] = project.gallery
     .toSorted((left, right) => left.order - right.order)
-    .map(item => ({ ...(mediaDetails.get(item.mediaId)??{src:placeholder,type:"image" as const}), alt: formatFibreText(item.alt) }));
+    .map((item, index) => {
+      const media = mediaDetails.get(item.mediaId) ?? { src: placeholder, type: "image" as const, alt: "" };
+      const fallback = `${publicTitle} — ${media.type === "video" ? "video" : "photo"} ${index + 1}`;
+      return { ...media, alt: formatFibreText(item.alt || media.alt.trim()) || fallback };
+    });
   const cover = project.gallery.find(item => item.mediaId === project.coverMediaId) ?? project.gallery.toSorted((a, b) => a.order - b.order)[0];
+  const coverMedia = mediaDetails.get(cover?.mediaId ?? "");
 
   return {
     id,
@@ -67,8 +72,8 @@ async function normalizeProject(id: string, raw: unknown): Promise<PublicProject
     title: publicTitle,
     category: project.category,
     summary: formatFibreText(project.summary),
-    featuredImage: (mediaDetails.get(cover?.mediaId??"")?.type==="image"?await getPublicMediaUrl(cover?.mediaId,"md"):mediaDetails.get(cover?.mediaId??"")?.poster) ?? placeholder,
-    featuredImageAlt: (cover && formatFibreText(cover.alt)) || `${publicTitle} image`,
+    featuredImage: (coverMedia?.type === "image" ? await getPublicMediaUrl(cover?.mediaId, "md") : coverMedia?.poster) ?? placeholder,
+    featuredImageAlt: formatFibreText(cover?.alt || coverMedia?.alt.trim() || "") || `${publicTitle} image`,
     gallery,
     featured: project.featured,
     ...(toIsoDate(project.publishedAt) ? { publishedAt: toIsoDate(project.publishedAt) } : {}),

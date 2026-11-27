@@ -7,8 +7,7 @@ import { ChevronDown, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { Logo } from "./logo";
 import type { PublicBusinessSettings } from "@/types/content";
 
-const mainLinks = [{ href: "/", label: "Home" }, { href: "/projects", label: "Projects" }, { href: "/about", label: "About" }, { href: "/resources", label: "Resources" }, { href: "/contact", label: "Contact" }];
-const desktopMainLinks = mainLinks.filter(link => link.href !== "/contact");
+const mainLinks = [{ href: "/", label: "Home" }, { href: "/projects", label: "Projects" }, { href: "/about", label: "About" }, { href: "/resources", label: "Resources" }];
 const serviceLinks = [{ href: "/electrical", label: "Electrical", note: "Power, wiring and installation" }, { href: "/fiber-optic", label: "Fibre Optic", note: "Installation, splicing and testing" }];
 
 export function Header({ settings }: { settings: PublicBusinessSettings | null }) {
@@ -82,7 +81,7 @@ export function Header({ settings }: { settings: PublicBusinessSettings | null }
     <div className="shell flex h-[var(--nav-height)] items-center justify-between gap-6">
       <Logo />
       <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary navigation">
-        <NavLink {...desktopMainLinks[0]} current={active("/")} />
+        <NavLink {...mainLinks[0]} current={active("/")} />
         <div ref={servicesRef} className="relative">
           <button type="button" onClick={() => setServicesOpen((value) => !value)} aria-expanded={servicesOpen} aria-haspopup="true" className={`nav-link gap-1 ${servicesActive ? "nav-link-active" : ""}`}>
             Services <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${servicesOpen ? "rotate-180" : ""}`} />
@@ -91,7 +90,7 @@ export function Header({ settings }: { settings: PublicBusinessSettings | null }
             {serviceLinks.map((link) => <Link key={link.href} href={link.href} onClick={() => setServicesOpen(false)} aria-current={active(link.href) ? "page" : undefined} className="group block p-4 hover:bg-paper focus-visible:bg-paper"><span className="block text-sm font-black text-ink group-hover:text-wine">{link.label}</span><span className="mt-1 block text-xs text-ink/50">{link.note}</span></Link>)}
           </div>}
         </div>
-        {desktopMainLinks.slice(1).map((link) => <NavLink key={link.href} {...link} current={active(link.href)} />)}
+        {mainLinks.slice(1).map((link) => <NavLink key={link.href} {...link} current={active(link.href)} />)}
         {settings?.phone && <ContactIcon href={settings.phone.href} label={`Call ${settings.phone.label}`}><Phone size={16}/></ContactIcon>}
         {settings?.email && <ContactIcon href={settings.email.href} label={`Email ${settings.email.label}`}><Mail size={16}/></ContactIcon>}
         {settings?.whatsapp && <ContactIcon href={settings.whatsapp.href} label={`WhatsApp ${settings.whatsapp.label}`} external><MessageCircle size={16}/></ContactIcon>}

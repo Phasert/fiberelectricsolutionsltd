@@ -2,7 +2,7 @@
 
 import { formatFibreText } from "@/lib/site-content/spelling";
 import Image from "next/image";
-import { Check, Eye, Film, ImageIcon, Search, X } from "lucide-react";
+import { Check, Eye, Film, ImageIcon, Search, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import type { MediaItem } from "@/types/admin";
@@ -108,13 +108,21 @@ export function VisualMediaPicker({
     </div>
     {open && <div className="fixed inset-0 z-[120] grid place-items-center bg-black/70 p-3 backdrop-blur-sm"><section role="dialog" aria-modal="true" aria-labelledby="visual-media-title" className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-paper shadow-2xl"><header className="flex items-start justify-between border-b bg-white p-5"><div><h2 id="visual-media-title" className="text-xl font-bold">{title}</h2><p className="mt-1 text-sm text-ink/50">Select {multiple ? `up to ${max} items` : "one item"} by thumbnail.</p></div><button type="button" onClick={close} className="grid size-10 place-items-center" aria-label="Close media picker"><X/></button></header>
       <div className="border-b bg-white px-4 py-3">
-        <label className="block text-sm font-bold">Upload from device
-          <input type="file" accept={accept} disabled={waitingForUpload || (multiple && draft.length >= max)} className="mt-2 block w-full text-sm" onChange={(event) => {
-            const file = event.currentTarget.files?.[0];
-            event.currentTarget.value = "";
-            if (file) void upload(file);
-          }} />
-        </label>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold">Upload a new file from this device</p>
+            <p className="mt-1 text-xs text-ink/50">{kind === "video" ? "MP4 or MOV videos." : kind === "image" ? "JPG, PNG, WEBP or HEIC photos." : "JPG, PNG, WEBP or HEIC photos, or MP4/MOV videos."} It is selected automatically after uploading. Or pick a saved file below.</p>
+          </div>
+          <label className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md bg-wine px-5 text-sm font-bold text-white focus-within:ring-2 focus-within:ring-wine/40 focus-within:ring-offset-2 ${waitingForUpload || (multiple && draft.length >= max) ? "pointer-events-none opacity-50" : ""}`}>
+            <Upload size={16} aria-hidden="true" />
+            {waitingForUpload ? "Uploading…" : "Upload from device"}
+            <input type="file" accept={accept} disabled={waitingForUpload || (multiple && draft.length >= max)} className="sr-only" onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void upload(file);
+            }} />
+          </label>
+        </div>
         {waitingForUpload && <p role="status" className="mt-2 text-sm">Uploading and refreshing saved files…</p>}
         {uploadError && <p role="alert" className="mt-2 text-sm text-red-700">{uploadError}</p>}
         {uploadedId && !waitingForUpload && !items.some((item) => item.id === uploadedId) && <p role="status" className="mt-2 text-sm">File uploaded. Reopen the editor if it does not appear in saved files.</p>}

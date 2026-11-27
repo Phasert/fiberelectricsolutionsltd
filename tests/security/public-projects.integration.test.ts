@@ -39,6 +39,7 @@ function project(status: "Draft" | "Published", slug: string) {
     gallery: [
       { mediaId: "missing-second", alt: "Second ordered test image", caption: "Second caption", order: 2 },
       { mediaId: "missing-cover-media", alt: "First ordered test image", caption: "First caption", order: 0 },
+      { mediaId: "missing-alt", order: 3 },
     ],
     publishedAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
@@ -99,8 +100,8 @@ describe("Phase D1a public projects", () => {
 
   it("preserves gallery order and text while using safe missing-media fallbacks", async () => {
     const projectRecord = await getPublicProjectBySlugUncached(publishedSlug);
-    expect(projectRecord?.gallery.map(image => image.alt)).toEqual(["First ordered test image", "Second ordered test image"]);
-    expect(projectRecord?.gallery.map(image => image.caption)).toEqual([undefined, undefined]);
+    expect(projectRecord?.gallery.map(image => image.alt)).toEqual(["First ordered test image", "Second ordered test image", "Phase D1a published project — photo 3"]);
+    expect(projectRecord?.gallery.map(image => image.caption)).toEqual([undefined, undefined, undefined]);
     expect(projectRecord?.gallery.every(image => image.src === "/images/project-electrical.svg")).toBe(true);
     expect(projectRecord?.featuredImage).toBe("/images/project-electrical.svg");
   });

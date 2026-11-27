@@ -58,8 +58,10 @@ const nextConfig: NextConfig = {
     agentUpgrade: "security",
   },
   outputFileTracingIncludes: {
-    "/api/contact": ["./public/images/fes-logo-email.png"],
     "/api/quote-requests": ["./public/images/fes-logo-email.png"],
+  },
+  async redirects() {
+    return [{ source: "/contact", destination: "/request-a-quote", permanent: true }];
   },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

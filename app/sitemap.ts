@@ -3,7 +3,7 @@ import {listPublicProjects}from"@/lib/projects/public-repository";
 import {listPublicResources}from"@/lib/resources/public-repository";
 import {siteUrl}from"@/lib/site-config";
 
-const staticPaths=["","/electrical","/fiber-optic","/projects","/about","/resources","/contact","/request-a-quote"];
+const staticPaths=["","/electrical","/fiber-optic","/projects","/about","/resources","/request-a-quote"];
 const hasFirebaseProject=()=>Boolean(process.env.FIREBASE_PROJECT_ID||process.env.GCLOUD_PROJECT||process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
 
 export default async function sitemap():Promise<MetadataRoute.Sitemap>{

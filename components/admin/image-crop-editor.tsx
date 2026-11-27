@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import { Check, RotateCcw, RotateCw, X } from "lucide-react";
 import type { MediaAspectRatio, MediaCrop } from "@/types/admin";
@@ -21,12 +21,6 @@ export function ImageCropEditor({ src, name, initialCrop, defaultAspectRatio="or
   const [area, setArea] = useState<Area | null>(initialCrop ? { x: initialCrop.x, y: initialCrop.y, width: initialCrop.width, height: initialCrop.height } : null);
   const [saving, setSaving] = useState(false);
   const aspect = useMemo(() => aspectRatio === "freeform" ? freeformRatio : fixedRatios[aspectRatio] ?? naturalRatio, [aspectRatio, freeformRatio, naturalRatio]);
-
-  useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previous; };
-  }, []);
 
   const reset = () => { setPosition({ x: 0, y: 0 }); setZoom(1); setRotation(0); setAspectRatio(defaultAspectRatio); setFreeformRatio(4 / 3); setArea(null); };
   const apply = async () => {

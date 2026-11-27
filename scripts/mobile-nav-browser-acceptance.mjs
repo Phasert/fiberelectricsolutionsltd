@@ -34,7 +34,6 @@ try {
     await navigate("Electrical", "/electrical");
     await navigate("Fibre Optic", "/fiber-optic");
     await navigate("Projects", "/projects");
-    await navigate("Contact", "/contact");
     await navigate("Request a quote", "/request-a-quote");
 
     await page.goto(`${base}/electrical`); await page.getByRole("link", { name: "Explore services" }).click(); await page.waitForURL(/#services$/);
@@ -50,7 +49,7 @@ try {
     await page.goForward(); await page.waitForURL(url => url.pathname === "/projects"); await expectClosed();
     await page.close();
   }
-  console.log(JSON.stringify({ ok: true, widths, links: ["Request a quote", "Electrical", "Fibre Optic", "Projects", "Contact"], behaviors: ["route close", "outside tap", "Escape", "scroll lock", "focus restore", "history navigation", "sticky anchor offset"] }));
+  console.log(JSON.stringify({ ok: true, widths, links: ["Request a quote", "Electrical", "Fibre Optic", "Projects"], behaviors: ["route close", "outside tap", "Escape", "scroll lock", "focus restore", "history navigation", "sticky anchor offset"] }));
 } finally {
   await browser.close();
 }

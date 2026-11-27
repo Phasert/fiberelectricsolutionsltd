@@ -28,16 +28,14 @@ export function EnquiryDetail({ item }: { item: Enquiry }) {
 
   useEffect(() => {
     if (activeImage === null) return;
-    const previousOverflow = document.body.style.overflow;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setActiveImage(null);
       if (event.key === "ArrowRight") setActiveImage(value => value === null ? null : (value + 1) % item.attachments.length);
       if (event.key === "ArrowLeft") setActiveImage(value => value === null ? null : (value - 1 + item.attachments.length) % item.attachments.length);
     };
-    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
     closeRef.current?.focus();
-    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onKey); };
+    return () => document.removeEventListener("keydown", onKey);
   }, [activeImage, item.attachments.length]);
 
   const copy = async (kind: "email" | "phone", value: string) => { try { await navigator.clipboard.writeText(value); setCopied(kind); window.setTimeout(() => setCopied(null), 1800); } catch { setCopied(null); } };

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     let emailAcceptedBySmtp = false;
     if (!result.duplicate) {
       try { await sendQuoteEmails(transport.quote, result.id); emailAcceptedBySmtp = true; }
-      catch (error) { logEmailFailure("quote", error); }
+      catch (error) { logEmailFailure(error); }
     }
     return NextResponse.json({ ok: true, reference: result.id, duplicate: result.duplicate, emailAcceptedBySmtp }, { status: result.duplicate ? 200 : 201 });
   } catch (error) {

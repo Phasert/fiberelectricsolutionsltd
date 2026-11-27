@@ -24,7 +24,7 @@ The default Firebase tooling project is the local emulator project. Live quote s
 
 ## Current application
 
-Public routes provide the homepage, company profile, electrical and fiber-optic services, category-based project gallery, articles/resources, quote request, contact and privacy experiences.
+Public routes provide the homepage, company profile, electrical and fiber-optic services, category-based project gallery, articles/resources, quote requests and the Privacy Notice.
 
 The protected CMS contains:
 

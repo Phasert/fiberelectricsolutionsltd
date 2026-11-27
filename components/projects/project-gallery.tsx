@@ -17,12 +17,10 @@ export function ProjectGallery({ images, title }: { images: ProjectImage[]; titl
 
   useEffect(() => {
     if (active === null) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     closeButton.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); if (event.key === "ArrowLeft" && images.length > 1) previous(); if (event.key === "ArrowRight" && images.length > 1) next(); };
     window.addEventListener("keydown", onKeyDown);
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); };
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [active, close, images.length, next, previous]);
 
   if (!images.length) return null;
