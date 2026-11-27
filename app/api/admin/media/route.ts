@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (getEditorialStorageMode() === "live-disabled")
     return NextResponse.json(
-      { error: "Live Firebase Storage is awaiting owner approval." },
+      { error: "Media uploads are currently unavailable." },
       { status: 503 },
     );
   try {

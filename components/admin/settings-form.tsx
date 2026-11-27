@@ -108,13 +108,13 @@ export function SettingsForm({ initialState }: { initialState: BusinessSettingsS
     </div>
 
     <div className="mt-6">
-      <SectionPanel id="business" active={activeSection} title="Business information" intro="These details are intended for public display on the FES website. Optional fields can stay empty until they are confirmed.">
+      <SectionPanel id="business" active={activeSection} title="Business information" intro="Manage the business details displayed on the FES website.">
         <div className="grid gap-5 md:grid-cols-2">
           <Field id="businessName" label="Business / site name" value={settings.businessName} onChange={value => update("businessName", value)} required error={errors.businessName}/>
-          <Field id="publicEmail" label="Public contact email" type="email" inputMode="email" autoComplete="email" value={settings.publicEmail} onChange={value => update("publicEmail", value)} placeholder="Awaiting confirmation" error={errors.publicEmail}/>
-          <Field id="publicPhone" label="Public telephone number" type="tel" inputMode="tel" autoComplete="tel" value={settings.publicPhone} onChange={value => update("publicPhone", value)} placeholder="Awaiting confirmation" error={errors.publicPhone}/>
+          <Field id="publicEmail" label="Public contact email" type="email" inputMode="email" autoComplete="email" value={settings.publicEmail} onChange={value => update("publicEmail", value)} error={errors.publicEmail}/>
+          <Field id="publicPhone" label="Public telephone number" type="tel" inputMode="tel" autoComplete="tel" value={settings.publicPhone} onChange={value => update("publicPhone", value)} error={errors.publicPhone}/>
           <Field id="whatsappNumber" label="WhatsApp number" hint="Optional. Include the country code." type="tel" inputMode="tel" value={settings.whatsappNumber} onChange={value => update("whatsappNumber", value)} placeholder="e.g. +1 868 …" error={errors.whatsappNumber}/>
-          <Field id="publicLocation" label="Business address or general location" value={settings.publicLocation} onChange={value => update("publicLocation", value)} placeholder="Awaiting confirmation" error={errors.publicLocation}/>
+          <Field id="publicLocation" label="Business address or general location" value={settings.publicLocation} onChange={value => update("publicLocation", value)} error={errors.publicLocation}/>
           <Field id="googleMapsUrl" label="Google Maps location link" hint="Optional public map or directions link." type="url" inputMode="url" value={settings.googleMapsUrl} onChange={value => update("googleMapsUrl", value)} placeholder="https://maps.google.com/…" error={errors.googleMapsUrl}/>
         </div>
         <fieldset className="mt-8 border-t border-black/[.07] pt-7"><legend className="font-bold text-ink">Opening hours</legend><p className="mt-1 text-sm leading-6 text-ink/45">Switch off days when the business is closed. Approved hours are available to the public business-settings repository.</p>

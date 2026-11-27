@@ -12,14 +12,14 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   if (!requestHasTrustedOrigin(request)) return NextResponse.json({ error: "This request could not be verified." }, { status: 403 });
   const config = getQuoteSubmissionConfig();
-  if (config.mode === "live-disabled") return NextResponse.json({ error: "Online quote submissions are awaiting owner privacy and retention approval." }, { status: 503 });
+  if (config.mode === "live-disabled") return NextResponse.json({ error: "Online submissions are currently unavailable." }, { status: 503 });
   const contentType=request.headers.get("content-type")?.toLowerCase()??"",multipart=contentType.startsWith("multipart/form-data"),json=contentType.startsWith("application/json");
   if (!multipart&&!json) return NextResponse.json({ error: "Unsupported request format." }, { status: 415 });
   const maximum=multipart?config.maxMultipartBodyBytes:config.maxBodyBytes;
   if (Number(request.headers.get("content-length") || 0) > maximum) return NextResponse.json({ error: "The request is too large." }, { status: 413 });
   try {
     let transport,files:File[]=[];
-    if(multipart){const form=await request.formData(),payload=form.get("payload");if(typeof payload!=="string"||new TextEncoder().encode(payload).byteLength>config.maxBodyBytes) return NextResponse.json({error:"The request is too large."},{status:413});transport=quoteSubmissionTransportSchema.parse(JSON.parse(payload));files=form.getAll("photos").filter((item):item is File=>item instanceof File);if(files.length&&!config.attachmentsEnabled)return NextResponse.json({error:"Photo attachments are awaiting owner privacy approval."},{status:503});}
+    if(multipart){const form=await request.formData(),payload=form.get("payload");if(typeof payload!=="string"||new TextEncoder().encode(payload).byteLength>config.maxBodyBytes) return NextResponse.json({error:"The request is too large."},{status:413});transport=quoteSubmissionTransportSchema.parse(JSON.parse(payload));files=form.getAll("photos").filter((item):item is File=>item instanceof File);if(files.length&&!config.attachmentsEnabled)return NextResponse.json({error:"Photo attachments are currently unavailable."},{status:503});}
     else{const body = await request.text();if (new TextEncoder().encode(body).byteLength > config.maxBodyBytes) return NextResponse.json({ error: "The request is too large." }, { status: 413 });transport = quoteSubmissionTransportSchema.parse(JSON.parse(body));}
     if (transport.companyWebsite) return NextResponse.json({ ok: true, reference: "received" }, { status: 202 });
     const elapsed = Date.now() - transport.startedAt;

@@ -21,14 +21,14 @@ export const businessSettings: BusinessSettings = {
 };
 
 export const adminProjects: AdminProject[] = [
-  {id:"prj-001",slug:"featured-project-placeholder",title:"Featured project placeholder",category:"Combined",summary:"Awaiting approved scope and photography.",location:"To be confirmed",period:"1 Sep 2026",status:"Published",featured:true,image:"/images/project-combined.svg",coverMediaId:"med-001",gallery:[],galleryCount:3,updatedAt:"8 Oct 2026"},
-  {id:"prj-002",slug:"electrical-project-placeholder",title:"Electrical project placeholder",category:"Electrical",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"15 Aug 2026",status:"Draft",featured:false,image:"/images/project-electrical.svg",coverMediaId:"med-002",gallery:[],galleryCount:2,updatedAt:"5 Oct 2026"},
-  {id:"prj-003",slug:"fiber-infrastructure-placeholder",title:"Fibre infrastructure placeholder",category:"Fiber",summary:"Structure ready for approved project content.",location:"To be confirmed",period:"12 Jun 2026",status:"Published",featured:false,image:"/images/project-fiber.svg",coverMediaId:"med-003",gallery:[],galleryCount:2,updatedAt:"2 Oct 2026"},
+  {id:"prj-001",slug:"featured-project-placeholder",title:"Featured project placeholder",category:"Combined",summary:"Sample featured project.",location:"",period:"1 Sep 2026",status:"Published",featured:true,image:"/images/project-combined.svg",coverMediaId:"med-001",gallery:[],galleryCount:3,updatedAt:"8 Oct 2026"},
+  {id:"prj-002",slug:"electrical-project-placeholder",title:"Electrical project placeholder",category:"Electrical",summary:"Sample project listing.",location:"",period:"15 Aug 2026",status:"Draft",featured:false,image:"/images/project-electrical.svg",coverMediaId:"med-002",gallery:[],galleryCount:2,updatedAt:"5 Oct 2026"},
+  {id:"prj-003",slug:"fiber-infrastructure-placeholder",title:"Fibre infrastructure placeholder",category:"Fiber",summary:"Sample project listing.",location:"",period:"12 Jun 2026",status:"Published",featured:false,image:"/images/project-fiber.svg",coverMediaId:"med-003",gallery:[],galleryCount:2,updatedAt:"2 Oct 2026"},
 ];
 export const adminResources: AdminResource[] = [
   {id:"res-001",slug:"planning-a-service-request",title:"Preparing a clear service request",kind:"FES article",category:"Company Updates",summary:"A concise guide to sharing the site details, photographs and outcomes needed for an effective service request.",status:"Published",featured:true,publishedAt:"1 Oct 2026",updatedAt:"5 Oct 2026",coverImage:"/images/project-combined.svg"},
-  {id:"res-002",slug:"electrical-insight-placeholder",title:"Electrical insight",kind:"FES article",category:"Electrical",summary:"Reserved for client-approved electrical information.",status:"Draft",updatedAt:"5 Oct 2026",coverImage:"/images/project-electrical.svg"},
-  {id:"res-003",slug:"external-industry-resource",title:"External industry resource",kind:"External resource",category:"Fiber Optic",summary:"Attributed link structure awaiting an approved source.",source:"Source to be approved",status:"Draft",updatedAt:"5 Oct 2026",coverImage:"/images/project-fiber.svg"},
+  {id:"res-002",slug:"electrical-insight-placeholder",title:"Electrical insight",kind:"FES article",category:"Electrical",summary:"Sample electrical article.",status:"Draft",updatedAt:"5 Oct 2026",coverImage:"/images/project-electrical.svg"},
+  {id:"res-003",slug:"external-industry-resource",title:"External industry resource",kind:"External resource",category:"Fiber Optic",summary:"Sample industry resource listing.",status:"Draft",updatedAt:"5 Oct 2026",coverImage:"/images/project-fiber.svg"},
 ];
 export const adminTips: AdminTip[] = [
   {id:"tip-001",type:"Do",title:"Plan before work begins",body:"Share site conditions, the required outcome and clear photographs.",enabled:true,order:1},

@@ -30,7 +30,7 @@ export default async function QuotePage({searchParams}:{searchParams:Promise<{se
     </section>
     <section className="py-9 sm:py-12">
       <div className="shell">
-        {!submissionsEnabled&&<div role="status" className="mb-6 rounded-md border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Quote requests are being prepared for secure online submission.</strong> You can complete and review the form, but the final submit action will remain unavailable until production activation is approved.</div>}
+        {!submissionsEnabled&&<div role="status" className="mb-6 rounded-md border border-amber-700/25 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Online submissions are currently unavailable.</strong> You can still review the form.</div>}
         <QuoteForm initialService={initialService} services={services} submissionsEnabled={submissionsEnabled}/>
         {settings&&<aside className="mt-8 rounded-lg border border-black/10 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="contact-help-heading">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
