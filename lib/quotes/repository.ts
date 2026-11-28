@@ -28,8 +28,14 @@ export async function createQuoteRequest(input: unknown, source: { ip: string; u
   const idempotencyRef = database.collection("quoteSubmissionKeys").doc(idempotencyId), duplicateRef = database.collection("quoteDuplicateKeys").doc(fingerprint), rateRef = database.collection("quoteRateLimits").doc(abuseId), requestRef = database.collection("quoteRequests").doc(requestId);
   try{const result=await database.runTransaction(async transaction => {
     const [idempotency, duplicate, rate] = await Promise.all([transaction.get(idempotencyRef), transaction.get(duplicateRef), transaction.get(rateRef)]);
-    if (idempotency.exists) { if (idempotency.get("fingerprint") !== fingerprint) throw new Error("QUOTE_IDEMPOTENCY_CONFLICT"); return { id: String(idempotency.get("requestId")), duplicate: true,retainUploads:true }; }
-    if (duplicate.exists && duplicate.get("expiresAt") instanceof Timestamp && duplicate.get("expiresAt").toMillis() > now.getTime()) { const duplicateRequestId = String(duplicate.get("requestId")),duplicateRequest=await transaction.get(database.collection("quoteRequests").doc(duplicateRequestId));if(duplicateRequest.exists){transaction.create(idempotencyRef, { requestId:duplicateRequestId, fingerprint, createdAt: Timestamp.fromDate(now), expiresAt: expiresAt(now, config.duplicateWindowMs) }); return { id: duplicateRequestId, duplicate: true,retainUploads:false };}transaction.delete(duplicateRef); }
+    if (idempotency.exists) {
+      if (idempotency.get("fingerprint") !== fingerprint) throw new Error("QUOTE_IDEMPOTENCY_CONFLICT");
+      const originalId = String(idempotency.get("requestId"));
+      const original = await transaction.get(database.collection("quoteRequests").doc(originalId));
+      if (!original.exists || original.get("deletionPending") === true) throw new Error("QUOTE_IDEMPOTENCY_CONFLICT");
+      return { id: originalId, duplicate: true, retainUploads: originalId === requestId };
+    }
+    if (duplicate.exists && duplicate.get("expiresAt") instanceof Timestamp && duplicate.get("expiresAt").toMillis() > now.getTime()) { const duplicateRequestId = String(duplicate.get("requestId")),duplicateRequest=await transaction.get(database.collection("quoteRequests").doc(duplicateRequestId));if(duplicateRequest.exists && duplicateRequest.get("deletionPending") !== true){transaction.create(idempotencyRef, { requestId:duplicateRequestId, fingerprint, createdAt: Timestamp.fromDate(now), expiresAt: expiresAt(now, config.duplicateWindowMs) }); return { id: duplicateRequestId, duplicate: true,retainUploads:false };}transaction.delete(duplicateRef); }
     const windowStart = rate.get("windowStart") instanceof Timestamp ? rate.get("windowStart").toMillis() : 0, withinWindow = now.getTime() - windowStart < config.rateWindowMs, count = withinWindow ? Number(rate.get("count") || 0) : 0;
     if (count >= config.rateLimit) throw new Error("QUOTE_RATE_LIMITED");
     const attachments=prepared.map((item,index)=>({id:`photo-${index+1}`,storagePath:paths[index],mimeType:item.mimeType,sizeBytes:item.sizeBytes,width:item.width,height:item.height,checksum:item.checksum,status:"Ready"}));
@@ -41,6 +47,30 @@ export async function createQuoteRequest(input: unknown, source: { ip: string; u
   });if(!result.retainUploads)await objectWriter.remove(paths);return{id:result.id,duplicate:result.duplicate};}catch(error){await objectWriter.remove(paths);throw error}
 }
 
-export async function deleteQuoteRequest(requestId:string,writer:Pick<ObjectWriter,"remove">=defaultWriter()){const database=getAdminFirestore(),reference=database.collection("quoteRequests").doc(requestId),snapshot=await reference.get();if(!snapshot.exists)return false;if(snapshot.get("legalHold")===true)throw new Error("QUOTE_LEGAL_HOLD");const paths=(snapshot.get("attachments")??[]).map((item:{storagePath?:string})=>item.storagePath).filter((path:unknown):path is string=>typeof path==="string"&&path.startsWith(`quote-photos/private/requests/${requestId}/`));await writer.remove(paths);await database.recursiveDelete(reference);return true}
+export async function deleteQuoteRequest(requestId: string, writer?: Pick<ObjectWriter, "remove">) {
+  const database = getAdminFirestore();
+  const reference = database.collection("quoteRequests").doc(requestId);
+  const snapshot = await database.runTransaction(async transaction => {
+    const current = await transaction.get(reference);
+    if (!current.exists) return null;
+    if (current.get("legalHold") === true) throw new Error("QUOTE_LEGAL_HOLD");
+    transaction.update(reference, { deletionPending: true });
+    return current;
+  });
+  if (!snapshot) return false;
+
+  const attachments = snapshot.get("attachments");
+  const prefix = `quote-photos/private/requests/${requestId}/`;
+  const paths = (Array.isArray(attachments) ? attachments : [])
+    .map(attachment => attachment?.storagePath)
+    .filter((path): path is string => typeof path === "string" && path.startsWith(prefix) && !path.includes(".."));
+  if (paths.length) await (writer ?? defaultWriter()).remove(paths);
+
+  // Keep the parent available for retries until its photos and subcollections are gone.
+  const subcollections = await reference.listCollections();
+  await Promise.all(subcollections.map(collection => database.recursiveDelete(collection)));
+  await reference.delete();
+  return true;
+}
 
 export async function cleanupExpiredQuoteRequests(now=new Date()){const snapshot=await getAdminFirestore().collection("quoteRequests").where("retentionUntil","<=",Timestamp.fromDate(now)).get();let removed=0;for(const document of snapshot.docs){if(document.get("legalHold")===true)continue;if(await deleteQuoteRequest(document.id))removed++}return removed}

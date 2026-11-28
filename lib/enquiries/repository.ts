@@ -40,13 +40,13 @@ export async function getAdminEnquiry(id:string):Promise<Enquiry|undefined> {
 
 export async function updateEnquiryStatus(id:string,status:EnquiryStatus,actor:Actor){
   const parsed=enquiryStatusSchema.parse(status),db=getAdminFirestore(),ref=db.collection("quoteRequests").doc(id);
-  await db.runTransaction(async(transaction)=>{const snapshot=await transaction.get(ref);if(!snapshot.exists)throw new Error("ENQUIRY_NOT_FOUND");transaction.update(ref,{status:parsed,updatedAt:Timestamp.now(),updatedBy:actor.uid});});
+  await db.runTransaction(async(transaction)=>{const snapshot=await transaction.get(ref);if(!snapshot.exists || snapshot.get("deletionPending") === true)throw new Error("ENQUIRY_NOT_FOUND");transaction.update(ref,{status:parsed,updatedAt:Timestamp.now(),updatedBy:actor.uid});});
   return parsed;
 }
 
 export async function addEnquiryNote(id:string,input:unknown,actor:Actor):Promise<EnquiryNote>{
   const {body}=enquiryNoteSchema.parse(input),db=getAdminFirestore(),ref=db.collection("quoteRequests").doc(id),noteRef=ref.collection("notes").doc(),createdAt=Timestamp.now();
-  await db.runTransaction(async(transaction)=>{const snapshot=await transaction.get(ref);if(!snapshot.exists)throw new Error("ENQUIRY_NOT_FOUND");transaction.create(noteRef,{body,authorUid:actor.uid,authorEmail:actor.email??"Administrator",createdAt});transaction.update(ref,{updatedAt:createdAt,updatedBy:actor.uid});});
+  await db.runTransaction(async(transaction)=>{const snapshot=await transaction.get(ref);if(!snapshot.exists || snapshot.get("deletionPending") === true)throw new Error("ENQUIRY_NOT_FOUND");transaction.create(noteRef,{body,authorUid:actor.uid,authorEmail:actor.email??"Administrator",createdAt});transaction.update(ref,{updatedAt:createdAt,updatedBy:actor.uid});});
   return{id:noteRef.id,body,authorUid:actor.uid,authorEmail:actor.email??"Administrator",createdAt:createdAt.toDate().toISOString()};
 }
 

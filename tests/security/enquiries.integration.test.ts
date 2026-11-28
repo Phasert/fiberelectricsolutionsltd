@@ -1,12 +1,13 @@
-import {afterEach,describe,expect,it} from "vitest";
+import {afterEach,describe,expect,it,vi} from "vitest";
 import sharp from "sharp";
 import {Timestamp} from "firebase-admin/firestore";
 import {GET as readAttachment} from "../../app/api/admin/enquiries/[id]/attachments/[attachmentId]/route";
-import {PATCH as patchEnquiry} from "../../app/api/admin/enquiries/[id]/route";
+import {DELETE as deleteEnquiry,PATCH as patchEnquiry} from "../../app/api/admin/enquiries/[id]/route";
 import {POST as postNote} from "../../app/api/admin/enquiries/[id]/notes/route";
 import {getAdminFirestore,getAdminStorage} from "../../lib/firebase/admin";
 import {addEnquiryNote,getAdminEnquiry,listAdminEnquiries,readEnquiryAttachment,updateEnquiryStatus} from "../../lib/enquiries/repository";
 import {APPROVED_QUOTE_CONSENT_VERSION,APPROVED_QUOTE_RETENTION_DAYS,getQuoteSubmissionConfig} from "../../lib/quotes/config";
+import * as session from "../../lib/auth/session";
 
 const origin="http://localhost:3000",actor={uid:"approved",email:"approved@example.test"},id="d5-enquiry";
 async function seed(){
@@ -23,5 +24,38 @@ describe("Phase D5 administrator enquiry management",()=>{
   it("records private notes with administrator attribution and timestamps",async()=>{await seed();const note=await addEnquiryNote(id,{body:"Customer contacted; awaiting site details."},actor),item=await getAdminEnquiry(id);expect(note).toMatchObject({authorUid:"approved",authorEmail:"approved@example.test"});expect(item?.notes?.[0]?.body).toContain("awaiting site details");await expect(addEnquiryNote(id,{body:""},actor)).rejects.toThrow();await expect(addEnquiryNote(id,{body:"x".repeat(2001)},actor)).rejects.toThrow()});
   it("reads a scoped private photograph server-side and rejects path escape",async()=>{await seed();const photo=await readEnquiryAttachment(id,"photo-1");expect(photo.mimeType).toBe("image/webp");expect((await sharp(photo.bytes).metadata()).format).toBe("webp");await getAdminFirestore().collection("quoteRequests").doc(id).update({attachments:[{id:"bad",storagePath:"editorial/public/derivatives/file.webp"}]});await expect(readEnquiryAttachment(id,"bad")).rejects.toThrow("ATTACHMENT_NOT_FOUND")});
   it("rejects unauthenticated reads and mutations and untrusted writes",async()=>{await seed();expect((await readAttachment(new Request(`${origin}/api/admin/enquiries/${id}/attachments/photo-1`),{params:Promise.resolve({id,attachmentId:"photo-1"})})).status).toBe(401);expect((await patchEnquiry(new Request(`${origin}/api/admin/enquiries/${id}`,{method:"PATCH",headers:{origin:"https://attacker.example","content-type":"application/json"},body:JSON.stringify({status:"Closed"})}),{params:Promise.resolve({id})})).status).toBe(403);expect((await postNote(new Request(`${origin}/api/admin/enquiries/${id}/notes`,{method:"POST",headers:{origin:"https://attacker.example","content-type":"application/json"},body:JSON.stringify({body:"unsafe"})}),{params:Promise.resolve({id})})).status).toBe(403)});
+  it("lets an administrator permanently delete a quote and respects legal holds", async () => {
+    const path = await seed();
+    await addEnquiryNote(id, { body: "Private note." }, actor);
+    const ref = getAdminFirestore().collection("quoteRequests").doc(id);
+    const remove = (requestOrigin = origin) => deleteEnquiry(
+      new Request(`${origin}/api/admin/enquiries/${id}`, { method: "DELETE", headers: { origin: requestOrigin } }),
+      { params: Promise.resolve({ id }) },
+    );
+    const verify = vi.spyOn(session, "verifyAdminSession");
+    try {
+      expect((await remove("https://untrusted.example")).status).toBe(403);
+      verify.mockResolvedValueOnce(null);
+      expect((await remove()).status).toBe(401);
+
+      const admin = { ...actor, role: "admin" as const, active: true, displayName: "Approved administrator" };
+      await ref.update({ legalHold: true });
+      verify.mockResolvedValueOnce(admin);
+      expect((await remove()).status).toBe(409);
+      expect((await ref.get()).exists).toBe(true);
+
+      await ref.update({ legalHold: false });
+      verify.mockResolvedValueOnce(admin);
+      expect((await remove()).status).toBe(204);
+      expect((await ref.get()).exists).toBe(false);
+      expect((await ref.collection("notes").get()).empty).toBe(true);
+      expect((await getAdminStorage().bucket().file(path).exists())[0]).toBe(false);
+
+      verify.mockResolvedValueOnce(admin);
+      expect((await remove()).status).toBe(204);
+    } finally {
+      verify.mockRestore();
+    }
+  });
   it("uses the approved version and 12-month policy in emulator fixtures without enabling live mode",()=>{const config=getQuoteSubmissionConfig();expect(config.mode).toBe("emulator");expect(config.consentVersion).toBe(APPROVED_QUOTE_CONSENT_VERSION);expect(config.retentionDays).toBe(APPROVED_QUOTE_RETENTION_DAYS);expect(APPROVED_QUOTE_RETENTION_DAYS).toBe(365)});
 });

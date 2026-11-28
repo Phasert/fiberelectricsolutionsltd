@@ -3,16 +3,23 @@ import { formatFibreText } from "@/lib/site-content/spelling";
 /* eslint-disable @next/next/no-img-element -- authenticated private images cannot use the server-side Next optimizer */
 
 import Link from "next/link";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Clipboard, Mail, Phone, Save, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Clipboard, Mail, Phone, Save, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Enquiry, EnquiryNote, EnquiryStatus } from "@/types/admin";
 import { formatQuoteServices } from "@/lib/quotes/service-names";
+import { useMutationGuard } from "@/components/ui/use-mutation-guard";
 
 const statuses: EnquiryStatus[] = ["New", "In Review", "Contacted", "Quoted", "Closed"];
 const emailIsValid = (value?: string) => Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
 const phoneIsValid = (value?: string) => Boolean(value && value.replace(/\D/g, "").length >= 7);
 
 export function EnquiryDetail({ item }: { item: Enquiry }) {
+  const router = useRouter();
+  const deletion = useMutationGuard();
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [savedStatus,setSavedStatus]=useState(item.status);
   const [status, setStatus] = useState(item.status);
   const [note, setNote] = useState("");
@@ -42,8 +49,53 @@ export function EnquiryDetail({ item }: { item: Enquiry }) {
   const revert = () => { setStatus(savedStatus); setNote(""); setSavedMessage(false);setSaveError(""); };
   const save = async () => {if(noteError||!isDirty||busy)return;setBusy(true);setSaveError("");setSavedMessage(false);try{if(status!==savedStatus){const response=await fetch(`/api/admin/enquiries/${encodeURIComponent(item.id)}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status})});if(!response.ok)throw new Error((await response.json().catch(()=>({}))).error??"Status could not be saved.");setSavedStatus(status);}if(note.trim()){const response=await fetch(`/api/admin/enquiries/${encodeURIComponent(item.id)}/notes`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({body:note.trim()})}),result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error??"Note could not be saved.");setNotes(current=>[...current,result.note]);setNote("");}setSavedMessage(true);}catch(error){setSaveError(error instanceof Error?error.message:"Changes could not be saved.");}finally{setBusy(false);}};
 
+  async function remove() {
+    await deletion.run("delete", async () => {
+      setDeleting(true);
+      setDeleteError("");
+      try {
+        const response = await fetch(`/api/admin/enquiries/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+        if (!response.ok) {
+          const result = await response.json().catch(() => null);
+          throw new Error(result?.error ?? "Could not delete the quote request. Please try again.");
+        }
+        router.replace("/admin/enquiries");
+        router.refresh();
+      } catch (error) {
+        setDeleteError(error instanceof Error ? error.message : "Could not delete the quote request. Please try again.");
+        setDeleting(false);
+      }
+    });
+  }
+
   return <>
-    <Link href="/admin/enquiries" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-wine hover:underline"><ArrowLeft size={16}/> Back to Quote Requests</Link>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <Link href="/admin/enquiries" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-wine hover:underline"><ArrowLeft size={16}/> Back to Quote Requests</Link>
+      <button type="button" disabled={busy || deleting} onClick={() => { setDeleteError(""); deleteDialog.current?.showModal(); }} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-red-200 bg-white px-3 text-sm font-bold text-red-700 hover:bg-red-50 disabled:opacity-40">
+        <Trash2 size={16} aria-hidden="true"/> Delete request
+      </button>
+    </div>
+    <dialog
+      ref={deleteDialog}
+      role="alertdialog"
+      aria-labelledby="delete-request-title"
+      aria-describedby="delete-request-description"
+      onCancel={event => { if (deleting || deletion.isActive("delete")) event.preventDefault(); }}
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-black/55 backdrop:backdrop-blur-[2px]"
+    >
+      <div className="p-6">
+        <span className="grid size-10 place-items-center rounded-full bg-red-50 text-red-700"><Trash2 size={18} aria-hidden="true"/></span>
+        <h2 id="delete-request-title" className="mt-4 text-lg font-bold">Delete this quote request?</h2>
+        <p id="delete-request-description" className="mt-2 text-sm leading-6 text-ink/65">
+          Are you sure you want to delete the request from <strong>{item.name}</strong>? This permanently deletes the request, internal notes and attached photos. It cannot be undone.
+        </p>
+        {deleteError && <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-800">{deleteError}</p>}
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" autoFocus disabled={deleting} onClick={() => deleteDialog.current?.close()} className="min-h-11 rounded-md border border-black/10 px-4 text-sm font-bold text-ink/70 disabled:opacity-40">Keep request</button>
+          <button type="button" disabled={deleting} aria-busy={deleting} onClick={() => void remove()} className="min-h-11 rounded-md bg-red-700 px-4 text-sm font-bold text-white hover:bg-red-800 disabled:opacity-60">{deleting ? "Deleting…" : "Permanently delete"}</button>
+        </div>
+      </div>
+    </dialog>
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
       <div className="grid gap-5">
         <Section title="Customer information" description="Contact details supplied with this request.">
